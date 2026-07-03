@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Star-Lord Command</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E9EAF1; --card:#FFFFFF; --card-2:#F0F1F6;
+  --ink:#1B1C32; --ink-soft:#4C4E66; --ink-faint:#8A8CA1;
+  --pine:#272763; --pine-d:#1B1B47; --moss:#5FA336;
+  --clay:#D8362F; --amber:#F2A81D; --ok:#5FA336;
+  --line:#D7D9E4; --line-soft:#E5E6EF;
+  --c-community:#D8362F; --c-creative:#7E4196; --c-outdoors:#5FA336; --c-growth:#EF8022;
+  --shadow:0 2px 0 rgba(27,28,50,.05), 0 8px 24px -12px rgba(27,28,50,.30);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Hanken Grotesk',-apple-system,sans-serif;background:var(--paper);color:var(--ink);
+  background-image:radial-gradient(circle at 12% 18%,rgba(255,255,255,.55),transparent 38%),
+    radial-gradient(circle at 88% 82%,rgba(39,39,99,.06),transparent 42%);
+  -webkit-font-smoothing:antialiased;line-height:1.5;}
+.app{max-width:600px;margin:0 auto;padding:0 0 96px;min-height:100%}
+header{padding:16px 18px;position:sticky;top:0;z-index:30;
+  background:linear-gradient(135deg,#322F7C 0%,#222250 52%,#1B1B45 100%);
+  box-shadow:0 6px 18px -10px rgba(27,28,50,.5);overflow:hidden}
+header:before{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:
+    radial-gradient(1.3px 1.3px at 14% 30%,rgba(255,255,255,.9),transparent),
+    radial-gradient(1px 1px at 33% 72%,rgba(255,255,255,.6),transparent),
+    radial-gradient(1.4px 1.4px at 57% 22%,rgba(255,255,255,.78),transparent),
+    radial-gradient(1px 1px at 79% 58%,rgba(255,255,255,.55),transparent),
+    radial-gradient(1px 1px at 90% 27%,rgba(255,255,255,.72),transparent),
+    radial-gradient(1px 1px at 45% 86%,rgba(255,255,255,.5),transparent),
+    radial-gradient(1.2px 1.2px at 70% 82%,rgba(255,255,255,.6),transparent),
+    radial-gradient(1px 1px at 24% 52%,rgba(255,255,255,.5),transparent);}
+.brand{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+.mark{width:46px;height:46px;flex:none;object-fit:contain;border-radius:9px}
+.brand h1{font-family:'Fraunces',serif;font-size:21px;font-weight:600;letter-spacing:-.01em;line-height:1.08;color:#fff}
+.brand .tag{font-size:11.5px;color:rgba(255,255,255,.6);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.spark{color:var(--amber);font-size:.6em;margin-left:5px;display:inline-block;
+  animation:twinkle 2.9s ease-in-out infinite;vertical-align:0.18em}
+@keyframes twinkle{0%,100%{opacity:.4;transform:scale(.85) rotate(0deg)}
+  50%{opacity:1;transform:scale(1.15) rotate(15deg)}}
+.view{padding:4px 16px 0;animation:rise .32s ease}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.view-title{font-family:'Fraunces',serif;font-size:21px;font-weight:600;margin:14px 2px 4px}
+.view-sub{font-size:13.5px;color:var(--ink-soft);margin:0 2px 14px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:16px;
+  padding:16px;margin-bottom:13px;box-shadow:var(--shadow)}
+.card.flat{box-shadow:none}
+.card h3{font-family:'Fraunces',serif;font-size:16.5px;font-weight:600;margin-bottom:3px}
+.card .hint{font-size:12.5px;color:var(--ink-faint);margin-bottom:11px}
+.note{background:var(--card-2);border:1.5px dashed var(--clay);border-radius:13px;padding:13px 14px;margin-bottom:13px}
+.note .lbl{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--clay);display:block;margin-bottom:4px}
+.note p{font-size:13px;color:var(--ink-soft)}
+.steps{display:flex;gap:8px;justify-content:center;margin:4px 2px 16px}
+.chv{width:30px;height:28px;flex:none}
+.chv .cf{fill:#A6A9BC;transition:fill .42s ease}
+.chv .cl{fill:#E4E5EE;transition:fill .42s ease}
+.chv.on .cf{fill:var(--pine)}
+.chv.on .cl{fill:#CBCDDC}
+.chv.on{animation:chvpulse 1.7s ease-in-out infinite}
+.chv.done .cf{fill:#474B6E}
+.chv.done .cl{fill:var(--amber)}
+.chv.done{filter:drop-shadow(0 0 5px rgba(242,168,29,.65))}
+.chv.just-locked{animation:chvlock .62s ease}
+@keyframes chvpulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes chvlock{0%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(242,168,29,0))}
+  35%{transform:scale(1.26);filter:drop-shadow(0 0 13px rgba(242,168,29,1))}
+  100%{transform:scale(1);filter:drop-shadow(0 0 5px rgba(242,168,29,.65))}}
+.gate-row{display:flex;gap:5px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
+.conn-line{font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-faint);margin-top:9px}
+.peak-gate{display:flex;gap:5px;margin:4px 0 2px}
+.peak-chev{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;min-width:0}
+.peak-chev .chv{width:26px;height:24px}
+.peak-chev .pcl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;
+  color:var(--ink-faint);text-align:center;line-height:1.06}
+.step-tag{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
+.step-tag .n{font-family:'Fraunces',serif;font-size:13px;font-weight:700;color:var(--clay);
+  letter-spacing:.06em;text-transform:uppercase}
+label.fld{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-soft);margin:11px 0 5px}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;font-family:inherit;
+  font-size:15px;color:var(--ink);background:var(--card-2);border:1.5px solid var(--line);
+  border-radius:10px;padding:11px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--pine);background:#fff}
+select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%235D5440' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+.btn{font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;border:none;border-radius:11px;
+  padding:13px 18px;transition:transform .08s ease,filter .15s ease}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--pine);color:#F6F1E2}
+.btn.clay{background:var(--clay);color:#F6F1E2}
+.btn.ghost{background:transparent;color:var(--ink-soft);border:1.5px solid var(--line)}
+.btn.full{width:100%}
+.btn.sm{padding:8px 12px;font-size:13px;border-radius:9px}
+.btn-row{display:flex;gap:9px;margin-top:14px}
+.btn-row .btn{flex:1}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-size:13px;font-weight:600;padding:8px 13px;border-radius:999px;cursor:pointer;
+  border:1.5px solid var(--line);background:var(--card-2);color:var(--ink-soft)}
+.chip.on{color:#fff;border-color:transparent}
+.chip[data-area="Community"].on{background:var(--c-community)}
+.chip[data-area="Creative"].on{background:var(--c-creative)}
+.chip[data-area="Outdoors"].on{background:var(--c-outdoors)}
+.chip[data-area="Personal Growth"].on{background:var(--c-growth)}
+.tgl{display:flex;align-items:center;gap:11px;padding:9px 0;cursor:pointer}
+.tgl .sw{width:44px;height:26px;border-radius:13px;background:var(--line);flex:none;position:relative;transition:.15s}
+.tgl.on .sw{background:var(--pine)}
+.tgl .sw:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.15s}
+.tgl.on .sw:after{left:21px}
+.tgl .tl{font-size:13.5px;font-weight:600}
+.stage-hd{display:flex;align-items:center;gap:8px;padding:10px 11px;background:var(--pine-d);
+  color:#EFE8D4;border-radius:9px;margin:9px 0 5px;cursor:pointer;font-family:'Fraunces',serif;
+  font-weight:600;font-size:13.5px}
+.stage-hd .cnt{margin-left:auto;font-size:11px;opacity:.8;font-family:'Hanken Grotesk';font-weight:700}
+.stage-hd .ar{transition:.2s}
+.skrow{display:flex;gap:9px;padding:9px 10px;border-radius:9px;border:1.5px solid var(--line);
+  background:var(--card-2);margin-bottom:5px;cursor:pointer;align-items:flex-start}
+.skrow.on{background:#fff;border-color:var(--pine)}
+.skbox{width:20px;height:20px;flex:none;border-radius:6px;border:2px solid var(--line);margin-top:1px;
+  display:flex;align-items:center;justify-content:center}
+.skrow.on .skbox{background:var(--pine);border-color:var(--pine)}
+.sktext{font-size:12.5px;line-height:1.42}
+.roll-row{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;
+  border:1.5px solid var(--line);background:var(--card-2);margin-bottom:8px;cursor:pointer}
+.roll-row.present{background:#fff;border-color:var(--pine)}
+.roll-row .tick{width:24px;height:24px;flex:none;border-radius:7px;border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center}
+.roll-row.present .tick{background:var(--pine);border-color:var(--pine)}
+.roll-row .nm{font-weight:600;font-size:15px;flex:1}
+.roll-row .sec{font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em}
+.peak-star{color:var(--amber);font-size:13px}
+.rec-row{padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--card-2);margin-bottom:10px}
+.rec-row .nm{font-weight:600;font-size:14.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.seg{display:flex;gap:5px}
+.seg button{flex:1;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:9px 4px;
+  border-radius:8px;border:1.5px solid var(--line);background:var(--card);color:var(--ink-soft);transition:all .12s ease}
+.seg button.on[data-c="-"]{background:var(--ink-faint);color:#fff;border-color:transparent}
+.seg button.on[data-c="P"]{background:var(--moss);color:#fff;border-color:transparent}
+.seg button.on[data-c="A"]{background:var(--amber);color:#fff;border-color:transparent}
+.seg button.on[data-c="L"]{background:var(--clay);color:#fff;border-color:transparent}
+.mini-cap{font-size:10.5px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;
+  letter-spacing:.05em;margin:9px 0 4px}
+.areapick{display:flex;flex-wrap:wrap;gap:5px}
+.areapick .ap{font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer;
+  border:1.5px solid var(--line);background:var(--card);color:var(--ink-soft)}
+.areapick .ap.on{color:#fff;border-color:transparent}
+.skchip{font-size:11.5px;font-weight:600;padding:6px 9px;border-radius:8px;cursor:pointer;
+  border:1.5px solid var(--line);background:var(--card);color:var(--ink-soft);margin:0 5px 5px 0;
+  display:inline-block;line-height:1.35}
+.skchip.on{background:var(--pine);color:#fff;border-color:transparent}
+.numfield{display:inline-flex;align-items:center;gap:7px;margin:8px 12px 0 0}
+.numfield label{font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase}
+.numfield input{width:78px;flex:none;padding:7px 9px;font-size:14px}
+.skill-tag{display:inline-flex;align-items:center;gap:7px;background:var(--card-2);border:1.5px solid var(--line);
+  border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;margin:0 6px 6px 0;line-height:1.35}
+.skill-tag .rm{cursor:pointer;color:var(--clay);font-weight:700;font-size:14px}
+.addrow{display:flex;gap:8px;margin-top:8px}
+.addrow input{flex:1}
+.wk{display:flex;align-items:center;gap:9px;padding:9px;border-radius:11px;background:var(--card-2);
+  border:1.5px solid var(--line);margin-bottom:7px;flex-wrap:wrap}
+.wk.special .wn{background:var(--clay)}
+.wk.event{border-style:dashed;border-color:var(--clay);background:#F2E9D6}
+.wk.current{box-shadow:0 0 0 2.5px var(--pine);border-color:var(--pine)}
+.wk .wn{width:34px;height:34px;flex:none;border-radius:9px;background:var(--pine);color:#F6F1E2;
+  font-family:'Fraunces',serif;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
+.wk.event .wn{background:var(--amber);border-radius:50%;font-size:15px}
+.wk select{flex:1;min-width:108px}
+.wk .toprow{display:flex;gap:8px;width:100%;align-items:center}
+.wk .fullrow{display:flex;gap:7px;width:100%}
+.wk .fullrow input{flex:1}
+.wk .spec-label{flex:1;font-weight:700;font-size:13px;color:var(--clay)}
+.wk .areachips{display:flex;flex-wrap:wrap;gap:5px;width:100%}
+.wk .areachips .chip{font-size:11px;padding:5px 9px}
+.cur-btn{font-size:10.5px;font-weight:700;border:1.5px solid var(--line);background:var(--card);
+  color:var(--ink-soft);border-radius:7px;padding:6px 9px;cursor:pointer;flex:none}
+.cur-btn.on{background:var(--pine);color:#fff;border-color:transparent}
+.addevent{display:block;margin:1px auto 8px;background:none;border:none;color:var(--clay);
+  font-size:11.5px;font-weight:700;cursor:pointer;padding:2px 8px;letter-spacing:.03em}
+.roles-bar{display:flex;align-items:center;gap:8px;width:100%;margin-top:6px;padding:8px 10px;
+  background:var(--card);border:1.5px solid var(--line);border-radius:9px;cursor:pointer}
+.wncol{display:flex;flex-direction:column;align-items:center;gap:3px;flex:none}
+.wkdate{width:106px;padding:5px 6px;font-size:11px;border-radius:7px}
+.wkdate-s{font-size:10.5px;font-weight:700;color:var(--ink-faint);text-align:center;line-height:1.1}
+.datepair{display:flex;gap:8px;width:100%}
+.datepair .dp{flex:1;display:flex;flex-direction:column;gap:3px}
+.datepair .dp label{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ink-soft);letter-spacing:.04em}
+.datepair .dp input{padding:7px 8px;font-size:13px}
+.evdel{width:100%;margin-top:8px;background:none;border:1.5px solid var(--line);color:var(--clay);
+  font-size:12px;font-weight:700;border-radius:8px;padding:9px;cursor:pointer}
+.evdel:active{transform:scale(.98)}
+.tchips{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.tchip{flex:1;min-width:0;padding:8px 4px;border-radius:9px;border:1.5px solid var(--line);
+  background:var(--card);font-size:12px;font-weight:700;cursor:pointer;color:var(--ink-soft);white-space:nowrap}
+.tchip.on{background:var(--pine);border-color:var(--pine);color:#fff}
+.linkrow{display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:1px solid var(--line-soft)}
+.linkrow .rn{flex:1;font-size:13.5px;font-weight:600;min-width:0}
+.linkrow a{text-decoration:none;text-align:center}
+.inv-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:9px}
+.inv-chev{position:relative;flex:none;width:30px}
+.inv-chev .chv{width:30px;height:28px}
+.inv-n{position:absolute;top:5px;left:0;width:30px;text-align:center;font-size:10px;font-weight:800;color:#1B1B47}
+.inv-row textarea{flex:1;min-height:46px}
+.callbtn{text-decoration:none;text-align:center}
+main textarea{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:9px 11px;
+  font:inherit;font-size:13.5px;background:var(--card);min-height:64px;resize:vertical}
+.roles-bar .rl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--clay);flex:none}
+.roles-bar .rs{font-size:12px;color:var(--ink-soft);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.role-list{width:100%;margin-top:6px}
+.role-row{display:flex;align-items:center;gap:8px;padding:6px 2px}
+.role-row .rn{font-size:13px;font-weight:600;flex:1}
+.rseg{display:flex;gap:4px;flex:none}
+.rseg button{font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;padding:6px 11px;
+  border-radius:7px;border:1.5px solid var(--line);background:var(--card-2);color:var(--ink-soft)}
+.rseg button.on[data-r="-"]{background:var(--ink-faint);color:#fff;border-color:transparent}
+.rseg button.on[data-r="L"]{background:var(--clay);color:#fff;border-color:transparent}
+.rseg button.on[data-r="A"]{background:var(--amber);color:#fff;border-color:transparent}
+.bal{display:flex;flex-direction:column;gap:9px}
+.bal-row{display:flex;align-items:center;gap:9px}
+.bal-row .bn{font-size:12px;font-weight:700;width:108px;flex:none}
+.bal-track{flex:1;height:13px;background:var(--card-2);border-radius:7px;overflow:hidden;border:1px solid var(--line)}
+.bal-fill{height:100%;border-radius:7px}
+.bal-row .bc{font-size:12px;font-weight:700;color:var(--ink-soft);width:30px;text-align:right}
+.scout{border:1.5px solid var(--line);border-radius:13px;background:var(--card-2);margin-bottom:9px;overflow:hidden}
+.scout .hd{display:flex;align-items:center;gap:9px;padding:12px;cursor:pointer}
+.scout .hd .nm{font-weight:600;font-size:15px;flex:1}
+.scout .hd .sec{font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase}
+.mno{font-size:11px;font-weight:700;color:var(--ink-faint)}
+.namerow{display:flex;gap:7px;margin-bottom:6px}
+.namerow input:first-child{flex:2}
+.namerow input:last-child{flex:1}
+.nameview{display:flex;align-items:center;gap:9px;margin-bottom:8px;padding:9px 11px;
+  background:var(--card);border:1.5px solid var(--line);border-radius:9px}
+.nameview .nv-txt{flex:1;font-size:13.5px;font-weight:600}
+.scout .body{padding:0 12px 13px;display:none}
+.scout.open .body{display:block}
+.prog-grid{display:flex;flex-direction:column;gap:7px;margin:6px 0 10px}
+.prog-row{display:flex;align-items:center;gap:8px}
+.prog-row .pn{font-size:12px;font-weight:700;width:108px;flex:none}
+.prog-track{flex:1;height:11px;background:var(--card);border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.prog-fill{height:100%}
+.prog-row .pc{font-size:11.5px;font-weight:700;width:36px;text-align:right;color:var(--ink-soft)}
+.al-line{display:flex;gap:8px;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:10px}
+.al-line b{color:var(--ink)}
+.subhd{font-family:'Fraunces',serif;font-size:13.5px;font-weight:600;margin:13px 0 6px;
+  padding-top:11px;border-top:1px solid var(--line-soft)}
+.award2{display:flex;gap:9px;margin-bottom:8px}
+.awcard{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:9px 10px}
+.awcard .at{font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--ink-faint);letter-spacing:.04em}
+.awcard .av{font-family:'Fraunces',serif;font-size:18px;font-weight:700}
+.awcard .an{font-size:10.5px;color:var(--clay);font-weight:700}
+.awcard .pr{display:flex;align-items:center;gap:5px;margin-top:6px}
+.awcard .pr label{font-size:9.5px;font-weight:700;color:var(--ink-faint);text-transform:uppercase}
+.awcard .pr input{width:54px;padding:4px 6px;font-size:12px}
+.sia-row{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:9px;
+  background:var(--card);border:1.5px solid var(--line);margin-bottom:6px}
+.sia-row .si{flex:1;min-width:0}
+.sia-row .si .sa{font-size:12.5px;font-weight:700}
+.sia-row .si .sd{font-size:11.5px;color:var(--ink-soft)}
+.sia-row .si .sx{font-size:10.5px;color:var(--ink-faint)}
+.mini-row{display:flex;gap:7px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.mini-row label{font-size:11.5px;font-weight:700;color:var(--ink-soft);text-transform:uppercase}
+.summary{white-space:pre-wrap;font-family:'Hanken Grotesk',monospace;font-size:12px;
+  background:var(--pine-d);color:#EFE8D4;border-radius:12px;padding:14px;line-height:1.6}
+.bigtick{width:54px;height:54px;border-radius:50%;background:var(--ok);margin:0 auto 10px;
+  display:flex;align-items:center;justify-content:center}
+.nlog{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:10px;
+  border:1.5px solid var(--line);background:var(--card-2);margin-bottom:7px}
+.nlog .nd{font-family:'Fraunces',serif;font-weight:700;font-size:12px;text-align:center;
+  width:42px;flex:none;line-height:1.15;color:var(--pine)}
+.nlog .ni{flex:1;min-width:0}
+.nlog .ni .t{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nlog .ni .s{font-size:11.5px;color:var(--ink-faint)}
+.areadot{width:9px;height:9px;border-radius:50%;flex:none}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+.tbl th,.tbl td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line-soft)}
+.tbl th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint)}
+.tbl td b{font-family:'Fraunces',serif}
+.rule-li{font-size:13px;color:var(--ink-soft);margin:7px 0;padding-left:16px;position:relative}
+.rule-li:before{content:"";position:absolute;left:0;top:7px;width:7px;height:7px;
+  background:var(--moss);border-radius:2px;transform:rotate(45deg)}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:var(--card);
+  border-top:1.5px solid var(--line);display:flex;max-width:600px;margin:0 auto;
+  padding:7px 6px calc(7px + env(safe-area-inset-bottom))}
+nav button{flex:1;background:none;border:none;cursor:pointer;padding:6px 2px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink-faint)}
+nav button.on{color:var(--pine)}
+nav button .nl{font-size:9.5px;font-weight:700}
+.empty{text-align:center;color:var(--ink-faint);font-size:13px;padding:18px 8px}
+.warn{font-size:12px;color:var(--clay);font-weight:600;margin-top:6px}
+.del-x{background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:18px;padding:2px 6px;line-height:1;flex:none}
+.curbanner{display:flex;align-items:center;gap:9px;background:var(--pine-d);color:#EFE8D4;
+  border-radius:11px;padding:11px 13px;margin-bottom:11px}
+.modal-bg{position:fixed;inset:0;background:rgba(35,31,22,.6);z-index:100;display:none;
+  align-items:center;justify-content:center;padding:24px}
+.modal-bg.show{display:flex}
+.modal-card{background:var(--card);border:1.5px solid var(--line);border-radius:16px;
+  padding:18px;max-width:420px;width:100%;box-shadow:var(--shadow);animation:rise .2s ease}
+.modal-card h4{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin-bottom:7px}
+.modal-card p{font-size:13.5px;color:var(--ink-soft);margin-bottom:14px}
+.modal-card textarea{margin-bottom:12px;min-height:120px}
+.curbanner .cl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+.curbanner .ct{font-family:'Fraunces',serif;font-size:14px;font-weight:600}
+.gate-footer{text-align:center;padding:20px 8px 4px;opacity:.6}
+.gate-footer .chevrons{display:flex;justify-content:center;gap:4px;margin-bottom:8px}
+.gate-footer .chv{width:18px;height:17px}
+.gate-footer .desig{font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <img class="mark" src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCACiALUDASIAAhEBAxEB/8QAHQABAAICAwEBAAAAAAAAAAAAAAYHBQgCAwQBCf/EADwQAAEDAwIDBQYEBAUFAAAAAAEAAgMEBREGEgchMRNBUWFxFCIygZGxCCMzoUNSctEVFkKSwSQmYoLw/8QAHAEBAAICAwEAAAAAAAAAAAAAAAUGBAcBAgMI/8QAMxEAAQMDAQcCBAUFAQAAAAAAAQACAwQFETEGEiFBUWFxE4EikaHRFDKxweEHFTNC8PH/2gAMAwEAAhEDEQA/ANfERFcFjoiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIpBw/0tWav1JDaKQ7GkGSeUjIijGMu/cAeZCj62d/DzpsWXRQuM0e2rubhK4nqIxkMH7k/NVTbLaA2O2OmZ/kd8LfJ5+w4/ILPttJ+KnDToOJXoi4N6Gba/Y3UEz5tuDVGof2mfHGdv7LX3iJpWq0fqWa1TuMsWO0p5sY7SM9D69xW4qqT8TVjbWaTpr3GzMtBMGvIH8N/Ln/7bfqtT7C7YV4uzaesmL2SnHxHOHHQjOnHhgcOKn7rbovw5fG0At6dFrkiIvoNVFEREREREREREREREREREREREREREREREREXqoLbca/d7Db6uq2/F2MLn4+gXsp9M6jqJuxgsF1kk/lbSSEj9l4SVUEZIe8DHUhdxG46Bd2g7BPqbVlBZ4AcTSgzPAzsjHN7vpn1OB3rbyokjoKWKkpWBjWMDGNHRjQMAKA8FdBP0dbZrreGsbdalgaWAh3Ys67cjvJxnBxyCl08jpZXSO6kr53/qBtDHebgI4HZii4AjQk6nxoB4zzV1sdAYIt544n/gvXb6uTtwyR5c13Ln3FcdaWpt70ldbU5rXGppXsZu6B+MsPycAfkvG0lrg4dQchZ8yM7DtHuAYW5yVRY5HwTMlj/MCCPIOQpWoY0tO9odVo2QQcHqEUs4j6UuVhu1TWS07G0FRVSdg+N2QAXEtafA4+yia+wKOriq4WzRHIP/AGFrM4yQCiIiyVwiIiIiIiIiIiIiIiIiIrY0XoahpqKKsu0LaiqkaHdm/myMHux3lYFwuMNBHvyc9B1UjbbZNcJCyPlqToFVkNNUTfowSyd3usJXuZp6+PaHMtNYQe8RFX3DBDA3bDEyNvg1oC81TdKCncWy1LA4dQOZVYftY/PwRj3KtcOxrXcHSEnsP/VRsmn72wZfaaxo84iuimt9Sa2GKemmY10jWuJYRgE4V4f5gtmf1nf7Cuxt4tUvWoj9HhdRtXKQQYx7Fer9iMcWvPuFb1poKS126CgoYWw08DAxjWjHIf8AK6qq4CN5ZE3cR1J6KJ2y9TPiD6WuEgxzAeHAfJerS1bNer3TWh0W2eol2Bzeg8SR5DJWiajZ2s9QuHxkn3yfKkjT+kCXaBSixWi56jrWxQtxE0/mSuGGMH/J8lmdW6GqLbAKu2ufVQNaO1aR77T/ADY7x9lZdpt9La6CKipGbY4xjJ6uPifNes8xgrYdHsLSMozFMcyH/Ycj0HbrnXsqlLfZfWDoxho5dfK1zle2Jhc84AXI1MlRDHu5NDRhqknGawtttxguNK3bS1WQ9g6NkHXHkR9iotC0thY09Q0AqoPsptshZLxeDr27ef4Xld7kamNoZwaVA+NNumuGjansGl76aVs+0DJIGQfoHE/Ja+LbKUNkLg4BzXZyD3hVjrHhXT1k8lbYZ20sjyXOp5P0yf8AxP8Ap9OfyWytktoYKKI0tScDOQeXgqqRygEgqm0WcvWktQ2gu9stk4YP4kbd7fqFg1sqGoinbvxODh2OVkgg6IiIvZcoiIiIiIiIiIiL6xxa4OHUHK2A07dKa8WiCtpnghzQHtzzY4dQVr8snp++XCx1Xb0MuAfjjdza/wBQoW9Ws18Q3DhzdPspyx3YW6U74y12vXyr0u3bG21HYZ7Tsztx1VenOefVZ7TevbTc2tirD7DUnltefccfJ391lbpY6WuYZ6ZzY5Xcw5vwuWvKmkmpnbkrSCtsWi600rcsdkH6eQoYucEMtRMyCCJ8ssjg1jGNJc4noAB1K51lLPSTmGojLHD6H0WxH4UNJUYtdTq6qhZLVPlMFK5wz2TQPeI8Cc4z4LimgM8gYFn3e6x22kNSRnoOpKq6j4Q8THU7a+l0/UQnG5oNRHHJ/tLgR6FZfg5cLraOL1rtOpaOWmqXSuj/AOoZ2b2uLTjOeue49+VtqojxN0XT6stTZINlPeqIia3VmMGKVp3NBP8AKSBn6qZNsYzDm8SFrk7WOrt6GrYA1wIyM5GeepyOqlyLDaJvf+YNN0tykhNPUkGOrgPWGdh2yMPo4H5YWZUoCCMhU2SN0byx2o4KsvxC3WjtmnKD2j35H1WY4x8TsNOflzH1VXWyxcSdQU7au3WF9NRvGWOkLWF48t5BIPjhW9QWmDWmt59S3GJs1qtL3UlqicMtlkafzZsdCN3uj+nuwrAUZNa6eplM0gydFGOjlqjkvIYNManvlaiX+LVenqsU15pp6SQ82iSNu13o4cj8iuml1FKCBUQtcPFvIrajWen6LUun6m11kTX72ExOI5xvxycD3LT+pgkgq5KZwzJG8sIHiDhRNda4YjpwKh62KWkeN1xIKmtFV09ZFvheHDvB6j1WIv2j9O3oOdW22ITH+NENj8+o6/PK4WChnpHurapwgiDDkOOOXifBRbWHFOkopH0liibWSjk6d/6bT5D/AFfb1UVQ0NZJVbtvJyOYOMeSsumMkjc4wVD+I2g36ZhbX0tT7RRPfsw8YewnpnxChCy+odS3m/OH+J1r5WNO5sY5MafQLELcFsiq4qdratwc/qFJsBA+JERFnrsiIiIiIiIiIiIiz+mNV3SxzNEcrpqXPvQPOQR5eBWAReU0Ec7CyQZC9oKiSneHxOwQr0jlodU2FtXSEZIO3PVjx1aVdX4UdR0smnqvSsz2xV1LO6ZjCcF7HYzj0IWs3Baok9puFJn8ssbJjzzhSa801wtl2bebVNPBI128SwOLXxu8cjmFreqjFsrnMbxA/QradJi/2sRSndJ4g9HDh8itp+MvESHh/Z6aZtIKyvrXubTwudtbhoG5zj4Dc3l35WG4McXWa4rpbRcqGKhuTWGSPsnExytHXGeYI9Sta9X6y1Hq2OiZqC4GtNEHiFxia0jdt3ZLQM/COqkfAaOKi4g2+7XBtVHBDu7Lsoy4ySEbWtx1IOe5P7i99QN0/Cuj9kqamtT/AFhmYAnIJ15ADhy7LZvTrHW/XuoLe1jxT1TIbgwk+7vcCx+B6sBPmVktc3GS06PutxgYXzQ0zzG0HBLsYGD6kLES361M1MK80N/Nb7H2XYttsp/L353Y2568srGaz1fYa2wVFJdrVqylo3OZ2kwss7QMPBHMtxzIA+al43tIIBWv6iJ8j27zToAfYYXv1Bf7Xwz4YRXGvY90dFTsjZECN8spHw58Sc5PqVWfCz8RDtUatprLebNT0MdbMIaeSGRzix7jhodnrk4GRjmeixX4tNV2S86Iobe+mv1BXtqxNTR1lukp2ygDa/m8DOA4dPELW3TVyqbRfqK5UkgjqKadksTiAdr2uBacHkeYC6yPIPBZUFsa6jLgMOGntyX6K6nvFJYLHVXWtlbHFAwkZPxO7mjxJK1itVIHzS3KoYO3qHukA/kBOVirbqjUGuaz/uO7yVRpjvbEcMbjyY0AepxnovTru+x6d03PWbgJ3Ds6dvi89Pp1+SrF3qZKydlJCOJOPmqlVMkfPuyNxjTPfmq24x6ulq6+SwUExbSwHbUOaf1H97fQfdVqvsjnPe57yS5xJJPeV8W0Lbb4rfTtgjGmp6nmVlsaGjARERZ67IiIiIiIiIiIiIiIiIiIiKyeCtOMXGrzz9yMD6lWQqO0dqmq05LL2cDKiCbG+NztpyOhBUiq+KFU6MiktMMb+50kpePoAPuqRd7NW1NY6RjctOOOR0V7s17oaWibHI7Dhnhg9VZsVPR9ux80DNu4bi1o3Yzzx5q+9E6F0rb30+oqavlrGNb2kTpnt2R8upwBzHmtWtFUt6uIGoNSVcjYGjdTUoG1vk4gfsCsxXXSqqHOYyeWOA8hGHkAjzCqjq2OiqjEAJN3UjQHoOvdZ9XNLcogY3FgPXmPHL5rajR1UL5ebpqGFxdQvLaSidnlIyMnc8eRcTg94CymsLW69aXuVqjkMclTTvZG8HBa7Hun64VW8BOIFG63waUu0zYJ4sto5XkBsjSc7M+I7vFWNrzVts0jZ31tdK10zgRT04Pvyu8APDxPcrHSVUT6f1S7z2PNU2pppY6n0w3jy8cv5UNqrLpjjLoOlpL850Nyt7jHVCJ4E9HUN917TkdDjPMYIwVqnxo01pjSOrRY9M3WpuYgjHtU0rmODZCfgG0Ach19V2X6s1LW6pr7xLJUCouE7pZXUziA4k5xhvcFGrlC+Co/PjdG53P3xgn6rgVUcpAYQVZbdbnsfhz8DovbZL9NQyRVUQcKiP6O9fVYPW16u98uPtNyfmNuRCxnwMHl5rm6eFvxSsGPNeWouFMGloHa+WOSzbdC6KoEzYt46Zxp4PJd7vQW+WPelkDXjQ/thYdF9cQXEgBoJ6DuXxXMKgEYKIiIuERERERERERERERERERERFzgilnmZDDG+SV7g1jGDJcT0ACtPQnDr2eWO439jXSNO6OlzkA9xd4+iq6kqJ6SpZU00ropozlj2nBBWZGstTjpean6j+yr9+o7nWRejRSNYDqTnPgY0/VSFBNSwu352lxGmmFflfT+00j4QdpPT1Ci88MkEhjlYWuHioDaOJOoaN7RVOirYx1EjcOPzCsXTeqbHqmIQj8mrA5wSnDvMtPeP/sBasrNnrlZml8rN6Pq3jjzz+mO6uNJdqaqO604PQrygkHI5Fd1bWVdbKJayqnqZGtDQ6WQvIaOQGT3BZOoshyTTzD+l/8AddcVknLx2ksYb37ck/ZRwrIt38yksccrr0/CX1vaY92MdfMqD8dcf4nbR39i/wC4VqUtPFTRCOJuB3nvJVL8ZKxtRrB0DXEimhawjwcfeP7EKb2NzU3tsjdGtJ+mP1Khr+8NoyOpH3/ZQtERbpVFRERERERERERERERERERERERERERERERERc4ZZIJWywyOjkYctc04IK4IuCARgoDhXJw31w26sZa7tI1tcOUch5Cby/q+6nq1fa4tcHNJBByCOoU7snE670VKIK2COuLRhsjnFr8eZHX1Wr9othnySme3AYOrdMeOWO3Ll2tVtvzWs9Op5c/urcu1dBbbdPXVLtsULC53n5DzK1vulZNcLjUV05BlnkdI7HTJOcDyWd1hrO6aja2CUMp6Rp3CGM9T4k96jSn9kNnJLRE6SfHqP+gHL7+yj7zcm1jw2P8AKPqUREVyUKiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIv/2Q==" alt="Scouts logo">
+      <div><h1>Star-Lord Command<span class="spark">✦</span></h1><div class="tag">Dial it in · Record it right</div></div>
+    </div>
+  </header>
+  <main id="main"></main>
+  <nav id="nav"></nav>
+</div>
+<div id="modal" class="modal-bg"><div class="modal-card" id="modalCard"></div></div>
+<script>
+const OAS_SKILLS={"Bushcraft":[[1,"Stage 1 — Introductory Skills",["I know why it is important to stick to trails when outdoors.","I know about the 'Buddy' system.","I know to stop when I get lost on activities.","I know my address and location in an emergency.","I know 3 reasons for having a shelter when sleeping outdoors.","I can strike a match.","I can collect sticks for preparing a campfire.","I can demonstrate stop, drop and roll, and how that can be used in an emergency situation.","I can find the emergency exit and muster point at my Scout Hall.","I have participated in a game that requires basic navigational skills.","I can hang a clothes line at camp with a clove hitch or other knot.","I know how to pack ropes away.","I know what is in a dilly bag/mess kit and can keep it clean at camp.","I can talk about what I enjoyed, learnt, or improved upon, by playing a navigational game."]],[2,"Stage 2",["I have explained what impact I can have on local vegetation while participating in activities.","I have discussed the appropriate action I should take in the case of an accident. Consider DRSABCD.. Consider emergency services. Consider other small accidents that may happen while hiking.","I can discuss what safety precautions I should take before going out in the Bush. Consider contacting authorities and informing others. Consider other small accidents that may happen.","I know how to contact the emergency services.","I can state how many degrees there are on a compass and what degrees the cardinal points are.","I know the rules for hygiene at camp. Consider cleaning equipment/preparing food. Consider toileting.","I can protect myself when exposed to the sun while outdoors.","I can cook a snack in a fire.","I know how much water I should carry when on a hike or when taking part in an outdoor activity.","I can demonstrate a correct way to build a safe fireplace in the Bush.","I understand the basic dangers of fire, and how to be safe around them.","I can establish and find the four cardinal directions (north, south, east, west) without a magnetic compass or any electronic means.","I can demonstrate 3 knots and apply them in an activity.","I have talked about what I enjoyed, learned, or improved upon from at least two bushcraft activities.","I can suggest what I would do differently for a future bushcraft activity."]],[3,"Stage 3",["I can explain the importance of wearing the right clothing while outdoors.","I know about native flora and fauna and the risks of the benefits they pose. Consider what is poisonous. Consider what is good for wounds or to eat.","I know how and where to get the latest weather forecast for the areas I will be doing activities in.","I know the First Aid treatment for burns from hot water, grease and food.","I know how to treat cuts an minor bleeding.","I know what DRSABCD stand for and how to apply it in First Aid situations.","I can cook a meal using a camp stove.","I can name 5 different situations that could be classified as an emergency in the outdoors and can respond to a mock emergency for one of these situations.","I can identify the Southern Cross in the night sky and then find South.","I can identify three other constellations in the night sky.","I have set up and followed a simple compass trail with the support of a local map with a Group of Scouts.","I can teach the importance of the buddy system to Scouts working on Stage 1.","I have put together a personal outdoor Survival kit and can explain why I have included these items.","I can make a personal shelter out of plastic sheeting, rope and other things I have found.","I can demonstrate 5 knots in an activity or camp setting, three of which can be my Stage 2 knots.","I can talk about the ways in which my Patrol worked together while following a compass trail.","I have identified improvements I can make to my shelter next time I try building 1."]],[4,"Stage 4 — Pioneering",["I know how to protect the environment while constructing objects.","I can prepare equipment, when required, for safe transportation to activity location.","I can draw up a plan before constructing an object.","I can read the plan for a pioneering activity and understand what I am required to do.","I can select appropriate size poles and ropes for a construction project.","I can, with a Group of Scouts construct a 5 metre high flagpole on camp.","I can, with a Patrol of Scouts, construct a Scout chariot and challenge another Patrol.","I can construct something fun with my Patrol that we have researched and agreed to construct together.","I can explain the safety precaution to take when undertaking construction projects.","I have used two different types of lashings, which are new to me, in a construction project at this Stage.","I can identify improvements in the way we go about future construction activities, including techniques, safety, teamwork, and outcomes.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[4,"Stage 4 — Survival Skills",["I know how to protect the environment when building shelters and lighting fires.","I can prepare equipment, for safe transportation to activity location.","I can understand the plan for a survival activity and what I am required to plan for.","I can think of five things I would want in my Survival kit.","I am familiar with the signs and symptoms of hypothermia and hyperthermia.","I can signal for help from the ground where the help will come from the air.","I have lit a fire in dry and wet conditions.","I have tried different ways to purify water for drinking and can talk about when it is appropriate to do so.","I have built a shelter big enough for three, made of only natural materials found outdoors and rope, and I have slept out in it for one night.","I can orientate a map to the surrounding landscape with and without a compass.","I can estimate distance travelled while on a Scouting activity without electronic means.","I have discussed the basic survival skills and why each one is important.","I can identify where I can improve my survival skills for next time I try a survival challenge.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[5,"Stage 5 — Pioneering",["I have considered risks involved in pioneering activities and have put together a risk assessment with the support from others.","I have helped design 3 construction projects for camp, taken into consideration safety of self and others at this Stage.","I know how to use a camp axe or Bose or safely (opening, closing, passing, cleaning, caring for, sharpening, cutting) and know how to store them safely.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider.","I can help construct a camp kitchen including a camp oven and basin.","Using spars [poles] and rope, I have constructed a 3 metre high tower or a bridge over a three metre span in conjunction with safe workplace practices.","I have taken part in at least 5 construction projects by the end of Stage 5.","I have built a structure that doesn't need ropes to construct.","I have prepared a short presentation for my Section Council on the pioneering projects I have been involved in so far.","I have thought about other skills I would like to learn in pioneering.","I can talk to others about what has gone well and what could be done better on future pioneering projects."]],[5,"Stage 5 — Survival Skills",["I have planned a meal for a survival camp taking into consideration limited access to cooking resources.","I can identify five types of cloud, what those cloud types mean and weather patterns.","I can identify ways to protect myself from being seen, heard or smelt by fauna.","I have helped a Scout in a lower Stage put together a Survival Kit and explain to them the use of each item.","I know how to gain permits or permission to gain access to locations when required.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider.","I have picked a survival base skill that I would like to learn and have developed skills in this area. - Consider something you haven't learned yet to do with fire, water, shelter, food or camouflage.","I have used 3 different ways to purify water for drinking, and I know the limitations, advantages and disadvantages of each method.","I can make a prediction about the local weather through natural signs.","I can identify three native plants that can support me either medically or nutritionally.","I can determine my location without electronic means by refreshing my navigational skills from Stages 1-4. - Consider using a fix or cross-section using back bearings.","I have refreshed my survival shelter skills and assist in the planning of a survivor style camp for a minimum of one night focusing on the basic survival skills.","I have prepared a short presentation for my Section Council on the survival challenges I have participated in, and the skills I have developed.","I have thought about other survival skills I would like to learn.","I can talk to others about what has gone well and what could be done better on future survival challenges."]]],"Bushwalking":[[1,"Stage 1 — Introductory Skills",["I can help pack a backpack for a day walk. Consider what is needed. Consider the best way of packing it.","I can dress myself for the walk. Consider the best types of clothes for bushwalking. Consider if I will be comfortable in different weather conditions.","I can list what food to bring on a day bushwalk. Consider what would be good for me and give me energy. Consider what is nutritious and can be lightweight.","I know why it is important to stick to trails when outdoors. Consider why the trail is there.","I know why to stop when I get lost in the Bush.","I can put together a small personal First Aid kit for our bushwalk. Consider blisters, dehydration and small wounds that may be encountered along the way.","I can explain the 'Buddy' system.","I can identify the four main cardinal points of the compass.","I can identify the main parts of the compass.","I have attended at least one bushwalk of at least one hour's duration at this Stage.","I can demonstrate behaving safely while bushwalking. Consider the environment, people, and equipment.","I can talk about what I enjoyed or learnt from going on a Bush walk."]],[2,"Stage 2 — Basic Walking Skills",["I can explain what clothing I should wear whilst bushwalking. Consider different types of fabric. Consider different types of environments.","I have explained what impact I can have on local vegetation when bushwalking.","I have discussed the appropriate action I should take in the case of an accident or emergency. Consider DRSABCD. Consider emergency services. Consider other small accidents that may happen while bushwalking.","I can discuss what safety precautions I should take before going out for a Bush walk. Consider contacting authorities an informing others. Consider packing the equipment you should carry to keep the Group safe.","I know when and how to contact the emergency services in an emergency.","I can draw or list all of the essential equipment to bring on a bushwalk.","I can use a compass to find basic directions. Try a simple navigational task around your local hall or park. Try taking a bearing and consider magnetic variation.","I can protect myself when exposed to the sun while outdoors.","I have attended at least two short Bush walks at this Stage.","Before I start bushwalking, I can show where and when I'm allowed to go. Consider the map and the rest of the Group.","I have Bush walked a total distance of at least 10 kilometres.","I have talked about what I enjoyed, learned, or improved upon from at least 2 bushwalks","I can suggest what I would do differently on a future bushwalk to enjoy it more, to be safer, to learn new things, or to be more challenging.","I have reviewed my list or picture of essential equipment with my Patrol and Leaders."]],[3,"Stage 3 — Basic Walking Skills",["I can help a Stage 1 Scout to pack their backpack for a bushwalk.","I know how and where to get the latest weather forecast for the area I will be bushwalking in.","I can help plan a balanced menu for bushwalking. Consider nutritional value, variety, and weight.","I can list places where I can and cannot bushwalk.","I can talk about different ways of keeping a Group together while bushwalking.","I have considered bushwalk etiquette when planning for a journey.","I can be responsible for my safety and aware of my surroundings.","I have run a small navigational activity for my fellow Scouts with the support of my leaders.","I can use different types of maps to help me throughout different activities.","I have attended a day walk at this Stage of at least six hours duration. Consider leading a small part of the bushwalk.","I have attended at least two bushwalking activities at this Stage.","I know how to avoid becoming lost, and I know what to do if I get lost.","I know how to treat cuts and minor bleeding.","I can teach the importance of the buddy system and other ways to stay safe to a Scout in Stage 1.","I can identify the features of a tropographical map.","I have given a presentation to my Patrol or my Unit Council about one of the bushwalks I went on during Stage 3.","I have discussed the top five things I have learned throughout Stages 1-3 of bushwalking."]],[4,"Stage 4 — Intermediate",["I can read a trip itinerary for a proposed bushwalk and understand what I am required to plan for and what my role is.","I know how to select equipment and protective clothing, including footwear, according to expected weather conditions.","I always ensure pack weight is appropriate to my body weight and level of fitness. -Consider if the type of equipment, including weather equipment, used in Stage 1 is still the equipment to be used in Stage 4.","I always ensure my equipment weight is distributed throughout my pack so my centre of gravity is balanced while bushwalking.","I am aware of a range of communication devices and can choose appropriate communication equipment for the location I am in.","I can work with others to prepare a menu and food list for a weekend Bush walk.","I can obtain and become familiar with the appropriate map for the intended walk.","I can identify natural navigational aids. - Consider the different natural navigational aids and have a go trying to use some on a bushwalk.","I have throughout the planning Stage become more familiar and confident with taking a bearing including accounting for magnetic variation.","I can apply ascending and descending techniques on slopes. - Consider the different types of techniques and aids available.","I know how to adopt appropriate posture when lifting and carrying a backpack.","I can demonstrate the approach to hazards safely and minimise risks to self and Group where possible.","I have taken part in and logged a 2 day bushwalk at this Stage.","I can identify improvements I can make in planning and leading future bushwalking trips.","I have checked bushwalking equipment for damage and discussed if it needs to be repaired or replaced.","I have discussed with my Patrol and Leaders what my key learnings are from the Bushwalking journey."]],[5,"Stage 5 — Intermediate",["I know how to identify food and water requirements for multiday bushwalks. - Consider food drops and alternate source if possible .","I know how to purify water for drinking.","I can assist Stage 3 Scouts to select appropriate footwear for various Bush walks.","I can minimise damage to the environment while bushwalking.","I can, with the support for my Patrol and Leaders, develop a risk management plan for a two-night Bush walking.","I can identify possible hazards associated with bushwalking and procedures to minimise risks and I know how to take actions to minimise these risks.","I can plan an overnight or weekend bushwalk including selecting an appropriate location using a topographical map and understand Naismith's rule. - Consider all logistical, organisational policy, safety, navigational, environmental, equipment and personal requirements.","I can properly select the clothing required for bushwalking, based on the seasonal requirements such as layering of clothing and protective clothing.","I have with assistance appropriately briefed all members of a bushwalking party and support people about our journey.","I have successfully completed aProvide First Aid (including CPR) course from a recognised provider.","I can find directions without a compass.","I can use a map and compass to find my position on the ground.","I can be an active member of my team while bushwalking.","I can bushwalk rough terrain safely using appropriate gear as required.","I can look after Group safety and morale on a bushwalk.","I can use a minimum of three communication devices to send a message","I have taken part in and logged two bushwalking activities at this Stage at least one of which is a 2 night bushwalk that I have led without leaders attending.","I have given a presentation to our Section Council or Unit on the journey that I have led highlighting the successes the learnings and the areas for improvement.","I can reflect on the journey that I led and what I learnt about myself in the experience."]]],"Camping":[[1,"Stage 1 — Introductory Skills",["I know about the \"Buddy\" system.","I know the boundaries of where I am allowed to go each time I go out camping.","I know to stop when I get lost while camping.","I know the basic elements that you need to make a fire.","I know that I should follow directions from the leader of this activity.","I can help pack a bag for camp.","I can strike a match.","I can help prepare food for cooking at camp.","I have spent two nights at camps and/or Scout sleepovers","I know why it is important to set up camp in an existing campsite.","I can set out my sleeping area at camp.","I can care for my basic personal gear on an overnight camp.","I can talk about what I enjoyed, learnt or improved upon by participating in the camp or sleepover."]],[2,"Stage 2 — Basic Skills",["I can explain what clothing I should wear whilst camping.","I have explained what impact I can have on local vegetation while camping.","I have discussed the appropriate action I should take in the case of an accident.","I can discuss what safety precautions you should take before going camping outdoors.","I know about proper hygiene practises at camp.","I know how to contact the emergency services.","I can draw and label a picture showing all of the essential equipment to bring on a camp.","I know the benefits and risks associated with fire.","I can demonstrate basic safe food handling and the importance of hygiene at camp.","I can protect myself when exposed to the sun while outdoors.","I can behave safely in and around tents and fires at camp.","I can demonstrate and explain why sleeping bags need to be aired out.","I have spent two nights on camp in a tent at this Stage.","I can help set up a tent and identify the main parts of a tent.","I have talked about what I enjoyed, learned, or improved upon from at least two camps.","I can suggest what I would do differently on a future camp to enjoy it more, to be safer, or to learn new things."]],[3,"Stage 3 — Basic Skills",["I can pack my own bag for camp.","I know how and where to get the latest weather forecast for the area I will be camping in.","I can help plan a balanced meal for camp.","I know the benefits of using gas to cook and can talk about what risks to watch out for in regards to using gas.","I can list Group equipment required for camp.","I know how to maintain personal hygiene while camping.","I can assemble a personal First Aid kit for a camp.","I know what DRSABCD stand for and how to use it in First Aid situations.","I can demonstrate keeping myself safe from natural and man made things at camp. Consider feet care, suncare, burns, falls, splinters, etc.","I can help build a campfire and collect materials to do so.","I can cook a meal on a campfire with assistance.","I have used a gas cooker to help cook a camp meal.","I can help run an activity at camp.","I can set up a tent, without help from an adult.","I have spent five nights on a camp in a tent by the end of this Stage.","I know how to treat cuts and minor bleeding.","I can teach the importance of the buddy system to a Stage 1 Scout.","I can demonstrate how to store food at camp.","I have learnt 3 knots that can help me during a standing camp.","I have discussed the ways I can improve the camping activity that I assisted in.","I have discussed my camping and how improvements can be made."]],[4,"Stage 4 — Intermediate",["I can prepare equipment where required, for safe transportation to an activity location.","I can identify appropriate campsites.","I know how to select equipment and protective clothing according to expected weather conditions.","I can work with others to prepare a menu and food list for a weekend camp.","I know about proper hygiene practises at camp and can discuss these with a Stages Two Scout.","I can plan an activity for a camp that I will go on at this Stages.","I can read an itinerary for a proposed camp and understand what I am required to do.","I am familiar with the signs and symptoms of hypothermia and hyperthermia.","I can implement safe sanitary practises at camp to avoid illness and environmental impacts.","I have assisted to pitch a bell tent, canvas troop tent or similar.","I have participated in five nights of camping at this Stage, three of which are consecutive.","I can demonstrate and assist Stage Two Scouts in setting up a tent.","I can help organise a campsite setup and pack down.","I can cook a meal at camp without assistance.","I can safely light an extinguish a campfire.","I can demonstrate the correct care and maintenance of Group gear during and between camps.","I know how to dry and store a tent.","I can identify improvements that could be made for future camping trips I participate in or lead.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[5,"Stage 5 — Intermediate",["I can select camp sites that minimise damage to the environment.","I can identify possible hazards associated with camping and procedures to minimise risks and I know how to take actions to minimise these risks.","I can plan suitable access to water, appropriate to the size of the Group and location.","I know where to source information about camping equipment selection.","I know how to plan for activities in all weather conditions.","I can show the personal gear needed for an overnight lightweight camp.","I can plan a camping trip in accordance with organisational policies.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider.","I can teach another Scout what to pack for camp.","I can demonstrate the appropriate measures for minimising and dealing with food waste, solid waste and human waste to protect the environment while camping.","I can demonstrate the best layout for a campsite and explain my reasoning including the type of ground, the position of trees, proximity to water, local fauna, shade and shelter.","I can cook a three course meal using a camp oven, portable hike stove or open fire.","I can demonstrate how to repair minor damages to tents.","I have participated in two nights of lightweight camping.","I have spent 16 nights away camping by the end of Stage Five.","I have completed Stage five in the three core outdoor adventure skills.","I have identified improvements that could be made to the three-course meal for next time I prepare a menu and cook on camp"]]],"Alpine":[[1,"Stage 1",["I can help pack a bag for a snow trip.","I know how to dress when I go on a snow trip.","I can explain the buddy system.","I know the importance of staying on the trail whilst at the snow.","I know why to stop when I get lost in the snow.","I know how to contact the emergency services.","I have built something out of snow.","I know how to stay dry or change to dry clothes when I am on a snow trip.","I follow the instructions of the activity leader when at a snow trip","I have been tobogganing","I can take care of my equipment for the duration of a day trip to the snow.","I can talk about what I enjoyed by participating in a snow trip."]],[2,"Stage 2",["I can explain what impact I can have a little vegetation when snow hiking or tobogganing overexposed shrubs.","I can discuss the appropriate action I should take in the case of an accident.","I can discuss what safety precautions I should take before going out in the snow.","I can label a picture describing all of the essential equipment to bring to the snow.","I have walked for one kilometre in the snow.","I can protect myself when exposed to the elements associated with snow while outdoors.","Before I start my snow activity, I can show where and when I'm allowed to go.","I have tried two different snow activities at this Stage.","When I come inside, I can put away my outdoor clothing so it will dry quickly.","I have talked about what I enjoyed, learned, or improved upon from at least 2 snow activities.","I can suggest what could be done differently on a future snow hike or activity, to enjoy it more, to be safer, or to learn new things."]],[3,"Stage 3",["I can pack for a day pack for a snow trip.","I know how and where to get the different weather forecasts for the area I will be in for my snow activity.","I know and can explain the effect of weather on Alpine activities.","I understand layering principle when dressing for snow activities.","I can plan a balanced meal for activities on the snow.","I have learned 8 main points of the compass.","I know what DRSABCD stands for and how to use it in First Aid situations","I am familiar with signs and symptoms of hypothermia and hyperthermia.","I have participated in an Alpine sport (eg downhill skiing, cross-country skiing, snowshoeing, snowboarding) at this Stage.","I have completed a journey of at least three kilometres using specialised snow equipment.","I have demonstrated my basic navigation skills during our Alpine sport activity.","I have built an emergency shelter in the snow, with a small Group.","I can teach the importance of the buddy system to a Scout in Stage 1.","I have made a basic First Aid kit that I take with me on all snow activities.","I have discussed with my Patrol ways we can improve safety for our next Alpine adventure.","I can identify Alpine sports skills I would like to learn or improve."]],[4,"Stage 4 — Cross Country Skiing",["I can list conditions that may make skiing more hazardous or difficult.","I know how to obtain and keep a supply of safe drinking water in the Alpine environment.","I know how to identify food and water requirements for day trips including the increased needs arising from a days cross country scheme.","I can read a planned Group itinerary for a proposed skiing trip and take responsibility for bringing or organising some of the equipment.","I can identify various Alpine signs and their meanings for skiers.","I have taught a Stage 2 Scout or below how to dress for the Alpine environment.","I can fit and adjust my own skiing equipment.","I can participate in a ski tour while carrying a day pack that I have packed myself with the gear I require.","I can demonstrate snow ploughing, herringboning, sidestepping while on cross country skis.","I can safely fall over when unable to stop.","I can demonstrate a safe approach to hazards and minimise risks to myself and the Group where possible.","I have taken part in two days of cross country ski touring at this Stage.","I can identify where I have begun to improve my cross country skiing skills and where I would like to further improve.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[4,"Stage 4 — Downhill Skiing",["I can list conditions that make skiing more hazardous or difficult.","I can read a planned Group itinerary for a proposed skiing trip and understand what I am required to do.","I can identify various Alpine signs and their meaning.","I can select suitable clothing and equipment and check that it is in good working order.","I can identify and plan food and water requirements according to principles of nutrition and the conditions of the activity.","I have taught a Stage 2 Scout or below how to dress for the Alpine environment.","I can fit equipment, according to the manufacturer's specification, to ensure comfort and safety.","I can safely fall over when unable to stop.","I can demonstrate a degree of balance, movement, and confidence on beginner terrain, (green runs)","I can control my speed using a snow plough.","I can safely ride a chair lift and other methods of snow transportation.","I can link turns using a snowplough.","I can demonstrate a safe approach to hazards and minimise risks to myself and the Group where possible.","I have taken part in at least two days of downhill skiing at this Stage.","I can identify where I have begun to improve with my downhill skiing skills and where I would like to further improve.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[4,"Stage 4 — Snowboarding",["I can list conditions that make snowboarding more hazardous or difficult.","I can read a planned Group itinerary for a proposed snowboarding trip and understand what I am required to do.","I can identify various Alpine signs and their meaning.","I can select suitable clothing and equipment and check that it is in good working order.","I can identify and plan food and water requirements according to principles of nutrition and the conditions of the activity.","I have taught a Stage 2 Scout or below how to dress for the Alpine environment.","I can fit equipment according to manufacturers specification, to ensure comfort and safety.","I can safely fall over when unable to stop.","I can demonstrate a degree of balance, movement and confidence on a beginner terrain. (green runs)","I can demonstrate straight running with an upright centred stance.","I can apply side-slipping across a slope on both toe and heal side.","I can maintain a slide traverse with centred pressure over the board.","I can safely ride a chair lift and other methods of snow transportation.","I can demonstrate a safe approach to hazards and minimise risks to myself and the Group where possible.","I have taken part in at least two days of snowboarding at this Stage.","I can identify where I have begun to improve with my snowboarding skills and where I would like to further improve.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[4,"Stage 4 — Snow Camping & Snowshoeing",["I can list conditions that may make snow camping and snowshoeing more hazardous or difficult.","I know how to obtain and keep a supply of safe drinking water in the Alpine environment.","I know the main points of minimal impact for snow camping.","I know how to identify food and water requirements for day trips to the snow.","I can read a planned Group itinerary for a proposed snow trip and take responsibility for bringing or organising some of the equipment.","I can identify various Alpine signs and their meaning to snow campers and snowshoers.","I have taught a Stage 2 Scout or below how to dress for the Alpine environment.","I can fit and adjust my own snowshoes.","I can apply ascending and descending techniques to walk on snow covered slopes.","I can adopt an appropriate posture when lifting and carrying a full backpack that I have packed myself.","I have set up a tent in the snow, with a team of other Scouts.","I can demonstrate the approach to hazards safely and minimise risks to self and the Group where possible.","I have taken part in a snow camp at this Stage.","I can identify where I have begun to improve my snow camping and shoeing skills, and where I would like to further improve.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[5,"Stage 5 — Cross-Country Skiing",["I have completed Stage 5 in each of the core Outdoor Adventure Skills.","I can select routes that minimise damage to the environment.","I can identify possible hazards associated with an Alpine environment and I know how to take actions to minimise these risks.","I can prepare equipment for safe transportation to an activity location.","I know where to find information about appropriate ski equipment selection.","I know how my cooking equipment can be affected by snow conditions.","I am able to pack the appropriate clothing and equipment for a two-day ski trip, including knowing how to layer clothing and select the right protective clothing.","I can demonstrate how to select suitable equipment according to design and/or construction features and local environmental issues and cheque that it is in good working order.","I have learnt three further skills to support me navigating in Alpine environments.","I can demonstrate a degree of balance, movement and confidence while cross country skiing.","I can prepare and maintain my own skis during a ski outing.","I have continued to further develop my cross country skiing skills and have incorporated them into my ski trips.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider.","I can adjust my body stance to increase my dynamics while skiing.","I apply speed control whilst traversing and using the shape of the turn.","I can take measures to guard my personal safety and the safety of others whilst skiing.","I have participated in a two-day ski tour.","I have notified the relevant authorities of trip completion.","I can review my own performance and identify potential improvements."]],[5,"Stage 5 — Downhill Skiing",["I have completed Stage 5 in all of the core Outdoor Adventure Skills .","I can access relevant sources to interpret whether an environmental information","I follow defined trails on ski resorts.","I can identify possible hazards associated with an Alpine environment and I know how to take actions to minimise these risks.","I can prepare equipment for safe transportation to an activity location.","I know where to find information about appropriate ski equipment selection.","I am able to pack appropriate clothing and equipment for a weekend ski trip including how to layer clothing and select the right protective clothing.","I can explain the Alpine Responsibility Code, skiing practises, Snowsport area signs and regulations, and Minimal Impact codes to ensure safety and protection of the environment.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider.","I have selected equipment and checked that it is in good working order.","I can demonstrate a degree of balance, movement and Co ordination whilst downhill skiing.","I can adjust my body stance to increase my dynamics whilst skiing.","I can control my speed on beginner terrain (green runs) by traversing and through the shape of my turns.","I can execute basic parallel turns on beginner to intermediate terrain.","I take measures to guard my personal safety and the safety of others while skiing.","I have continued to further develop my downhill skiing skills through a minimum of 6 day skiing by the end of this Stage.","I can review my own performance and identify potential improvements."]],[5,"Stage 5 — Snowboarding",["I have completed Stage 5 in all of the core Outdoor Adventure Skills .","I can access relevant sources to interpret whether an environmental information","I follow defined trails on ski resorts.","I can identify possible hazards associated with an Alpine environment and I know how to take actions to minimise these risks.","I can prepare equipment for safe transportation to an activity location.","I know where to find information about appropriate ski equipment selection.","I am able to pack appropriate clothing and equipment for a weekend ski trip including how to layer clothing and select the right protective clothing.","I can explain the Alpine Responsibility Code, skiing practises, Snowsport area signs and regulations, and Minimal Impact codes to ensure safety and protection of the environment.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider.","I have selected equipment and checked that it is in good working order.","I can demonstrate a degree of balance, movement and coordination while snowboarding.","I can adjust my body stance whilst snowboarding.","I can control my speed on beginner terrain (green runs) by traversing and through the shape of my turns.","I can execute basic parallel turns on beginner to intermediate terrain.","I take measures to guard my personal safety and the safety of others while skiing","I have continued to further develop my downhill skiing skills through a minimum of 6 day skiing by the end of this Stage.","I can review my own performance and identify potential improvements."]],[5,"Stage 5 — Snow Camping & Snowshoeing",["I have completed Stage 5 in all of the core Outdoor Adventure Skills .","I can select routes that minimise damage to the environment.","I can identify possible hazards associated with an Alpine environment and I know how to take actions to minimise these risks.","I know how my cooking equipment can be affected by snow conditions.","I can prepare equipment, where required, for safe transportation to an activity location.","I know where to find information about appropriate Alpine equipment selection.","I am able to pack the appropriate clothing and equipment for a two-day snow camp, including knowing how to layer clothing and select the right protective clothing.","I can demonstrate how to select suitable equipment according to design and/or construction features and local environmental issues, and check that it is in good working order.","I have learnt three further skills to support me in navigating Alpine environments.","I can discuss the various designs of snowshoes and their practical purposes.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider.","I can set up a suitable cooking area in the snow.","I can take measures to guard personal safety and safety of others whilst hiking.","I have hiked with snowshoes for two days in snow conditions following compass bearings.","I have camped for a night in the snow at this Stage.","I have notified the relevant authorities of trip completion.","I can review my own performance and identify potential improvements."]]],"Cycling":[[1,"Stage 1",["I have discussed what the purpose of a helmet is in a cycling environment.","I know how to wear and adjust a helmet.","I know the limits of where I may go each time I go out riding.","I know why to stop when I get lost cycling.","I understand that I should follow directions from a leader.","I know why I should care for my bike and helmet after use.","I know basic road rules relating to riding a bike.","I can show the main parts of a bike (ABC Check).","I know about the 'Buddy' system in relation to cycling.","I can talk about what I enjoyed by participating in a bike ride."]],[2,"Stage 2",["I can explain what clothing I should wear whilst riding.","I can put on my own helmet properly.","Before I start riding, I can show where and when I am allowed to go.","I have explained what impact I can have on local vegetation when riding.","I can pump up my tyres.","I can protect myself when exposed to the weather while outdoors.","I have taken part in a skills activity on a safe enclosed area involving cones, stops, balance, control etc.","I can ride my bike in a straight line.","I have taken part in an least two bike rides.","I have discussed the appropriate action I should take in the case of an accident.","I know how to contact the emergency services.","I have talked about what I enjoy, learnt, or improved upon from at least two bike riding journeys.","I can suggest what could be done differently on a future bike riding journey, to enjoy it more, to be safer, or to learn new things."]],[3,"Stage 3",["I can explain the importance of having the right clothing and gear while riding.","I know which items I should carry with me when riding.","I know how and where to get the latest weather forecast for the area I will be riding in.","I know that I should follow the instructions of the person in charge of the group.","I know what DRSABCD stands for and how to use it in First Aid situations.","I can show you how to test a bike before riding (ABCDQ) test.","I have assembled an in-field repair kit and have taken it on a ride.","I have assisted in repairing a puncture.","I have taken part in a day ride as part of a group.","I can maintain safety while riding in a group on parts, trails or roads.","I know what the legal requirements are for riding in my area.","I have discussed with my Patrol different ways to improve safety for our next bike ride journey.","I have reviewed with my patrol the items included in our in-field repair kit."]],[4,"Stage 4 — Introductory",["I can discuss equipment that I will need on a day ride and how conditions may affect my selection.","I can prepare equipment where required, for safe transportation to an activity location.","I can plan appropriate food and water requirements for my cycling trip.","I know how to select equipment and protective clothing according to expected weather conditions.","I know how to identify bike parts requiring lubrication.","I can conduct routine bike maintenance cheques and repairs.","I can identify possible hazards associated with cycling on a road and procedures to minimise risks and I can take actions to minimise these risks.","I have planned a route for a cycle trip.","I have adjusted my bike to ensure an appropriate riding posture.","I am familiar with the signs and symptoms of hypothermia and hyperthermia.","I know how to adopt appropriate posture and balance when riding.","I can ride in a group safely.","I have demonstrated methods to communicate with motorists and other cyclists.","I can apply smooth and timely gear changes across different terrain features.","I have cleaned my bike and helmet after a cycling trip.","I have taken part in and logged at least five cycling activities (including one full day trip at this Stage).","I can repair a puncture on my bike without assistance.","I can identify where I have begun to improve my cycling skills and where I would like to further improve.","I know how to clean and maintain my bike after a bike ride journey."]],[4,"Stage 4 — Introductory Mountain Biking",["I can prepare equipment, where required, for safe transportation to an activity location.","I can discuss equipment that I will need on a day ride and how conditions may affect my selection.","I know how to select equipment and protective clothing according to expected weather conditions and terrain.","I can plan appropriate food and water requirements for my mountain biking trip.","I know how to identify bike parts requiring lubrication.","I can conduct routine bike maintenance cheques and repairs.","I can identify possible hazards associated with mountain biking and procedures to minimise risks and I know how to take actions to minimise these risks.","I have planned a route for a mountain biking trip.","I have adjusted my bike to ensure an appropriate riding posture.","I am familiar with the signs and symptoms of hypothermia and hyperthermia.","I know how to adopt appropriate posture and balance when riding.","I can see approaching obstacles and can negotiate them in a safe and controlled manner.","I have demonstrated methods to communicate with other mountain bikers.","I have taken part in three activities on off road trails.","I know how to navigate using maps and trail guide resources.","I can ride in a group safely.","I can apply smooth and timely gear changes across different terrain features.","I have cleaned my bike and helmet after a cycling trip.","I can repair a puncture on my bike without assistance.","I can identify where I have begun to improve my mountain biking skills and where I would like to further improve.","I know how to clean and maintain my bike after a bike riding journey."]],[5,"Stage 5 — Introductory",["I know how to choose a bike appropriate for my needs.","I can select routes that minimise damage to the environment.","I can consider requirements for carrying equipment on my bike for an overnight trip.","I can identify cycling tools and spare parts.","I can apply lubrication when required.","I know how to adjust tyre pressure according to the terrain.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider.","I have demonstrated recommend braking techniques for sealed and off road conditions.","I have adjusted my position and body weight to assist in my handling.","I can replace a cable.","I can fix a broken chain.","I know how to take measures to guard personal and group safety.","I have undertaken at least five days of cycling by the end of Stage 5.","I have participated in an overnight cycling trip (that could be supported) at this Stage.","I can demonstrate a comfortable cadence for the terrain encountered.","I have given a presentation about one bike riding journey to my unit."]],[5,"Stage 5 — Introductory Mountain Biking",["I know where two sources of information about bike selection can be gained and have looked into bike selection.","I know how to identify food and water requirements for a day of mountain biking.","I can select routes that minimise damage to the environment.","I know how to clean a bike to prevent damage.","I can identify mountain biking tools and spare parts.","I can apply lubrication when required.","I know how to adjust tyre pressure according to the terrain.","I have assisted in planning a mountain biking trip.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider.","I can apply smooth and timely gear changes and component lockouts across different terrain features.","I have demonstrated recommended braking techniques for downhill and cross country conditions.","I can adopt a comfortable cadence for the terrain encountered.","I know how to navigate trails and apply efficient cornering techniques.","I have undertaken at least five days of mountain biking by the end of Stage 5.","I can replace a cable.","I can fix a broken chain.","I have spent a day exploring a mountain bike trail hub.","I have adjusted my body weight and pedal position to assist in my handling across various terrain.","I have given a presentation about one mountain bike riding journey to my unit."]]],"Vertical":[[1,"Stage 1 — Introductory Skills",["I know what the best types of clothes for a rock activity are and can dress myself for an activity.","I know not to break or damage trees when climbing them.","I know what to do if I get lost at an activity.","I can explain the buddy system.","I have discussed what the purpose of a helmet is.","I know the safety rules for climbing on rocks, trees, fences and man-made structures.","I have been to a rock playground and know how to play safely and cooperatively with others.","I can take care of my personal equipment for the duration of a rock activity.","I know how to wear and adjust a helmet.","I know how to contact the emergency services.","I can talk about what I enjoyed, learned, or improved upon by participating in a rock-based activity."]],[2,"Stage 2 — Basic Skills",["I can discuss what safety precautions you should take before going on a rock activity.","I can put on my own helmet and harness properly.","I have explained what impact I can have on local visitation when participating in rock sports.","I can explain why we do harness and carabiner checks before we begin our rock activity.","I can draw or label a diagram labelling all of the essential equipment required for rock activities.","I know why knotting skills are important for vertical activities.","I have been climbing twice on an artificial wall or natural rock formation.","I have abseiled once at this Stage.","I can protect myself from sun exposure.","I have discussed the appropriate action I should take in case of an accident.","I can show you where I am allowed to climb, before I start climbing.","I can tie 2 knots that will help me in vertical activities.","I have talked about what I enjoyed, learned, or improved upon from at least 2 rock-based activities.","I can suggest what I would do differently on a future rock-based activity to enjoy it more, to be safer, or to learn new things."]],[3,"Stage 3 — Basic Skills",["I know what the risks are for participating in a vertical activity in different weather conditions.","I can explain the importance of wearing the right clothing and gear while participating in a vertical activity.","I know which items I should carry with me when participating in a vertical activity.","I know how and where to get the latest weather forecast for the area I will be climbing in.","I know the safety rules for participating on climbing wall or ropes challenge course.","I can point out a good anchor for a rock activity.","I understand the needs for belays in relation to vertical activities.","I know what DRSABCD stand for and how to apply it in First Aid situations.","I have helped a Stage 1 Scout learn to adjust their helmet.","I have taken part in at least two vertical activities at this Stage.","I have climbed or abseiled a 10 metre wall at this Stage.","I know how to treat cuts and minor bleeding.","I can teach the importance of the buddy system to a younger Scout.","I can demonstrate how to correctly care for carabiners and explain why it is important.","I have correctly tied a re-threaded Figure-of-Eight knot, Vertical Butterfly knot and a Tape knot and can apply them to a vertical activity.","I have discussed with my Patrol ways that we can improve the safety of our rock-based activities."]],[4,"Stage 4 — Introductory Abseiling",["I know what makes a safe and unsafe vertical activity site.","I can prepare equipment, where required, for safe transportation to an activity location.","I can read an itinerary for a proposed abseiling trip and understand what I am required to do.","I know why and where I should wear a helmet for vertical activities.","I have completed all necessary personal and equipment safety cheques prior to commencing an abseiling activity. (ABCDE cheque with buddy)","I can prepare a belay for a proposed abseiling activity.","I know how to care for, handle and store an abseiling rope harness and helmet.","I have discussed different setup techniques for abseils.","I am familiar with the signs and symptoms of hypothermia and hyperthermia","I have revisited my knotting skills and can tie an Vertical Butterfly, re-threaded Figure-of-Eight, Figure-of-Eight on the Bight, Tape knot and a Pursik knot and I can apply them to abseiling activity situations.","I know how wet conditions can affect my safety when abseiling.","I know the communication calls and script to follow between an abseiler and a belayer.","I have taken part in and logged a minimum of two abseiling sessions on different days on either artificial or natural surface at this Stage.","I can thread a descending device to the abseil line and clip onto the line safely.","I can demonstrate the correct posture and technique while abseiling using single and double rope.","I have been top belayed during an abseil.","I can ascend an abseil rope including over an edge.","I can bottom belay another person while they are abseiling.","I have done 10 or more abseils s by the completion of Stage 4.","I can identify improvements for future abseiling activities.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[4,"Stage 4 — Introductory Canyoning",["I know what makes a safe and unsafe Canyon activity.","I can prepare equipment, where required, for safe transportation to an activity location.","I can read an itinerary for a proposed canyoning trip and understand what I am required to do or take and why.","I know why and where I should wear a helmet for Canyon activities.","I have completed all necessary personnel and equipment safety cheques prior to commencing a canyoning activity (ABCDE check with Buddy.)","I can prepare a belay for a proposed canyoning activity.","I know how to care for, handle and store a canyoning rope harness and helmet.","I have discussed different setup techniques for canyons.","I know how weather systems can impact canyoning activities and have discussed options to evacuate when necessary.","I am familiar with the signs and symptoms of hypothermia and hyperthermia.","I know how wet conditions can affect my safety when canyoning.","I know the communication calls and scripts to follow whilst canyoning.","I have taken part in and logged a minimum of two canyoning activities at this Stage one of which is horizontal and one vertical.","I can demonstrate canyoning techniques within a variety of terrain obstacles such as liloing, swimming and wading through rock pools.","I can thread a descending device to the abseil line and clip onto the line safely.","I can demonstrate the correct posture and technique while abseiling using a double rope and in a slippery Canyon.","I can bottom belay or keep an eye on another person while they are abseiling if they are on a self-belay.","I have revisited my knotting skills and can tie an Vertical butterfly, re threaded figure-of-eight, double fisherman's knot, tape knot and a Pursik knot and I can apply them to canyoning activity situations.","I can identify improvements for future canyoning activities.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[4,"Stage 4 — Introductory Caving",["I know what makes a safe and unsafe caving activity site.","I can prepare equipment, where required, for safe transportation to an activity location.","I can read an itinerary for a proposed caving trip and understand what I am required to do.","I know why and where I should wear a helmet for vertical activities.","I have completed all necessary personnel and equipment safety checks prior to commencing caving activity. (ABCDE checks.)","I can prepare belay device for proposed caving activities.","I know how to care for, handle and store caving rope, harness and helmet and other equipment.","I have discussed different setup techniques for caving activities.","I am familiar with the signs and symptoms of hypothermia and hyperthermia.","I know what to do when I become lost in a cave.","I know how wet and dusty conditions can affect my safety when caving.","I know the communication calls and scripts to follow whilst caving.","I have taken part in and logged two caving journeys at this Stage.","I can move efficiently through a cave and negotiate hazards and features.","I have revisited my knotting skills and can tie an Vertical butterfly, re threaded figure-of-eight, double fisherman's knot, tape knot and a Pursik knot and I can apply them to caving activity situations.","I can identify improvements for future caving activities.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[4,"Stage 4 — Introductory Climbing",["I know what makes a safe and unsafe climbing activity site.","I can prepare equipment, where required, for safe transportation to a climbing location.","I can read an itinerary for a proposed climbing trip and understand what I am required to do.","I know why and where I should wear a helmet for climbing activities.","I have completed all necessary personnel and equipment safety check prior to commencing a climb. (ABCDE check with buddy)","I can prepare a belay device for a proposed climbing activity.","I know how to care for, handle and store a climbing rope harness and helmet.","I have discussed different setup techniques for climbing activities.","I am familiar with the signs and symptoms of hypothermia and hyperthermia.","I have revisited my knotting skills and can tie an Vertical butterfly, re threaded figure-of-eight, double fisherman's knot, tape knot and a Pursik knot and I can apply them to climbing activity situations.","I know how wet conditions can affect my safety when climbing.","I know the communication calls and script to follow between a climber and belayer","I have tried different climbing techniques such as smearing, crimping, wedging, layback and mantling.","I have taken part in and logged four climbs on natural surfaces at this Stage.","I know the difference between single-pitch, multi-pitch, top-rope lead, climbing and seconding, and bouldering climbing methods.","I can thread the belay device to keep the climber safe.","I can belay another person while they are climbing.","I can tie myself into the end of the climbing rope.","I have demonstrated good climbing techniques.","I can identify improvements for future climbing activities.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[5,"Stage 5 — Introductory Abseiling",["I know how to identify food and water requirements for day trips.","I can select routes that minimise damage to the environment.","I can identify possible hazards associated with abseiling activity and procedures to minimise risks and I know how to take actions to minimise these risks.","I know where to get information about vertical equipment selection.","I can put together a simple abseil trip itinerary.","I can assist a Stage 3 or below Scout with their knotting skills and have learned two additional knots since Stage 4 that will assist me in abseiling activities.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider.","I can abseil using a self-belay on an easy Abseil.","I can adjust and fit equipment to ensure personal comfort and safety.","I always demonstrate appropriate techniques to minimise damage to the environment while abseiling.","I have conducted an evaluation of relevant aspects of the abseiling activity.","I can list six places to find information to assist with planning and abseiling activity and what sort of information to look for.","I have undertaken at least five activity days of abseiling by the end of Stage 5.","I have demonstrated the correct posture for beginning and abseiling descent to a Stage three or below Scout.","I have assisted in setting up abseils at single-pitch locations.","I have assisted in setting up multiple types of belays for different abseiling trips.","I have belayed other Scouts on different types of belays.","I can safely escape a belay while keeping the abseiler safe.","I know how to pack up rope correctly.","I have completed a minimum of 20 abseils by the completion of Stage 5.","I have given a presentation on an abseiling expedition I have completed to my Unit."]],[5,"Stage 5 — Introductory Canyoning",["I know how to identify food and water requirements for day trips.","I can select routes that minimise damage to the environment.","I can identify possible hazards associated with canyoning activities and procedures to minimise risk and I know how to take actions to minimise these risks.","I know where to get the information about canyoning equipment selection.","I can assist a Stage 3 or below Scout with their knotting skills and have learned two additional knots since Stage 4 that will assist me in canyoning activities.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider.","I can abseil using a self-belay in a Canyon.","I always demonstrate appropriate techniques to minimise damage to the environment whilst canyoning","I have conducted an evaluation of the relevant aspects of the canyon activity.","I can list four places to find information to assist with planning a Canyon activity and what sort of information to look for.","I have demonstrated the correct method of a belay within a Canyon.","I can demonstrate a safe way of doing the following skills in deep rock pools: swimming, wading and liloing","I know how to remain safe around open holes and water in a canyoning system.","I have undertaken at least five days of canyoning by the end of Stage 5 with a minimum of seven canyons completed, across at least four different canyons locations.","I can demonstrate basic chimneying","I have assisted in setting up canyon abseils as single pitch locations.","I can safely escape a belay while keeping the abseiler safe.","I know how to pack up rope correctly in a Canyon environment.","I have given a presentation on a canyoning expedition I have completed to my Unit."]],[5,"Stage 5 — Introductory Caving",["I know how to identify food and water requirements for day trips.","I can select routes that minimise damage to the environment.","I can identify possible hazards associated with caving activities and procedures to minimise risks and I know how to take actions to minimise these risks.","I know where to gain information about caving equipment selection.","I know the dangers associated with foul air in caves. (Carbon Dioxide and Methane.)","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider.","I can explain the precautions to take in a wet cave and how to respond to flooding","I know how to identify foul air in a cave.","I can demonstrate the standard communication conventions used in caving.","I have undertaken at least five days of caving by the end of Stage 5.","I can demonstrate basic chimneying","I can adjust and fit equipment to ensure personal comfort and safety.","I always demonstrate appropriate techniques to minimise damage to the environment while caving.","I have conducted an evaluation of relevant aspects of the caving activity.","I can list six places to find information to assist with planning a caving activity and what sort of information to look for.","I have abseiled in a low light environment in a cave.","I know how to pack up rope correctly.","I can climb a caving ladder.","I have been through a confined space in a cave.","I have given a presentation on a caving expedition I have completed to my Unit."]],[5,"Stage 5 — Introductory Climbing",["I know how to identify food and water requirements for day trips.","I can select routes that minimise damage to the environment.","I can identify possible hazards associated with climbing activity and procedures to minimise risks and I know how to take actions to minimise these risks.","I know where to get information about vertical equipment and selection.","I can put together a simple climbing trip itinerary.","I can assist a Stage 3 or below Scout with their knotting skills.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider.","I can adjust and fit equipment to ensure personal comfort and safety.","I can identify different natural features of a climb.","I can use rest spots on a climb.","I can abseil using a self-belay.","I always demonstrate appropriate techniques to minimise damage to the environment while climbing.","I have conducted an evaluation of relevant aspects of the climbing activity.","I can list six places to find information to assist with planning a climbing activity and what sort of information to look for.","I have undertaken at least five activity days of climbing by the end of Stage 5.","I have demonstrated the climbing techniques to a Stage 3 or below Scout.","I have assisted in setting up a top rope climb.","I have assisted in setting up multiple types of belays for different climbs.","I have belayed other Scouts on different belay devices.","I can safely escape a belay while keeping the climber safe.","I know how to pack up rope correctly.","I understand the concepts, principles, physics and consequences of shock loading inclining.","I have learnt two additional knots since Stage 4 that will assist me in all climbing activities.","I have given a presentation on a climbing expedition I have completed to my Unit."]]],"Aquatics":[[1,"Stage 1",["I can explain what a Personal Flotation Device (PFD) is for.","I can explain the buddy system.","I know how to stay safe while playing around water.","I know how to maintain my position when lost on the water.","I know the importance of adult supervision when swimming and being around water.","I know how to signal for help when in the water.","I can float for 15 seconds and glide for five metres on my front and back without assistance.","I can swim 10 metres (any stroke) without assistance.","I can put my face in the water and blow bubbles.","I can get an object of the bottom of the pool in chest-deep water.","I know three different animals that live in the ocean.","I can practise signalling for help in the water.","I have tried 2 swimming strokes.","I can talk about what I enjoyed by participating in a swimming trip."]],[2,"Stage 2",["Before I go swimming, I can point out where I'm allowed to go.","I can explain how to contact the emergency service, in the event of an emergency.","I can discuss what safety precautions you should take before going swimming.","I can pack a bag with all the clothes and equipment I will need for a swimming trip.","I can discuss different rescue techniques for someone that has fallen in water and cannot swim.","I can put on a PFD by myself.","I can swim with my head in the water.","I can protect myself when exposed to the sun an other elements while outdoors.","I can swim 25 metres (any stroke) without assistance.","I can tread water for 30 seconds.","I have taken part in a short snorkelling activity at this Stage.","I have talked about what I enjoyed, learned, or improved upon from at least two swimming trips.","I can suggest what could be done differently on a future swimming activity, to enjoy it more, to be safer, or to learn new things."]],[3,"Stage 3",["I know what DRSABCD stands for and how to use it in First Aid situations.","I can explain common water safety risks and how to avoid them.","I know how to remove a cramp in my leg with a buddy's help.","I know how and where to get different weather forecasts for outdoor swimming activities.","I know how to treat cuts and minor bleeding.","I can identify the different hazards between bodies of water such as pools, lakes, rivers and oceans.","I can put on and fit a PFD while in the water and use the Heat Exposure Lessening Position (HELP) and huddle positions.","I can swim 50 metres in a pool (using any stroke).","I can jump feet first into water that is above my head, then swim at least 25 metres without kicking off from a side or wall.","I can show three ways to rescue someone who has fallen into deep water and can't swim.","I can teach the importance of the buddy system to a Scout in Stage 1.","I can tread water for one and a half minutes.","I have discussed with my Patrol what I have learned about swimming safety from two swimming trips."]],[4,"Stage 4 — Snorkelling",["I am familiar with the signs and symptoms of hypothermia and hyperthermia.","I know what gear is necessary for a snorkelling adventure, including protective clothing, masks and sunscreen.","I know why ear equalisation is necessary when snorkelling and diving at depth.","I know the importance of not going snorkelling alone, and of notifying others of my plans before leaving.","I can swim on the surface of a pool or open water (such as a lake) for 50METRES using a mask fins and a snorkel.","I can breathe through a snorkel and adjust my mask to fit comfortably.","I have snorkelled in open water and observed at least one marine or aquatic creature.","I can recognise the signs of a panic snorkeler or diver and know how to call for help.","I can swim for 100 metres without stopping (any stroke).","I have completed two days of snorkelling by the end of Stage 4.","I can identify improvements that could be made for future snorkelling activities I participate in or lead.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[4,"Stage 4 — Lifesaving",["I can give a short talk to less experienced Scouts on water safety as it applies to them in particular about keeping themselves safe.","I can explain the hazards of taking deep breaths and holding your breath (shallow water blackout).","I am familiar with the signs and symptoms of hypothermia and hyperthermia.","I am able to list five different situations that could be classified as an emergency in an aquatic environment.","I can swim 25M fully clothed before removing the clothes without touching the bottom of an open body of water.","I can perform a rescue drill in the water.","I can tread water continuously for three minutes.","I can put on and remove a PFD in deep water.","I can recognise other signs of a person with difficulty in water including vertical body position, gasping for air, ineffective or lack of limb movements or remaining submerged.","I have demonstrated using a buoyancy aid to support a tied swimmer and then towed the patient, maintaining clear Airways.","I can identify where I have begun to improve my responses to incidents, and where I would like to further improve.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[4,"Stage 4 — Surfing",["I am familiar with the signs and symptoms of hypothermia and hyperthermia.","I know the importance of not going surfing alone, and of notifying others of my plans before leaving.","I know what gear is required for a surfing adventure, including protective clothing, board and sunscreen.","I can discuss surfer etiquette before heading out on a surf activity.","I understand what precautions to take in regards to marine life whilst surfing.","I can observe surfing etiquette when catching and riding waves.","I can trim along a broken or peeling wave up to half a metre deep","I can demonstrate how to propel the board through broken and unbroken waves and flat water whilst heading out to a wave with a leg rope attached, where applicable.","I have demonstrated correct dismount drill in both the prone and standing positions.","I have tried to catch a wave of around half a metre in height.","I have completed two days of surfing by the end of Stage 4.","I have checked equipment for damage and discussed if it needs to be repaired or replaced.","I can identify improvements in my technique for future surfing activities."]],[5,"Stage 5 — Snorkelling",["I know how to identify food and water requirements for day trips.","I can select snorkelling routes that minimise damage to the environment.","I can identify possible hazards associated with snorkelling and procedures to minimise risks.","I know where sources of information about snorkelling equipment selection can be gained.","I can help choose a suitable snorkelling destination.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider","I can be an active member of my team while snorkelling.","I can swim 200 metres on the surface wearing snorkelling equipment.","I can snorkel safely within a group using appropriate gear as required.","I can inform appropriate authorities before the snorkelling trip.","I can duck dive with snorkel and mask to 1.5 metres and fetch an item from the bottom.","I have undertaken at least five days of snorkelling by the end of stage 5.","upon surfacing from a duck dive I can clear my snorkel without lifting my head out of the water.","I have taken photos of some marine life that I have seen while snorkelling.","I have notified the relevant authorities of trip completion.","I can review my own snorkelling ability and identify potential improvements."]],[5,"Stage 5 — Lifesaving",["I know how to deal with an incident injury or illness in an outdoor location and how to summon help.","I can demonstrate to a group of Scouts how to safely remove an unconscious person from a body of water.","I can identify possible hazards associated with surfing or swimming in the ocean, lake or river (wherever is applicable to you) and procedures to minimise risks.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider","I can swim 300 metres continuously using correct techniques: 100 M freestyle 50m backstroke 50m breaststroke 50m side stroke 50m survival backstroke.","I can perform a rescue using a long object throwing a flotation object and weighted rope over a distance of 10 metres within a time limit of one minute.","I can fit a PFD correctly while treading water swim 100 metres using survival strokes demonstrate HELP (heat escape lessening posture) technique and climb out of the water whilst wearing the PFD.","I have completed a mock incident report.","I can review my own incident response performance and identify potential improvements."]],[5,"Stage 5 — Surfing",["I know how to identify food and water requirements for a surfing session.","I can select beach access routes that minimise damage to the environment.","I can identify possible hazards associated with surfing and procedures to minimise risks.","I know where sources of information about surfing equipment selection can be gained.","I can help choose a suitable surfing destination.","I can outline safety procedures and safe areas and/or boundaries for the surfing session.","I understand how to deal with marine creatures if I interact with them.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider","I can demonstrate monitoring basic manoeuvres and surfing techniques to ensure the safety of myself and other participants.","I can catch broken waves demonstrating control and basic surfing manoeuvres without wiping out.","I understand the effect of wind, tide, swell and ocean floors on surf conditions and adapt my activities to suit.","I can implement a suitable communication system for participants to use while surfing.","I understand surf survival skills and can demonstrate self rescue techniques.","I have undertaken at least five days of surfing by the end of stage 5.","I can demonstrate assessing equipment for safety and suitability and adjust and fit to ensure personal comfort.","I can review my own surfing skills development and identify potential improvements."]]],"Boating":[[1,"Stage 1 — Introductory Skills",["I can dress myself for a boating trip.","I can explain the buddy system.","I know what a PFD is and why I have to wear one when on a boat.","I know how to stay with my buddy and the boat if it tips over.","I can take care of my equipment for the duration of a boating trip.","I can tie a reef knot.","I can swim 10 metres with a PFD.","I can explain the risks of exposure to weather.","I can get in and out of my watercraft safely.","I have taken part in a short boating adventure of at least one hour.","I can show where the bow and stern are on a boat.","I can talk about what I enjoyed by participating in a boating trip."]],[2,"Stage 2 — Basic Water Skills",["I can select the correct PFD for me.","I can put on an adjust my PFD.","I can discuss what safety precautions we should take before going out on the water.","I can explain the importance of wearing the right clothing and safety gear while boating.","I can describe four appropriate actions I should take if I capsize a sailboat or rowboat.","I know how to signal for help.","I can label a diagram describing all of the essential equipment required for boating activities.","I can tie a knot that will help me on a boating trip.","I can swim 25 metres wearing my PFD.","I can protect myself when exposed to the sun and other elements.","I can rig my boat with help and then practise getting into and out of my boat safely.","I have taken part in at least two boating trips at this Stage.","I can show you where I should sit in my boat and I know my role when I'm in the boat.","I can demonstrate how to clean down my boat before storing it.","I have talked about what I enjoyed, learned, or improved upon from at least two boating trips.","I can suggest what could be done differently on a future boating activity, to enjoy it more, to be safer, or to learn new things."]],[3,"Stage 3 — Basic Water Skills",["I know what DRSABCD stand for and how to use it in First Aid situations.","I can know what the risks are for boating in different weather conditions.","I have explained what impact I can have on the local environment when boating.","I know which personal items I should carry with me when boating.","I know how and where to get the latest weather forecast for the area I will be boating in.","I have discussed basic water safety while participating in boating activities as it applies to my State and Branch.","I can identify six types of naturally powered watercraft.","I have helped a low Stage Scout learn to put their PFD on.","I have learnt 3 knots that will help me in a boating situation.","I can name six different parts of a boat and or oar.","I know the difference between a tack and a gybe.","I have taken part in at least five boating trips by the end of Stage 3.","I can get back into my sailboat, rowboat or windsurfer from the water with help from someone else.","I can swim and demonstrate the HELP and huddle positions while in the water wearing a PFD.","I can swim 50 metres with my PFD on using any stroke.","I can teach the importance of the buddy system to a Scout in Stage 1.","I have discussed with my Patrol what I have learnt about boat safety from two boating trips"]],[4,"Stage 4 — Introductory Sailing",["I am familiar with the signs and symptoms of hypothermia and hyperthermia.","I ensure sufficient fluids are available for the duration of the activity.","I can read an itinerary for a proposed small sailing boat trip and understand what I am required to do.","I can identify the equipment I am required by law to have with me while boating.","I can prepare equipment, where required, for safe transportation to an activity location including the requirements to rig the boat.","I can name 15 different parts of a small sailboat what they do and what they are needed for.","I can explain how damaged centre boards can affect my sailing performance.","I have prepared my Patrol a small sailboat for towing on the water.","I have taken part in and logged at least two small sailboat trips at this Stage.","I have assisted to steer a small sailboat going upwind or downwind at this Stage.","I have learned a minimum of four sailing principles during Stage 4 and have demonstrated an understanding of them while on the water.","I have assisted with rigging a sail and can name three types of sails and the parts of those sails.","I have been part of a crew and can work the jib sheet under instruction.","I can interpret navigation Marks and know how to maintain a lookout.","I have taken part in a capsized training drill in deep water.","I have assisted with anchoring a small boat.","I have demonstrated methods to communicate effectively with other crew members.","I can identify where I have begun to improve my sailing skills and where I would like to further improve.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[4,"Stage 4 — Windsurfing",["I am familiar with the signs and symptoms of exposure.","I ensure sufficient fluids are available for the duration of the activity.","I can read an itinerary for a proposed windsurfing activity and understand what I am required to do.","I can identify the equipment I am required by law to have with me while windsurfing.","I can prepare equipment where required, for safe transportation to an activity location.","I know how the maintenance of a windsurfer needs to be conducted.","I can explain how damaged centre boards can affect my boating performance.","I can successfully uphaul the rig and maintain the V position for windsurfing","I can demonstrate how to steer a windsurfer going upwind or downwind.","I have taken part in and logged at least two windsurfing activities at this Stage.","I know how to adopt appropriate posture and balance when sailing a windsurfer.","I have demonstrated methods to communicate effectively with other windsurf sailors.","I can interpret marine navigation warnings to avoid incidences.","I can identify where I have begun to improve my windsurfing skills, and where I would like to further improve.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[5,"Stage 5 — Introductory Sailing",["I know how to identify food and water requirements for day trips.","I can select routes that minimise damage to the environment.","I can identify possible hazards associated with sailing and procedures I can take to minimise the risks.","I have planned a date of small boat sailing taking into consideration all personal and Group equipment and all requirements for the trip.","I have learned another two knots since completing Stage 3 that will help me while sailing and have assisted a Stage 3 Scout in learning their knots.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider","I can steer my small Sailcraft to come alongside another object and can make a jetty or beach approach.","I have steered a small Sailcraft on all points of sailing.","I have helped a Stage two or three Scout explain the basic safety rules for being near water.","I have reefed a sail, sailed with a reefed sail and take it out a reef.","I have created and used a float plan.","I can explain the collision regulations for sailing.","I can steer a crewed rowing boat using the correct rowing orders - or - I have demonstrated steering a sailboat upwind, bearing off, reaching and going downwind.","I can perform controlled gybes while sailing downwind and know how to avoid unexpected gybes.","I can explain local weather patterns and signs of bad weather.","I can load a boat with crew and equipment and trim it correctly.","I have demonstrated competence at all roles on board.","I have demonstrated proper Man Over Board (MOB) procedures while on the water.","I have demonstrated an ability to set the sails using tell tales and leech tails to respond to wind conditions.","I have undertaken at least five days of sailing on safe familiar waters by the end of Stage 5.","I have assisted with basic boat maintenance tasks.","I can manoeuvre the sailboat properly when giving the proper commands to the crew.","I have participated in a sailboat towing situation.","I have helped my crew to understand the importance of looking after the boat and rigging, including washing and storing the sails appropriately.","I have discussed with my crew what we did well and what we could learn from, to enhance the next sailing trip."]],[5,"Stage 5 — Windsurfing",["I know how to identify food and water requirements for windsurfing activities.","I can select windsurfing activity routes that minimise damage to the environment.","I can identify possible hazards associated with windsurfing and procedures to minimise risks and I know how to take actions to minimise these risks.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider","I have helped a Stage2 or 3 Scout explain the basic safety rules for being near water.","I know how to create and use a float plan for a windsurfing activity.","I can explain the rules established to avoid collision.","I can inspect a rigged windsurfer and identify faulty parts.","I have demonstrated steering a windsurfer heading upwind, or bearing off and going downwind, depending on wind conditions and direction.","I can demonstrate a self rescue with my windsurfer.","I have undertaken at least five days of windsurfers sailing on safe familiar waters by the end of Stage 5.","I can manoeuvre a windsurfer around a triangular course.","I can review my own windsurfing performance and identify potential improvements.","I am aware of what to do in the event of an incident whilst windsurfing."]]],"Paddling":[[1,"Stage 1",["I can explain what a PFD is for.","I can dress myself for a paddling trip.","I can explain the buddy system.","I can swim 10 metres with a PFD.","I can float with my PFD for two minutes.","I can explain basic risks of cold water.","I know what a forward and backward stroke are.","I can demonstrate the forward and backward stroke.","I have taken part in a short paddling adventure of at least one hour.","I can take care of my equipment for the duration of a paddling trip.","I can show where the bow and stern are in a canoe or kayak.","I can talk about what I enjoyed by participating in a paddling trip."]],[2,"Stage 2",["I can put on an adjust my PFD.","I have explained some of the ways that I could have an impact on the environment where I am paddling.","I can list the appropriate action I should take if I capsize in a canoe or kayak.","I can discuss what safety precautions you should take before going out on the water.","I know how to contact the emergency services.","I can draw and label a diagram describing all of the essential equipment required for paddling activities.","I have learned 1 knot that will help me in a paddling situation.","I have learned about two other strokes.","I can swim 25 metres wearing my PFD.","I can protect myself when exposed to the sun while outdoors on a paddling trip.","I know what to do when lost on the water.","I can demonstrate a forward and backward stroke and paddle in a straight line.","With help from my team, other Scouts, or my Leader, I can paddle my canoe or kayak for the duration of a paddling trip.","I have taken part in at least two paddling activities at this Stage.","I can name the important parts of a canoe or kayak.","Before I launch my watercraft, I can show where I am allowed to go paddling.","I can demonstrate how to clean down my watercraft before storing it.","I have talked about what I enjoyed, learned, or improved upon from at least three paddling trips.","I can suggest what could be done differently on a future paddling activity, to enjoy it more, to be safer, or to learn new things."]],[3,"Stage 3",["I know what the risks are for paddling in different weather conditions.","I can explain the importance of wearing the right clothing and gear while paddling.","I know which items I should carry with me when paddling.","I know how and where to get the latest weather forecast for the area I will be paddling in.","I have learnt an additional stroke to assist with my paddling.","I can identify two different types of rescue techniques for a boat that has capsized.","I know different forms of communication to use between paddlers while on the water.","I can identify common waterways markers.","I know what DRSABCD stand for and how to use it in First Aid situations.","I can get in and out of my watercraft safely.","I can secure my watercraft on the shore.","I know how to choose a paddle that is the correct size.","I have helped a Stage 1 paddler learn to put their PFD on.","I have taken part in at least two paddling activities at this Stage.","I can paddle my watercraft in the direction of travel whether straight or around objects and shorelines.","I have been a part of a raft-up drill on the water and can explain its uses.","I have capsized a canoe while sitting in it.","I can get back into my canoe or kayak with help from someone in another watercraft if my watercraft capsized.","I can swim 50 metres with my PFD on using any stroke.","I can teach the importance of the buddy system to a less experienced Scout.","I have discussed with my Patrol what I have learned about paddling safety from two paddling trips."]],[4,"Stage 4 — Introductory Canoe",["I have helped a Stage two paddler to explain the basic safety rules for being near water.","I can read an itinerary for a proposed canoeing trip and understand what I am required to do.","I can explain how canoes and paddles can be damaged.","I can identify the equipment I am required, by law, to have with me while canoeing.","I can prepare equipment, where required, for safe transportation to an activity location.","I have learnt a knot that will help me in a paddling rescue situation.","I understand how to keep a Group together while canoeing.","I can point out where the systems are dangerous when paddling.","I can swim and demonstrate the HELP and huddle positions while in the water wearing a PFD.","I am familiar with the signs and symptoms of hypothermia and hyperthermia","I can trade places with my canoeing partner while on the water staying in our watercraft.","I have taken part in and logged at least 2 canoes activities at this Stage.","I can demonstrate how to plan a day trip using a map or a chart of the area.","I can demonstrate basic canoe strokes (e.g. forward, reverse, draw, stop and sweep).","I can launch my canoe in a controlled manner and maintain balance.","I can identify where I have begun to improve my canoeing skills, and where I would like to further improve.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[4,"Stage 4 — Introductory Kayak",["I have helped a Stage two paddler to explain the basic safety rules for being near water.","I can read an itinerary for a proposed kayaking trip and understand what I am required to do.","I can explain how kayaks and paddles can be damaged.","I can identify the equipment I am required, by law, to have with me while kayaking.","I can prepare equipment, where required, for safe transportation to an activity location.","I have learnt a knot that will help me in a paddling rescue situation.","I understand how to keep a Group together while kayaking.","I can point out where the systems are dangerous when paddling.","I can swim and demonstrate the HELP and huddle positions while in the water wearing a PFD.","I am familiar with the signs and symptoms of hypothermia and hyperthermia","I can stand up in my kayak and trade kayaks with someone else without getting in the water.","I have taken part in and logged at least 2 kayaking activities at this Stage.","I can demonstrate how to plan a day trip using a map or a chart of the area.","I can demonstrate basic kayak strokes (e.g. forward, reverse, draw, sweep and rudder).","I can launch my kayak in a controlled manner and maintain balance.","I can identify where I have begun to improve my kayaking skills, and where I would like to further improve.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[4,"Stage 4 — Introductory Sea Kayak",["I have helped a Stage two paddler to explain the basic safety rules for being near water.","I can read an itinerary for a proposed sea kayaking trip and understand what I am required to do.","I can explain how kayaks and paddles can be damaged.","I can identify the equipment I am required, by law, to have with me while sea kayaking.","I can prepare equipment, where required, for safe transportation to an activity location.","I have learnt a knot that will help me in a paddling rescue situation.","I understand how to keep a Group together while sea kayaking.","I can point out where the systems are dangerous when paddling.","I can swim and demonstrate the HELP and huddle positions while in the water wearing a PFD, away from shore at the beach or in an open body of salt water.","I am familiar with the signs and symptoms of hypothermia and hyperthermia","I can stand up in my kayak and trade kayaks with someone else without getting in the water.","I have taken part in and logged at least 2 sea kayaking activities at this Stage.","I can demonstrate how to plan a day trip using a map or a chart of the area.","I can demonstrate basic kayak strokes (e.g. forward, reverse, draw, sweep and rudder).","I can demonstrate using a rudder while kayaking or rudder stroke.","I can launch my sea kayak in a controlled manner and maintain balance.","I can identify where I have begun to improve my sea kayaking skills, and where I would like to further improve.","I have checked equipment for damage and discussed if it needs to be repaired or replaced."]],[5,"Stage 5 — Introductory Canoe",["I know how to identify food and water requirements for multi day trips.","I can select routes that minimise damage to the environment.","I can identify possible hazards associated with canoeing and procedures to minimise risks and I know how to take actions to minimise these risks.","I know where to source information about canoe selection.","I have a basic waterways knowledge (e.g. tides, eddies, flow)","I can identify different waterways markers.","I know where to find waterways regulations and can point out two things I didn't already know when participating in watercraft activities.","I know what safety and communications equipment I should have with me while on a paddling journey and can demonstrate their uses.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider","I have participated in at least one 2-day canoeing trip.","I can demonstrate a self rescue with my canoe to a Stage three Scout or below.","I condemn straight I self rescue with my canoe to a Stage three Scout or below.","I have participated in a canoe-over-canoe rescue as both a rescuer and the one being rescued.","I can assist Stage three paddlers to get back into their swamped watercraft.","I can help paddlers at Stage three or below identify the parts of their paddle and their canoe.","I have participated in being towed in my canoe.","I can use all of my previously learnt strokes and can demonstrate a J-stroke and support strokes for canoeing.","I have notified the relevant authority of trip completion.","I can review my own canoeing performance and identify potential improvements."]],[5,"Stage 5 — Introductory Kayak",["I know how to identify food and water requirements for multi day trips.","I can select routes that minimise damage to the environment.","I can identify possible hazards associated with kayaking and procedures to minimise risks and I know how to take actions to minimise these risks.","I know where to source information about kayaking selection.","I have a basic waterways knowledge (e.g. tides, eddies, flow)","I can identify different waterways markers.","I know where to find waterways regulations and can point out two things I didn't already know when participating in watercraft activities.","I can identify the use for a kayak role and can name two different versions.","I know what safety and communications equipment I should have with me while on a paddling journey and can demonstrate their uses.","I have successfully completed a Provide First Aid (including CPR) course from a recognised provider","I have participated in at least one 2 day kayaking trip.","I have helped prepare an emergency plan and a flight plan with a more experienced kayaker for a trip.","I can demonstrate a self rescue with my kayak to a Stage three or below Scout.","I can apply deep water reentry techniques.","I can assist Stage three paddlers to get back into their swamped watercraft.","I can help paddlers at Stage three or below identify the parts of their paddle and their kayak.","I have participated in being towed in my kayak.","I can use all of my previously learnt strokes and can demonstrate a rudder and support strokes for kayaking.","I have notified the relevant authority of trip completion.","I can review my own kayaking performance and identify potential improvements."]],[5,"Stage 5 — Introductory Sea Kayak",["I know how to identify food and water requirements for multi day trips.","I can select routes that minimise damage to the environment.","I can identify possible hazards associated with sea kayaking and procedures to minimise risks and I know how to take actions to minimise these risks.","I know where to source information about sea kayak selection","I have basic waterways knowledge (e.g tides, eddies, flow)","I can identify different waterways markers.","I know where to find waterways regulations and can point out two things I didn't already know when participating in watercraft activities.","I can identify the use for a kayak role and can name two different versions.","I know what safety and communications equipment I should have with me while on a paddling journey and can demonstrate their uses.","I have successfully completed a provide First Aid (including CPR) course from a recognised provider.","I've participated in at least one 2 day sea kayaking trip.","I have helped prepare an emergency plan and a float plan with a more experienced sea kayaker for a trip.","I can demonstrate a self rescue with my sea kayak.","I can apply deep water re entry techniques.","I can assist Stage three paddlers to get back into their swamped watercraft.","I can help paddlers at Stage two identify the parts of their paddle and their kayak.","I have participated in being towed in my kayak.","I can use all my previously learnt strokes and can use support strokes for kayaking.","I have notified the relevant authority of trip completion.","I can review my own sea kayaking performance and identify potential improvements."]]]};
+const AREAS=['Community','Creative','Outdoors','Personal Growth'];
+const AREA_VAR={Community:'--c-community',Creative:'--c-creative',Outdoors:'--c-outdoors','Personal Growth':'--c-growth'};
+const MS={1:{P:6,A:2,L:1},2:{P:5,A:3,L:2},3:{P:4,A:4,L:4}};
+const WK_TYPES=['Activity','Planning','Risk Assessment','Badge Night'];
+const EV_TYPES=['Camp','Hike','Weekend Activity','Other'];
+const STREAMS=['Bushcraft','Bushwalking','Camping','Alpine','Cycling','Vertical','Aquatics','Boating','Paddling'];
+const SIA_AREAS=['Adventure & Sport','Arts & Literature','Creating a Better World','Environment','Growth & Development','STEM & Innovation'];
+const PEAK_PARTS=['M1','M2','M3','OAS','SIAs','Journey','Project'];
+const KM_BADGES=[10,50,100,150,200,300,400,500,750,1000];
+const NIGHT_BADGES=[10,25,50,75,100,150,200,250,300];
+const SEED=[
+  {name:"Ailia List",memberNo:"155207",priorKm:100,priorNights:25},
+  {name:"Ashton Baker",memberNo:"144791",priorKm:100,priorNights:25},
+  {name:"Ben Kelly",memberNo:"136717",priorKm:100,priorNights:25},
+  {name:"Jesse Rujic",memberNo:"149622",priorKm:10,priorNights:10},
+  {name:"Katie Williams",memberNo:"132759",priorKm:400,priorNights:50},
+  {name:"Stephanie Baxter",memberNo:"124711",priorKm:200,priorNights:25},
+  {name:"Tyler Caelli",memberNo:"149827",priorKm:100,priorNights:0},
+  {name:"William Gomersall",memberNo:"156063",priorKm:150,priorNights:0},
+  {name:"Kobie Bennett",memberNo:"170510",priorKm:0,priorNights:0},
+  {name:"Cooper Wheatly",memberNo:"170428",priorKm:0,priorNights:0},
+  {name:"Morrison Kingston",memberNo:"",priorKm:0,priorNights:0}
+];
+
+const Store=(()=>{
+  const cloud=(typeof window!=='undefined'&&window.storage)?window.storage:null;
+  const mem={};
+  return {
+    async get(k){try{if(cloud){const r=await cloud.get(k);return r?r.value:null;}
+      return localStorage.getItem(k);}catch(e){return mem[k]??null;}},
+    async set(k,v){try{if(cloud){await cloud.set(k,v);return;}localStorage.setItem(k,v);}
+      catch(e){mem[k]=v;}}
+  };
+})();
+
+let S={view:'tonight',roster:[],year:null,welcome:null,contacts:[],msgText:'',msgSel:{},nights:[],night:null,lastNight:null,_focus:null};
+const uid=()=>Math.random().toString(36).slice(2,9);
+const todayISO=()=>new Date().toISOString().slice(0,10);
+function fmtD(iso){return new Date(iso+'T00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'});}
+function cssv(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function freshNight(){return {v:4,step:1,date:todayISO(),weekId:'',activity:'',areas:[],stream:'',openGroup:0,
+  targetSkills:[],present:[],credits:{},skillsDone:{},logKm:false,logNights:false,kmLog:{},nightsLog:{},
+  signedBy:'',saved:false};}
+const TERM_DEFS=[['Term 1','2026-02-02',9],['Term 2','2026-04-20',11],['Term 3','2026-07-20',10],['Term 4','2026-10-12',10]];
+function termForDate(d){let idx=0;TERM_DEFS.forEach((t,i)=>{if(d>=t[1])idx=i;});return idx;}
+function freshTermN(i){
+  const len=TERM_DEFS[i][2],items=[];
+  for(let k=0;k<len;k++)items.push({id:uid(),kind:'week',type:'Activity',activity:'',areas:[]});
+  if(len>=3){items[len-3].type='Planning';items[len-2].type='Risk Assessment';items[len-1].type='Badge Night';}
+  return {label:TERM_DEFS[i][0],startDate:TERM_DEFS[i][1],items};
+}
+function freshYear(){return {v:1,cur:null,viewT:termForDate(todayISO()),terms:[0,1,2,3].map(freshTermN),events:[]};}
+function migrateOldTerm(t){
+  if(t&&t.v===2)return t;
+  if(t&&t.weeks)return {v:2,currentId:null,
+    items:t.weeks.map(w=>({id:uid(),kind:'week',type:w.type||'Activity',
+      activity:w.activity||'',areas:w.area?[w.area]:[]}))};
+  return null;
+}
+function migrateYear(y,oldT){
+  if(y&&y.v===1){if(y.viewT==null)y.viewT=termForDate(todayISO());if(!y.events)y.events=[];return y;}
+  const yr=freshYear();
+  const t=migrateOldTerm(oldT);
+  if(t){
+    const idx=t.startDate?termForDate(t.startDate):termForDate(todayISO());
+    yr.terms[idx]={label:TERM_DEFS[idx][0],startDate:t.startDate||TERM_DEFS[idx][1],items:t.items};
+    if(t.currentId)yr.cur={t:idx,id:t.currentId};
+    yr.viewT=idx;
+  }
+  return yr;
+}
+function viewTerm(){return S.year.terms[S.year.viewT];}
+function planFind(id){
+  for(let i=0;i<4;i++){const it=S.year.terms[i].items.find(x=>x.id===id);if(it)return{it,t:i};}
+  const ev=S.year.events.find(x=>x.id===id);if(ev)return{it:ev,t:-1};
+  return{it:null,t:-1};
+}
+function planContainer(id){
+  for(let i=0;i<4;i++){if(S.year.terms[i].items.some(x=>x.id===id))return S.year.terms[i].items;}
+  if(S.year.events.some(x=>x.id===id))return S.year.events;
+  return null;
+}
+function desigFor(n){
+  const yd=(n.date||todayISO()).charAt(3);
+  const f=n.weekId?planFind(n.weekId):{it:null,t:-1};
+  const it=f.it;
+  const fromAreas=a=>(!a||a.length!==1)?'X':({'Community':'C','Creative':'E','Outdoors':'O','Personal Growth':'G'}[a[0]]||'X');
+  let letter;
+  if(it&&it.kind==='event')letter=({'Camp':'K','Hike':'H'})[it.type]||'W';
+  else if(it&&it.type!=='Activity')letter=({'Planning':'P','Risk Assessment':'R','Badge Night':'B'})[it.type]||'X';
+  else letter=fromAreas(n.areas);
+  let tno,nno;
+  if(it&&f.t>=0){tno=f.t+1;let wn=0;nno=0;
+    for(const x of S.year.terms[f.t].items){if(x.kind==='week')wn++;if(x.id===it.id){nno=wn;break;}}}
+  else if(it){tno=0;nno=S.year.events.findIndex(x=>x.id===it.id)+1;}
+  else{tno=termForDate(n.date||todayISO())+1;nno=99;}
+  return 'S'+yd+letter+'-'+String(tno*100+Math.min(nno,99)).padStart(3,'0');
+}
+function applyCurrent(n){
+  const it=S.year.cur?planFind(S.year.cur.id).it:null;
+  if(!it){n.weekId='';return;}
+  n.weekId=it.id;
+  if(it.kind==='event'){n.activity=it.activity||it.type;n.areas=[...(it.areas||[])];
+    if(it.type==='Hike')n.logKm=true;if(it.type==='Camp')n.logNights=true;}
+  else if(it.type==='Activity'){n.activity=it.activity||'';n.areas=[...(it.areas||[])];}
+  else{n.activity=it.type+' Night';n.areas=it.type==='Planning'?['Personal Growth']:[];}
+  if(it.roles){n.credits={};Object.entries(it.roles).forEach(([sid,r])=>{
+    if(r==='L'||r==='A')n.credits[sid]={t:r,a:n.areas[0]||''};});}
+}
+function nightFromCurrent(){const n=freshNight();applyCurrent(n);return n;}
+function itemLabel(it){
+  if(!it)return'';
+  const f=planFind(it.id);
+  if(it.kind==='event'){
+    const pre=f.t>=0?('T'+(f.t+1)+' · '):'';
+    return pre+(it.type||'Event')+': '+(it.activity||'unnamed');
+  }
+  if(f.t<0)return '';
+  let wn=0;for(const x of S.year.terms[f.t].items){if(x.kind==='week')wn++;if(x.id===it.id)break;}
+  return 'T'+(f.t+1)+' · Week '+wn+(it.type!=='Activity'?' · '+it.type:'');
+}
+function skillName(id){
+  const p=id.split('|');if(p[0]==='c')return null;
+  const arr=OAS_SKILLS[p[0]];if(!arr)return null;
+  const grp=arr[+p[1]];if(!grp)return null;
+  return grp[2][+p[2]]||null;
+}
+function weekDate(term,wn){
+  if(!term||!term.startDate)return'';
+  const d=new Date(term.startDate+'T00:00');
+  d.setDate(d.getDate()+7*(wn-1));
+  return d.toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+}
+function chevSVG(state,extra){
+  return `<svg class="chv ${state}${extra?' '+extra:''}" viewBox="0 0 30 28">`
+    +`<path class="cf" d="M15 26.5 L1.5 8.5 L7 2.5 L15 13 L23 2.5 L28.5 8.5 Z"/>`
+    +`<path class="cl" d="M15 20.5 L8.6 9.6 L21.4 9.6 Z"/></svg>`;
+}
+
+async function load(){
+  const r=await Store.get('muster.roster');
+  S.roster=r?JSON.parse(r):SEED.map(s=>({id:uid(),name:s.name,section:'Scout',peak:false,milestone:1,memberNo:s.memberNo||'',sias:[],priorKm:s.priorKm||0,priorNights:s.priorNights||0,peakSteps:[false,false,false,false,false,false,false]}));
+  S.roster.forEach(s=>{if(!s.sias)s.sias=[];if(s.priorKm==null)s.priorKm=0;if(s.priorNights==null)s.priorNights=0;if(s.memberNo==null)s.memberNo="";if(!s.peakSteps)s.peakSteps=[false,false,false,false,false,false,false];
+    if(s.g1name==null)s.g1name='';if(s.g1phone==null)s.g1phone='';
+    if(s.g2name==null)s.g2name='';if(s.g2phone==null)s.g2phone='';
+    if(s.medical==null)s.medical='';});
+  const y=await Store.get('muster.year');
+  const oldT=y?null:await Store.get('muster.term');
+  S.year=migrateYear(y?JSON.parse(y):null,oldT?JSON.parse(oldT):null);
+  if(S.year.cur&&!planFind(S.year.cur.id).it)S.year.cur=null;
+  const w=await Store.get('muster.welcome');S.welcome=w?JSON.parse(w):seedWelcome();
+  if(!S.welcome.faqs)S.welcome.faqs=[];if(!S.welcome.invest)S.welcome.invest=[];if(!S.welcome.files)S.welcome.files=[];
+  const c=await Store.get('muster.contacts');S.contacts=c?JSON.parse(c):[];
+  const n=await Store.get('muster.nights');S.nights=n?JSON.parse(n):[];
+  const d=await Store.get('muster.night');const nd=d?JSON.parse(d):null;
+  S.night=(nd&&nd.v===4&&!nd.saved)?nd:nightFromCurrent();
+  save('year');
+}
+function seedWelcome(){return {
+  faqs:[
+    {id:uid(),q:'What does it cost?',a:'Add the current registration fee and term fees here once confirmed with Tracey.'},
+    {id:uid(),q:'What do they wear before being invested?',a:'Casual clothes and closed shoes are fine until investiture. After that: Scout shirt, scarf and woggle. Add where to buy.'},
+    {id:uid(),q:'What should they bring each night?',a:'Closed shoes, a water bottle, and weather gear if we are outside.'},
+    {id:uid(),q:'What happens on a normal night?',a:'Games, badge work and outdoor skills run by the youth with leaders guiding. Drop-off and pick-up times go here.'},
+    {id:uid(),q:'How does joining work?',a:'Come and try a few nights first. Then membership forms go through Scouts WA and the Group Leader. Once processed, the scout gets invested.'},
+    {id:uid(),q:'What is Terrain?',a:'The online system where scouts and parents track badge progress. Add sign-up steps here.'}
+  ],
+  invest:[
+    {id:uid(),txt:'Family enquires — pass details to the Group Leader (Tracey) and invite them to a come-and-try night.'},
+    {id:uid(),txt:'Three come-and-try nights — no uniform needed, just closed shoes and a water bottle.'},
+    {id:uid(),txt:'Membership application through Scouts WA — Group Leader handles the paperwork.'},
+    {id:uid(),txt:'Give the family the welcome pack and collect guardian contact and medical details.'},
+    {id:uid(),txt:'Scout learns the Scout Promise and Law and completes Introduction to Scouting.'},
+    {id:uid(),txt:'Investiture ceremony on a section night — scarf, woggle and badges presented.'},
+    {id:uid(),txt:'Record the investiture in Terrain and the workbooks — chevron seven, locked.'}
+  ],
+  files:[
+    {id:uid(),name:'Badge placement diagram',url:'',note:'Paste a OneDrive or Google Drive share link here, then Copy sends it out fast.'}
+  ]};}
+const save=k=>Store.set('muster.'+k,JSON.stringify(S[k]));
+
+/* custom dialogs — native confirm/alert/prompt are blocked in sandboxed frames */
+function closeModal(){const m=document.getElementById('modal');
+  m.classList.remove('show');document.getElementById('modalCard').innerHTML='';}
+function uiConfirm(msg,onYes){
+  const c=document.getElementById('modalCard');
+  c.innerHTML=`<h4>Just checking</h4><p>${esc(msg)}</p>
+    <div class="btn-row"><button class="btn ghost" id="mNo">Cancel</button>
+    <button class="btn clay" id="mYes">Confirm</button></div>`;
+  document.getElementById('modal').classList.add('show');
+  document.getElementById('mNo').onclick=closeModal;
+  document.getElementById('mYes').onclick=()=>{closeModal();onYes();};
+}
+function uiAlert(msg){
+  const c=document.getElementById('modalCard');
+  c.innerHTML=`<h4>Heads up</h4><p>${esc(msg)}</p>
+    <div class="btn-row"><button class="btn primary" id="mOk">OK</button></div>`;
+  document.getElementById('modal').classList.add('show');
+  document.getElementById('mOk').onclick=closeModal;
+}
+function uiPrompt(title,msg,onSubmit){
+  const c=document.getElementById('modalCard');
+  c.innerHTML=`<h4>${esc(title)}</h4><p>${esc(msg)}</p>
+    <textarea id="mInput" placeholder="Paste here"></textarea>
+    <div class="btn-row"><button class="btn ghost" id="mCancel">Cancel</button>
+    <button class="btn primary" id="mGo">Continue</button></div>`;
+  document.getElementById('modal').classList.add('show');
+  document.getElementById('mCancel').onclick=closeModal;
+  document.getElementById('mGo').onclick=()=>{const v=document.getElementById('mInput').value;closeModal();onSubmit(v);};
+}
+
+function progressFor(id){
+  const p={Community:0,Creative:0,Outdoors:0,'Personal Growth':0,A:0,L:0};
+  S.nights.forEach(n=>{
+    if(n.present&&!n.present.includes(id))return;
+    const c=n.credits[id];if(!c)return;
+    const t=typeof c==='string'?c:c.t;
+    if(t==='P'){let a=typeof c==='object'?c.a:null;
+      if(!a||p[a]==null)a=(n.areas&&n.areas[0])||n.area;
+      if(p[a]!=null)p[a]++;}
+    else if(t==='A')p.A++;else if(t==='L')p.L++;});
+  return p;
+}
+function kmTotal(id){let t=0;S.nights.forEach(n=>{if(n.kmLog&&n.kmLog[id])t+=+n.kmLog[id]||0;});
+  const s=S.roster.find(x=>x.id===id);return t+(s?+s.priorKm||0:0);}
+function nightsTotal(id){let t=0;S.nights.forEach(n=>{if(n.nightsLog&&n.nightsLog[id])t+=+n.nightsLog[id]||0;});
+  const s=S.roster.find(x=>x.id===id);return t+(s?+s.priorNights||0:0);}
+function nextBadge(total,arr){for(const v of arr)if(v>total)return v;return null;}
+
+/* ===== render ===== */
+function render(){
+  document.getElementById('main').innerHTML=
+    ({tonight:vTonight,plan:vPlan,troop:vTroop,comms:vComms,welcome:vWelcome,rules:vRules})[S.view]();
+  renderNav();
+  if(S._focus){const el=document.getElementById(S._focus);if(el)el.focus();S._focus=null;}
+}
+function renderNav(){
+  const items=[
+    ['tonight','Tonight','M12 3L4 9v11h6v-6h4v6h6V9z'],
+    ['plan','Plan','M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z M9 4v14 M15 6v14'],
+    ['troop','Youth','M9 11a3 3 0 100-6 3 3 0 000 6z M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5 M17 11a3 3 0 100-6 M15.5 15c3 .3 5.5 2 5.5 5'],
+    ['comms','Comms','M4 5h16v11H9l-5 4z M8 9h8 M8 12h5'],
+    ['welcome','New','M9 11a3 3 0 100-6 3 3 0 000 6z M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5 M18 5v6 M15 8h6'],
+    ['rules','Rules','M5 3h11l3 3v15H5z M9 8h7 M9 12h7 M9 16h4']];
+  document.getElementById('nav').innerHTML=items.map(([v,l,d])=>
+    `<button data-act="nav" data-v="${v}" class="${S.view===v?'on':''}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>
+      <span class="nl">${l}</span></button>`).join('');
+}
+
+/* ---- TONIGHT ---- */
+function vTonight(){
+  const n=S.night;
+  if(n.saved)return doneScreen();
+  const chev=[1,2,3,4].map(i=>{
+    const st=n.step>i?'done':(n.step===i?'on':'pending');
+    return chevSVG(st,n._lockAnim===i?'just-locked':'');
+  }).join('');
+  n._lockAnim=null;
+  let body='';
+  if(n.step===1)body=stepSetup();
+  if(n.step===2)body=stepRoll();
+  if(n.step===3)body=stepRecord();
+  if(n.step===4)body=stepSignoff();
+  return `<div class="view">
+    <div class="view-title">Tonight at Scouts</div>
+    <div class="view-sub">${fmtD(n.date)} · four steps, then sign off.</div>
+    <div class="steps">${chev}</div>${body}
+    ${n.step===1?recentNights():''}</div>`;
+}
+function stepSetup(){
+  const n=S.night;
+  const cur=S.year.cur?planFind(S.year.cur.id).it:null;
+  const wkOpts='<option value="">— pick from the plan —</option>'+S.year.terms.map((tm,ti)=>
+    '<optgroup label="'+esc(tm.label)+'">'+tm.items.map(it=>
+      `<option value="${it.id}" ${n.weekId===it.id?'selected':''}>${esc(itemLabel(it))}</option>`).join('')+'</optgroup>').join('')
+    +(S.year.events.length?'<optgroup label="Year events">'+S.year.events.map(it=>
+      `<option value="${it.id}" ${n.weekId===it.id?'selected':''}>${esc(itemLabel(it))}</option>`).join('')+'</optgroup>':'');
+  let skillUI;
+  if(n.stream&&OAS_SKILLS[n.stream]){
+    skillUI=OAS_SKILLS[n.stream].map((grp,gi)=>{
+      const label=grp[1],skills=grp[2];
+      const open=n.openGroup===gi;
+      const selN=skills.filter((_,i)=>n.targetSkills.some(s=>s.id===n.stream+'|'+gi+'|'+i)).length;
+      const rows=open?skills.map((sk,i)=>{
+        const id=n.stream+'|'+gi+'|'+i;
+        const on=n.targetSkills.some(s=>s.id===id);
+        return `<div class="skrow ${on?'on':''}" data-act="skilltoggle" data-id="${id}">
+          <div class="skbox">${on?'<svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5l3 3 6-6.5" stroke="#F6F1E2" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
+          <div class="sktext">${esc(sk)}</div></div>`;}).join(''):'';
+      return `<div class="stage-hd" data-act="grouptoggle" data-g="${gi}">
+        ${esc(label)}<span class="cnt">${selN?selN+' picked':''}</span>
+        <span class="ar" style="transform:rotate(${open?90:0}deg)">▸</span></div>${rows}`;
+    }).join('');
+  }else skillUI='<p class="hint" style="margin-top:8px">Pick a stream above to see its skills.</p>';
+  const custom=n.targetSkills.filter(s=>s.id.split('|')[0]==='c');
+  return `<div class="step-tag"><span class="n">Step 1 — Set up</span></div>
+  ${cur?`<div class="curbanner"><div><div class="cl">Pulled from your term plan</div>
+    <div class="ct">${esc(itemLabel(cur))}</div></div></div>`:''}
+  <div class="card">
+    <h3>The night's activity</h3>
+    <p class="hint">A credit can only attach to a specific, named activity.</p>
+    <label class="fld">Tonight is</label>
+    <select data-act="pickweek">${wkOpts}</select>
+    <label class="fld">Activity name <span style="color:var(--clay)">*required</span></label>
+    <input type="text" data-act="ntext" data-f="activity" value="${esc(n.activity)}" placeholder="e.g. Indoor rock climbing">
+    <label class="fld">Challenge areas — pick all that apply</label>
+    <div class="chips">${AREAS.map(a=>`<span class="chip ${n.areas.includes(a)?'on':''}" data-act="narea" data-area="${a}">${a}</span>`).join('')}</div>
+  </div>
+  <div class="card">
+    <h3>Distance & nights</h3>
+    <p class="hint">Switch on to log per-scout km or nights under canvas in Step 3.</p>
+    <div class="tgl ${n.logKm?'on':''}" data-act="toggle" data-f="logKm"><div class="sw"></div><span class="tl">Log hike kilometres</span></div>
+    <div class="tgl ${n.logNights?'on':''}" data-act="toggle" data-f="logNights"><div class="sw"></div><span class="tl">Log nights under canvas</span></div>
+  </div>
+  <div class="card">
+    <h3>OAS skills targeted tonight</h3>
+    <p class="hint">Pick the stream, then tap the skills being covered. Scouts at different stages? Tap skills across any stage (1–5) — in Step 3 you tick only what each scout actually demonstrated.</p>
+    <label class="fld">OAS stream</label>
+    <select data-act="ntext" data-f="stream">
+      <option value="">— pick a stream —</option>
+      ${STREAMS.map(s=>`<option value="${s}" ${n.stream===s?'selected':''}>${s}</option>`).join('')}</select>
+    ${skillUI}
+    <label class="fld">Skill not listed? Add it</label>
+    <div class="addrow"><input type="text" id="customSkill" placeholder="Custom skill (e.g. a Stage 4+ skill)">
+      <button class="btn ghost sm" data-act="addcustom" style="flex:none">Add</button></div>
+    ${custom.length?'<div style="margin-top:9px">'+custom.map(s=>
+      `<span class="skill-tag">${esc(s.name)}<span class="rm" data-act="delskill" data-id="${s.id}">×</span></span>`).join('')+'</div>':''}
+    <p class="hint" style="margin-top:9px">${n.targetSkills.length} skill${n.targetSkills.length===1?'':'s'} selected for tonight.</p>
+  </div>
+  <div class="btn-row"><button class="btn primary full" data-act="next">Take the roll →</button></div>`;
+}
+function stepRoll(){
+  const n=S.night;
+  if(!S.roster.length)return `<div class="card"><div class="empty">Add your youth members first (Youth tab).</div></div>`;
+  const rows=S.roster.map(s=>{
+    const on=n.present.includes(s.id);
+    return `<div class="roll-row ${on?'present':''}" data-act="roll" data-id="${s.id}">
+      <div class="tick">${on?'<svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="#F6F1E2" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
+      <div class="nm">${esc(s.name)} ${s.peak?'<span class="peak-star">★</span>':''}</div>
+      <div class="sec">${esc(s.section)}</div></div>`;}).join('');
+  return `<div class="step-tag"><span class="n">Step 2 — Roll call</span></div>
+  <div class="card"><h3>Who's here?</h3>
+    <p class="hint">${n.present.length} of ${S.roster.length} present.</p>${rows}</div>
+  <div class="btn-row"><button class="btn ghost" data-act="back">← Back</button>
+    <button class="btn primary" data-act="next" style="flex:2">Record the night →</button></div>`;
+}
+function stepRecord(){
+  const n=S.night;
+  if(!n.present.length)return `<div class="card"><div class="empty">No-one marked present.</div></div>
+    <div class="btn-row"><button class="btn ghost full" data-act="back">← Back to roll</button></div>`;
+  const rows=n.present.map(id=>{
+    const s=S.roster.find(x=>x.id===id);if(!s)return'';
+    const cr=n.credits[id];const ct=cr?(typeof cr==='string'?cr:cr.t):'-';
+    const ca=(cr&&typeof cr==='object'&&cr.a)||'';
+    const seg=[['-','Attended'],['P','Participate'],['A','Assist'],['L','Lead']]
+      .map(([k,l])=>`<button data-act="credit" data-id="${id}" data-c="${k}" class="${ct===k?'on':''}">${l}</button>`).join('');
+    let areaPick='';
+    if((ct==='P'||ct==='A'||ct==='L')&&n.areas.length>1)
+      areaPick=`<div class="mini-cap">This credit counts toward</div>
+      <div class="areapick">${n.areas.map(a=>`<span class="ap ${ca===a?'on':''}" data-act="creditarea" data-id="${id}" data-area="${a}"
+        style="${ca===a?'background:'+cssv(AREA_VAR[a]):''}">${a}</span>`).join('')}</div>`;
+    let skT='';
+    if(n.targetSkills.length){
+      const done=n.skillsDone[id]||{};
+      skT=`<div class="mini-cap">OAS skills demonstrated</div><div>${n.targetSkills.map(sk=>
+        `<span class="skchip ${done[sk.id]?'on':''}" data-act="skilldone" data-id="${id}" data-skill="${sk.id}">${esc(sk.name)}</span>`).join('')}</div>`;
+    }
+    let nums='';
+    if(n.logKm||n.logNights){
+      nums='<div>';
+      if(n.logKm)nums+=`<span class="numfield"><label>km</label>
+        <input type="number" min="0" step="0.5" data-act="kmlog" data-id="${id}" value="${n.kmLog[id]??''}"></span>`;
+      if(n.logNights)nums+=`<span class="numfield"><label>nights</label>
+        <input type="number" min="0" step="1" data-act="nightslog" data-id="${id}" value="${n.nightsLog[id]??''}"></span>`;
+      nums+='</div>';
+    }
+    return `<div class="rec-row">
+      <div class="nm">${esc(s.name)} ${s.peak?'<span class="peak-star">★</span>':''}</div>
+      <div class="seg">${seg}</div>${areaPick}${skT}${nums}</div>`;
+  }).join('');
+  return `<div class="step-tag"><span class="n">Step 3 — Record the night</span></div>
+  <div class="note"><span class="lbl">⚠ The integrity rule</span>
+    <p>Attending is <b>not</b> a credit. Give Participate / Assist / Lead only for <b>active</b> involvement — and tick only the OAS skills each scout <b>genuinely demonstrated</b>.</p></div>
+  <div class="card"><h3>${esc(n.activity||'Tonight')}</h3>
+    <p class="hint">For each scout: milestone credit, OAS skills shown${n.logKm?', km':''}${n.logNights?', nights':''}.</p>${rows}</div>
+  <div class="btn-row"><button class="btn ghost" data-act="back">← Back</button>
+    <button class="btn primary" data-act="next" style="flex:2">Sign off →</button></div>`;
+}
+function stepSignoff(){
+  const n=S.night;
+  const cnt={P:0,A:0,L:0,'-':0};
+  n.present.forEach(id=>{const c=n.credits[id];cnt[c?(typeof c==='string'?c:c.t):'-']++;});
+  let skT=0;Object.values(n.skillsDone).forEach(o=>skT+=Object.values(o).filter(Boolean).length);
+  const ready=n.activity.trim()&&n.areas.length&&n.signedBy.trim();
+  return `<div class="step-tag"><span class="n">Step 4 — Leader sign-off</span></div>
+  <div class="card"><h3>Confirm & save</h3>
+    <p class="hint">By signing off you confirm — as the leader — that the milestone credits and the OAS skills recorded tonight are accurate, for every scout. Nothing reaches the workbooks until you do.</p>
+    <div style="display:flex;gap:8px;margin:8px 0 4px;flex-wrap:wrap">
+      <span class="chip on" style="background:var(--moss)">${cnt.P} participate</span>
+      <span class="chip on" style="background:var(--amber)">${cnt.A} assist</span>
+      <span class="chip on" style="background:var(--clay)">${cnt.L} lead</span>
+      <span class="chip on" style="background:var(--ink-faint)">${cnt['-']} attended</span>
+      <span class="chip on" style="background:var(--pine)">${skT} OAS skill ticks</span>
+    </div>
+    <label class="fld">Signed off by (leader name)</label>
+    <input type="text" data-act="ntext" data-f="signedBy" value="${esc(n.signedBy)}" placeholder="Your name">
+    ${!ready?`<p class="warn">Need: activity name, at least one challenge area, and your name.</p>`:''}
+  </div>
+  <div class="btn-row"><button class="btn ghost" data-act="back">← Back</button>
+    <button class="btn clay" data-act="signoff" style="flex:2;${ready?'':'opacity:.45'}" ${ready?'':'disabled'}>Confirm & save night</button></div>`;
+}
+function doneScreen(){
+  const n=S.lastNight;
+  if(!n){S.night=nightFromCurrent();save('night');return vTonight();}
+  const gate=[1,2,3,4,5,6,7].map(()=>chevSVG('done')).join('');
+  return `<div class="view">
+    <div class="card" style="text-align:center;padding:22px 16px">
+      <div class="gate-row">${gate}</div>
+      <h3 style="font-family:'Fraunces',serif;font-size:19px">Night recorded</h3>
+      <p class="hint" style="margin-top:4px">Copy this into the Teams workbooks.</p>
+      <div class="conn-line">${n.desig?'Designation '+esc(n.desig)+' · ':''}chevron seven locked · connection established</div></div>
+    <div class="card"><h3>Enter into the workbooks</h3>
+      <p class="hint">The app is your run-sheet & oversight log — the workbooks stay the shared record.</p>
+      <div class="summary" id="sum">${esc(summaryText(n))}</div>
+      <div class="btn-row"><button class="btn ghost full" data-act="copy">Copy summary</button></div></div>
+    <div class="btn-row"><button class="btn primary full" data-act="newnight">Start another night</button></div></div>`;
+}
+function summaryText(n){
+  const nm=id=>{const s=S.roster.find(x=>x.id===id);return s?s.name:'?';};
+  const byT={P:{},A:{},L:{}};
+  n.present.forEach(id=>{
+    const c=n.credits[id];if(!c)return;
+    const t=typeof c==='string'?c:c.t;if(!byT[t])return;
+    let a=(typeof c==='object'&&c.a)||(n.areas&&n.areas[0])||'—';
+    (byT[t][a]=byT[t][a]||[]).push(nm(id));});
+  const attended=n.present.filter(id=>!n.credits[id]).map(nm);
+  const block=o=>{const ks=Object.keys(o);
+    return ks.length?ks.map(a=>'    '+a+':  '+o[a].join(', ')).join('\n'):'    (none)';};
+  let oas;
+  if(n.targetSkills&&n.targetSkills.length){
+    oas=n.targetSkills.map(sk=>{
+      const got=n.present.filter(id=>n.skillsDone[id]&&n.skillsDone[id][sk.id]).map(nm);
+      const tag=sk.stage?'[S'+sk.stage+'] ':'';
+      return '  '+tag+sk.name+'\n     -> '+(got.length?got.join(', '):'(none)');}).join('\n');
+  }else oas='  (no OAS skills logged tonight)';
+  let extra='';
+  if(n.logKm){const ks=n.present.filter(id=>n.kmLog[id]).map(id=>'  '+nm(id)+':  '+n.kmLog[id]+' km');
+    extra+='\n\n> WALKABOUT AWARD  —  km this activity\n'+(ks.length?ks.join('\n'):'  (none entered)');}
+  if(n.logNights){const ns=n.present.filter(id=>n.nightsLog[id]).map(id=>'  '+nm(id)+':  '+n.nightsLog[id]+' nights');
+    extra+='\n\n> CAMPER AWARD  —  nights under canvas\n'+(ns.length?ns.join('\n'):'  (none entered)');}
+  return `STAR-LORD COMMAND — NIGHT RECORD${n.desig?'\nDesignation: '+n.desig:''}
+${fmtD(n.date)} ${n.date.slice(0,4)}  ·  ${n.weekLabel||'unscheduled'}
+Activity:  ${n.activity}
+Challenge areas:  ${(n.areas||[]).join(', ')||'—'}
+
+> OAS WORKBOOK${n.stream?'  —  '+n.stream+' sheet':''}
+Tick Y for each skill, only for the scouts listed:
+${oas}
+
+> MILESTONES WORKBOOK  —  Milestone sheets
+Use activity "${n.activity}" + date ${fmtD(n.date)} in each cell.
+  Participate:
+${block(byT.P)}
+  Assist:
+${block(byT.A)}
+  Lead:
+${block(byT.L)}
+
+Attended only — no milestone credit:
+  ${attended.length?attended.join(', '):'(none)'}${extra}
+
+Signed off by:  ${n.signedBy}`;
+}
+function recentNights(){
+  if(!S.nights.length)return'';
+  const items=S.nights.slice(-6).reverse().map(n=>{
+    const c=Object.values(n.credits).map(x=>typeof x==='string'?x:x.t);
+    const a=(n.areas&&n.areas[0])||n.area;
+    return `<div class="nlog"><div class="nd">${fmtD(n.date)}</div>
+      <div class="ni"><div class="t">${esc(n.activity)}</div>
+        <div class="s">${c.filter(x=>x==='P').length}P · ${c.filter(x=>x==='A').length}A · ${c.filter(x=>x==='L').length}L</div></div>
+      <div class="areadot" style="background:${a?cssv(AREA_VAR[a]):'#ccc'}"></div>
+      <button class="del-x" data-act="delnight" data-id="${n.id}">×</button></div>`;}).join('');
+  return `<div class="card flat" style="background:transparent;border:none;padding-left:2px;padding-right:2px">
+    <h3 style="margin-bottom:8px">Recent nights</h3>${items}</div>`;
+}
+
+/* ---- PLAN ---- */
+function vPlan(){
+  const vi=S.year.viewT;
+  const chips=S.year.terms.map((tm,i)=>
+    `<button class="tchip ${vi===i?'on':''}" data-act="planview" data-t="${i}">${tm.label}</button>`).join('')
+    +`<button class="tchip ${vi===-1?'on':''}" data-act="planview" data-t="-1">Year events</button>`;
+  const body=vi===-1?planYearEvents():planTermView();
+  return `<div class="view">
+    <div class="view-title">Year Plan</div>
+    <div class="view-sub">Four terms plus the events between them. The ● current night flows straight into Tonight.</div>
+    <div class="tchips">${chips}</div>
+    ${body}</div>`;
+}
+function rolesUI(it){
+  const roles=it.roles||{};
+  const leads=S.roster.filter(s=>roles[s.id]==='L').map(s=>s.name);
+  const assists=S.roster.filter(s=>roles[s.id]==='A').map(s=>s.name);
+  const sum=(leads.length||assists.length)
+    ?((leads.length?'Lead: '+leads.join(', '):'')+(leads.length&&assists.length?'  ·  ':'')+(assists.length?'Assist: '+assists.join(', '):''))
+    :'Tap to assign who leads & assists';
+  let list='';
+  if(it._rolesOpen)list='<div class="role-list">'+(S.roster.length?S.roster.map(s=>{
+    const r=roles[s.id]||'-';
+    const seg=[['-','—'],['L','Lead'],['A','Assist']].map(([k,l])=>
+      `<button data-act="setrole" data-id="${it.id}" data-sid="${s.id}" data-r="${k}" class="${r===k?'on':''}">${l}</button>`).join('');
+    return `<div class="role-row"><span class="rn">${esc(s.name)}</span><div class="rseg">${seg}</div></div>`;
+  }).join(''):'<p class="hint" style="margin:6px 0 0">Add youth members in the Youth tab first.</p>')+'</div>';
+  return `<div class="roles-bar" data-act="rolestoggle" data-id="${it.id}">
+    <span class="rl">Roles</span><span class="rs">${esc(sum)}</span>
+    <span style="margin-left:auto;flex:none;transform:rotate(${it._rolesOpen?90:0}deg)">▸</span></div>${list}`;
+}
+function eventCard(it){
+  const cur=S.year.cur&&S.year.cur.id===it.id;
+  const curBtn=`<button class="cur-btn ${cur?'on':''}" data-act="setcurrent" data-id="${it.id}">${cur?'● This night':'Set current'}</button>`;
+  const areaChips=`<div class="areachips">${AREAS.map(a=>
+    `<span class="chip ${it.areas.includes(a)?'on':''}" data-area="${a}" data-act="wkarea" data-id="${it.id}">${a}</span>`).join('')}</div>`;
+  const tsel=`<select data-act="evtype" data-id="${it.id}">${EV_TYPES.map(tp=>`<option ${it.type===tp?'selected':''}>${tp}</option>`).join('')}</select>`;
+  return `<div class="wk event ${cur?'current':''}">
+    <div class="wn">★</div>
+    <div class="toprow">${tsel}${curBtn}</div>
+    <div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity)}" placeholder="Event name — e.g. OneCamp 2026"></div>
+    <div class="datepair">
+      <span class="dp"><label>Start</label><input type="date" data-act="evstart" data-id="${it.id}" value="${it.startDate||''}"></span>
+      <span class="dp"><label>Finish</label><input type="date" data-act="evend" data-id="${it.id}" value="${it.endDate||''}"></span>
+    </div>
+    ${areaChips}${rolesUI(it)}
+    <button class="evdel" data-act="delitem" data-id="${it.id}">✕ Delete this event</button></div>`;
+}
+function planYearEvents(){
+  const evs=[...S.year.events].sort((a,b)=>(a.startDate||'9999')<(b.startDate||'9999')?-1:1);
+  const rows=evs.map(eventCard).join('');
+  return `<div class="card"><h3>Events outside term time</h3>
+    <p class="hint">Camps, hikes and weekend activities in the holidays or later in the year. Give each a start date and it sorts itself. Set one current on the day and run it through Tonight like any other night.</p>
+    ${rows||'<div class="empty">Nothing on the horizon yet.</div>'}
+    <button class="addevent" data-act="addyearevent">+ add an event</button></div>`;
+}
+function planTermView(){
+  const t=viewTerm();
+  const counts={Community:0,Creative:0,Outdoors:0,'Personal Growth':0};
+  let weekCount=0,evCount=0;
+  t.items.forEach(it=>{
+    if(it.kind==='week'){weekCount++;if(it.type==='Activity')it.areas.forEach(a=>counts[a]!=null&&counts[a]++);}
+    else{evCount++;it.areas.forEach(a=>counts[a]!=null&&counts[a]++);}});
+  const bal=AREAS.map(a=>{const c=counts[a],pct=Math.min(100,c/2*100);
+    return `<div class="bal-row"><span class="bn">${a}</span>
+      <div class="bal-track"><div class="bal-fill" style="width:${pct}%;background:${cssv(AREA_VAR[a])}"></div></div>
+      <span class="bc">${c}/2</span></div>`;}).join('');
+  let wn=0;
+  const rows=t.items.map(it=>{
+    const cur=S.year.cur&&S.year.cur.id===it.id;
+    if(it.kind!=='week')return eventCard(it)+`<button class="addevent" data-act="addevent" data-id="${it.id}">+ insert event below</button>`;
+    wn++;
+    const curBtn=`<button class="cur-btn ${cur?'on':''}" data-act="setcurrent" data-id="${it.id}">${cur?'● This week':'Set current'}</button>`;
+    const areaChips=`<div class="areachips">${AREAS.map(a=>
+      `<span class="chip ${it.areas.includes(a)?'on':''}" data-area="${a}" data-act="wkarea" data-id="${it.id}">${a}</span>`).join('')}</div>`;
+    const tsel=`<select data-act="wktype" data-id="${it.id}">${WK_TYPES.map(tp=>`<option ${it.type===tp?'selected':''}>${tp}</option>`).join('')}</select>`;
+    const dateEl=wn===1
+      ? `<input type="date" class="wkdate" data-act="termstart" value="${t.startDate||''}">`
+      : `<span class="wkdate-s">${weekDate(t,wn)||'—'}</span>`;
+    const wncol=`<div class="wncol"><div class="wn">${wn}</div>${dateEl}</div>`;
+    let inner;
+    if(it.type==='Activity'){
+      inner=`${wncol}<div class="toprow">${tsel}${curBtn}</div>
+        <div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity)}" placeholder="Activity name"></div>${areaChips}${rolesUI(it)}`;
+    }else{
+      const lbl=it.type==='Planning'?'Plan next term — Personal Growth, can be a lead/assist'
+        :it.type==='Risk Assessment'?'Risk assessments — before the holidays':'Badges handed out — Group Section Night';
+      inner=`${wncol}<div class="toprow">${tsel}${curBtn}</div>
+        <div class="spec-label" style="width:100%">${lbl}</div>${it.type==='Planning'?rolesUI(it):''}`;
+    }
+    return `<div class="wk ${it.type!=='Activity'?'special':''} ${cur?'current':''}">${inner}</div>
+      <button class="addevent" data-act="addevent" data-id="${it.id}">+ insert event below</button>`;
+  }).join('');
+  return `<div class="card">
+      <div style="display:flex;align-items:center;gap:9px">
+        <label class="fld" style="margin:0">${esc(t.label)} — weeks</label>
+        <button class="btn ghost sm" data-act="weeks" data-d="-1">–</button>
+        <div style="font-family:'Fraunces',serif;font-weight:700;font-size:22px;width:42px;text-align:center">${weekCount}</div>
+        <button class="btn ghost sm" data-act="weeks" data-d="1">+</button>
+        <span class="hint" style="margin:0">${evCount} event${evCount===1?'':'s'}</span>
+      </div></div>
+    <div class="card"><h3>Challenge area balance</h3>
+      <p class="hint">Aim for ~2 activities per area this term. Activities can count toward more than one.</p>
+      <div class="bal">${bal}</div></div>
+    <div class="card"><h3>The weeks</h3>
+      <p class="hint">Week 1's date fills the rest in. Assign Lead/Assist roles so the credits pre-fill on the night. ● marks the current night.</p>
+      ${rows}</div>`;
+}
+
+/* ---- TROOP ---- */
+function vTroop(){
+  const sorted=[...S.roster].sort((a,b)=>(b.peak-a.peak)||a.name.localeCompare(b.name));
+  const cards=sorted.map(s=>{
+    const p=progressFor(s.id),tg=MS[s.milestone];
+    const grid=AREAS.map(a=>{const c=p[a],pct=Math.min(100,c/tg.P*100);
+      return `<div class="prog-row"><span class="pn">${a}</span>
+        <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${cssv(AREA_VAR[a])}"></div></div>
+        <span class="pc">${c}/${tg.P}</span></div>`;}).join('');
+    const km=kmTotal(s.id),nt=nightsTotal(s.id);
+    const kmN=nextBadge(km,KM_BADGES),ntN=nextBadge(nt,NIGHT_BADGES);
+    const sias=s.sias||[];
+    const areaSet=new Set(sias.map(x=>x.area));
+    const siaList=sias.map(x=>`<div class="sia-row"><div class="si">
+      <div class="sa">${esc(x.area)}</div><div class="sd">${esc(x.description||'')}</div>
+      <div class="sx">${x.date?fmtD(x.date):''}</div></div>
+      <button class="del-x" data-act="delsia" data-id="${s.id}" data-sia="${x.id}">×</button></div>`).join('');
+    return `<div class="scout ${s._open?'open':''}">
+      <div class="hd" data-act="scopen" data-id="${s.id}">
+        <span class="nm">${esc(s.name)}${s.memberNo?' <span class="mno">#'+esc(s.memberNo)+'</span>':''} ${s.peak?'<span class="peak-star">★</span>':''}</span>
+        <span class="sec">M${s.milestone} · ${esc(s.section)}</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" style="transform:rotate(${s._open?180:0}deg);transition:.2s"><path d="M3 6l5 5 5-5" stroke="#5D5440" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="body">
+        <div class="mini-cap" style="margin-top:8px">Name & member number</div>
+        ${s._editName
+          ? `<div class="namerow">
+              <input type="text" data-act="scoutname" data-id="${s.id}" value="${esc(s.name)}" placeholder="Full name">
+              <input type="text" data-act="scoutno" data-id="${s.id}" value="${esc(s.memberNo||'')}" placeholder="Member #">
+            </div>
+            <button class="btn primary sm" data-act="nameedit" data-id="${s.id}" style="width:100%;margin-bottom:8px">Done</button>`
+          : `<div class="nameview">
+              <span class="nv-txt">${esc(s.name)}${s.memberNo?'&nbsp;&nbsp;·&nbsp;&nbsp;#'+esc(s.memberNo):''}</span>
+              <button class="btn ghost sm" data-act="nameedit" data-id="${s.id}">Edit</button>
+            </div>`}
+        <div class="mini-cap">Guardians & medical</div>
+        <div class="namerow">
+          <input type="text" data-act="g1n" data-id="${s.id}" value="${esc(s.g1name||'')}" placeholder="Guardian 1 name">
+          <input type="tel" data-act="g1p" data-id="${s.id}" value="${esc(s.g1phone||'')}" placeholder="Mobile">
+        </div>
+        <div class="namerow">
+          <input type="text" data-act="g2n" data-id="${s.id}" value="${esc(s.g2name||'')}" placeholder="Guardian 2 name">
+          <input type="tel" data-act="g2p" data-id="${s.id}" value="${esc(s.g2phone||'')}" placeholder="Mobile">
+        </div>
+        <textarea data-act="med" data-id="${s.id}" placeholder="Medical — allergies, meds, conditions" style="min-height:52px">${esc(s.medical||'')}</textarea>
+        ${(s.g1phone||s.g2phone)?`<div class="btn-row" style="margin:7px 0 2px">
+          ${s.g1phone?`<a class="btn ghost sm callbtn" href="tel:${esc(s.g1phone)}">📞 ${esc(s.g1name||'Guardian 1')}</a>`:''}
+          ${s.g2phone?`<a class="btn ghost sm callbtn" href="tel:${esc(s.g2phone)}">📞 ${esc(s.g2name||'Guardian 2')}</a>`:''}</div>`:''}
+        <p class="hint" style="margin:4px 0 2px">Participates per challenge area (Milestone ${s.milestone})</p>
+        <div class="prog-grid">${grid}</div>
+        <div class="al-line">Assists <b>${p.A}/${tg.A}</b> · Leads <b>${p.L}/${tg.L}</b></div>
+        ${s.peak?(()=>{
+          const ps=s.peakSteps||[false,false,false,false,false,false,false];
+          const locked=ps.filter(Boolean).length;
+          return `<div class="subhd">Peak Award — ${locked} of 7 chevrons</div>
+        <p class="hint" style="margin:0 0 6px">Tap a chevron as ${esc(s.name.split(' ')[0])} completes each part.</p>
+        <div class="peak-gate">${PEAK_PARTS.map((lbl,i)=>
+          `<div class="peak-chev" data-act="peakstep" data-id="${s.id}" data-i="${i}">
+            ${chevSVG(ps[i]?'done':'pending')}<span class="pcl">${lbl}</span></div>`).join('')}</div>
+        ${locked===7?'<div class="conn-line" style="margin-top:7px">Gate dialled — Peak Award complete</div>':''}`;
+        })():''}
+        <div class="award2">
+          <div class="awcard"><div class="at">🥾 Walkabout</div>
+            <div class="av">${km} km</div>
+            <div class="an">${kmN?'next badge: '+kmN+'km':'all badges earned'}</div>
+            <div class="pr"><label>prior</label><input type="number" min="0" data-act="priorkm" data-id="${s.id}" value="${s.priorKm||0}"></div></div>
+          <div class="awcard"><div class="at">🏕️ Camper</div>
+            <div class="av">${nt} nights</div>
+            <div class="an">${ntN?'next badge: '+ntN:'all badges earned'}</div>
+            <div class="pr"><label>prior</label><input type="number" min="0" data-act="priornights" data-id="${s.id}" value="${s.priorNights||0}"></div></div>
+        </div>
+        <div class="subhd">Special Interest Areas — ${sias.length}/6 · ${areaSet.size} area${areaSet.size===1?'':'s'}</div>
+        <p class="hint" style="margin-top:0">Peak Award needs 6 SIAs across 3+ areas. Recorded here, not in the term plan.</p>
+        ${siaList}
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">
+          <select id="siaArea-${s.id}" style="flex:1;min-width:150px">${SIA_AREAS.map(a=>`<option>${a}</option>`).join('')}</select>
+          <input type="date" id="siaDate-${s.id}" value="${todayISO()}" style="flex:none;width:150px">
+        </div>
+        <div class="addrow"><input type="text" id="siaDesc-${s.id}" placeholder="What the SIA was for">
+          <button class="btn primary sm" data-act="addsia" data-id="${s.id}" style="flex:none">Add SIA</button></div>
+        <div class="mini-row" style="margin-top:12px">
+          <label>Milestone</label>
+          <select data-act="setms" data-id="${s.id}" style="width:auto;flex:none">
+            ${[1,2,3].map(m=>`<option value="${m}" ${s.milestone==m?'selected':''}>M${m}</option>`).join('')}</select>
+          <label style="margin-left:6px">Section</label>
+          <select data-act="setsec" data-id="${s.id}" style="width:auto;flex:none">
+            ${['Joey','Cub','Scout','Venturer'].map(x=>`<option ${s.section===x?'selected':''}>${x}</option>`).join('')}</select></div>
+        <div class="btn-row" style="margin-top:6px">
+          <button class="btn ghost sm" data-act="peak" data-id="${s.id}">${s.peak?'★ Peak Award — yes':'☆ Mark as Peak Award'}</button>
+          <button class="btn ghost sm" data-act="delscout" data-id="${s.id}" style="flex:none;color:var(--clay)">Remove</button>
+        </div></div></div>`;}).join('');
+  return `<div class="view">
+    <div class="view-title">The Youth</div>
+    <div class="view-sub">Every scout's progress in one place. ★ = chasing Peak Award — plan the term around them.</div>
+    <div class="card"><h3>Add a scout</h3>
+      <div class="addrow"><input type="text" id="newScout" placeholder="Scout's name">
+        <button class="btn primary" data-act="addscout" style="flex:none">Add</button></div></div>
+    ${cards||'<div class="card"><div class="empty">No scouts yet.</div></div>'}</div>`;
+}
+
+/* ---- COMMS ---- */
+function normPhone(p){let d=(p||'').replace(/[^0-9]/g,'');
+  if(d.startsWith('0'))d='61'+d.slice(1);return d;}
+function commsPeople(){
+  const ppl=S.roster.map(s=>({id:s.id,name:s.name,sub:'Parent/guardian',phone:s.g1phone||'',tag:'Scouts'}));
+  S.contacts.forEach(c=>ppl.push({id:c.id,name:c.name,sub:c.tag,phone:c.phone||'',tag:c.tag==='Venturer'?'Venturers':'Leaders'}));
+  return ppl;
+}
+function vComms(){
+  const ppl=commsPeople();
+  const secs=['Scouts','Venturers','Leaders'];
+  const secChips=secs.map(sec=>{
+    const ids=ppl.filter(p=>p.tag===sec).map(p=>p.id);
+    const allOn=ids.length&&ids.every(id=>S.msgSel[id]);
+    return `<span class="chip ${allOn?'on':''}" data-act="commsec" data-sec="${sec}">${sec}</span>`;
+  }).join('');
+  const selN=ppl.filter(p=>S.msgSel[p.id]).length;
+  const rows=ppl.map(p=>`
+    <div class="skrow ${S.msgSel[p.id]?'on':''}" data-act="comsel" data-id="${p.id}">
+      <div class="skbox">${S.msgSel[p.id]?'<svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5l3 3 6-6.5" stroke="#F6F1E2" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
+      <div class="sktext">${esc(p.name)} <span class="mno">· ${esc(p.sub)}${p.phone?'':' · no number'}</span></div></div>`).join('');
+  let links='';
+  if(S._waShow){
+    const sel=ppl.filter(p=>S.msgSel[p.id]);
+    const txt=encodeURIComponent(S.msgText||'');
+    const lrows=sel.map(p=>p.phone
+      ?`<div class="linkrow"><span class="rn">${esc(p.name)}</span><a class="btn primary sm" href="https://wa.me/${normPhone(p.phone)}?text=${txt}" target="_blank" rel="noopener">Open WhatsApp</a></div>`
+      :`<div class="linkrow"><span class="rn">${esc(p.name)}</span><span class="hint" style="margin:0">no number saved</span></div>`).join('');
+    links=`<div class="card"><h3>Send — one tap each</h3>
+      <p class="hint">Each button opens WhatsApp to that person with your message pre-filled. Hit send, come back, tap the next one. For a group chat, just use Copy message and paste it in.</p>
+      ${lrows||'<div class="empty">No one selected.</div>'}</div>`;
+  }
+  const cRows=S.contacts.map(c=>`
+    <div class="linkrow"><span class="rn">${esc(c.name)} <span class="mno">· ${esc(c.tag)}${c.phone?'':' · no number'}</span></span>
+      <button class="btn ghost sm" data-act="delcontact" data-id="${c.id}">✕</button></div>`).join('');
+  return `<div class="view">
+    <div class="view-title">Comms</div>
+    <div class="view-sub">Write once, open a channel to each family. Subspace, but it's WhatsApp.</div>
+    <div class="card"><h3>Message</h3>
+      <textarea data-act="commsg" placeholder="Type the message once — reminder, camp info, uniform note...">${esc(S.msgText||'')}</textarea>
+      <div class="btn-row" style="margin-top:9px">
+        <button class="btn ghost" data-act="copymsg">Copy message</button>
+        <button class="btn primary" data-act="buildlinks">Open channels (${selN})</button></div></div>
+    <div class="card"><h3>Who's it going to?</h3>
+      <p class="hint">Tap a section to select everyone in it, or tick people one by one. Scout messages go to the parent/guardian number saved in the Youth tab.</p>
+      <div class="areachips" style="margin:4px 0 8px">${secChips}</div>
+      ${rows||'<div class="empty">No people yet — add guardian numbers in the Youth tab.</div>'}</div>
+    ${links}
+    <div class="card"><h3>Venturer & leader contacts</h3>
+      <p class="hint">Extra people you message that aren't on the Scout roster.</p>
+      ${cRows}
+      <div class="namerow" style="margin-top:8px">
+        <input type="text" id="newCName" placeholder="Name">
+        <input type="tel" id="newCPhone" placeholder="Mobile">
+      </div>
+      <div class="namerow">
+        <select id="newCTag" style="flex:1"><option>Venturer</option><option>Leader</option></select>
+        <button class="btn primary sm" data-act="addcontact" style="flex:1">Add contact</button>
+      </div></div></div>`;
+}
+
+/* ---- WELCOME / NEW TO SCOUTING ---- */
+function vWelcome(){
+  const faqs=S.welcome.faqs.map(f=>`
+    <div class="wk" style="flex-direction:column;align-items:stretch">
+      <input type="text" data-act="faqq" data-id="${f.id}" value="${esc(f.q)}" placeholder="Question parents ask" style="font-weight:700">
+      <textarea data-act="faqa" data-id="${f.id}" placeholder="Your answer — fill it in as you find out">${esc(f.a)}</textarea>
+      <button class="evdel" data-act="faqdel" data-id="${f.id}">✕ Remove</button></div>`).join('');
+  const steps=S.welcome.invest.map((st,i)=>`
+    <div class="inv-row">
+      <div class="inv-chev">${chevSVG('done')}<span class="inv-n">${i+1}</span></div>
+      <textarea data-act="invtxt" data-id="${st.id}">${esc(st.txt)}</textarea>
+      <button class="btn ghost sm" data-act="invdel" data-id="${st.id}">✕</button></div>`).join('');
+  const files=S.welcome.files.map(f=>`
+    <div class="wk" style="flex-direction:column;align-items:stretch">
+      <input type="text" data-act="filen" data-id="${f.id}" value="${esc(f.name)}" placeholder="What is it — e.g. Badge placement diagram" style="font-weight:700">
+      <input type="url" data-act="fileu" data-id="${f.id}" value="${esc(f.url)}" placeholder="Paste the share link (OneDrive / Google Drive)">
+      <input type="text" data-act="filenote" data-id="${f.id}" value="${esc(f.note||'')}" placeholder="Note to self">
+      <div class="btn-row">
+        <button class="btn ghost sm" data-act="filecopy" data-id="${f.id}">Copy link</button>
+        ${f.url?`<a class="btn primary sm" href="${esc(f.url)}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">Open</a>`:''}
+        <button class="btn ghost sm" data-act="filedel" data-id="${f.id}">✕</button></div></div>`).join('');
+  return `<div class="view">
+    <div class="view-title">New to Scouting</div>
+    <div class="view-sub">Every answer a new family needs — so you're never caught out at the door.</div>
+    <div class="card"><h3>Answers for new parents</h3>
+      <p class="hint">The questions you get asked at pick-up. Fill the answers in as you gather them — then it's all in your pocket.</p>
+      ${faqs}<button class="addevent" data-act="faqadd">+ add a question</button></div>
+    <div class="card"><h3>Path to investiture</h3>
+      <p class="hint">Seven chevrons from first night to invested. Edit the steps as you confirm how it's properly done.</p>
+      ${steps}<button class="addevent" data-act="invadd">+ add a step</button></div>
+    <div class="card"><h3>Attachments & links</h3>
+      <p class="hint">Things you send families — badge diagrams, forms, the welcome pack. Keep them as share links so Copy → paste into WhatsApp does the job.</p>
+      ${files}<button class="addevent" data-act="fileadd">+ add a link</button></div></div>`;
+}
+
+/* ---- RULES ---- */
+function vRules(){
+  const msRows=Object.entries(MS).map(([m,t])=>
+    `<tr><td><b>Milestone ${m}</b></td><td>${t.P} per area</td><td>${t.A}</td><td>${t.L}</td></tr>`).join('');
+  return `<div class="view">
+    <div class="view-title">Field Rules</div>
+    <div class="view-sub">The system, always in your pocket.</div>
+    <div class="card"><h3>Milestone targets</h3>
+      <p class="hint">Milestones restart each section. Four areas: Community, Creative, Outdoors, Personal Growth.</p>
+      <table class="tbl"><tr><th></th><th>Participates</th><th>Assists</th><th>Leads</th></tr>${msRows}</table>
+      <p class="hint" style="margin-top:9px">Each Milestone needs a personal reflection at the end of that Milestone.</p></div>
+    <div class="card"><h3>The night routine</h3>
+      <div class="rule-li">1 — Set up: name the activity, pick challenge areas, tap the OAS skills from the stream, switch on km/nights logging if needed.</div>
+      <div class="rule-li">2 — Roll: mark who is actually present.</div>
+      <div class="rule-li">3 — Record: per scout, set the milestone credit, tick the OAS skills they demonstrated, enter km/nights.</div>
+      <div class="rule-li">4 — Sign off: you confirm the credits and skills, it saves, you get the workbook entries.</div></div>
+    <div class="card"><h3>Awards & SIAs</h3>
+      <div class="rule-li">Walkabout km and Camper nights add up automatically — set each scout's prior total once in the Youth tab.</div>
+      <div class="rule-li">SIAs are logged per scout in the Youth tab — 6 across 3+ areas for the Peak Award.</div></div>
+    <div class="card"><h3>Term cycle</h3>
+      <div class="rule-li">Block a Planning week and a Risk Assessment week before the holidays.</div>
+      <div class="rule-li">Block a Badge Night for handing badges out.</div>
+      <div class="rule-li">Insert camps & weekend activities between weeks as they come up.</div>
+      <div class="rule-li">On the Planning night, assign Lead/Assist roles to each activity & camp — they pre-fill the credits when that night runs.</div>
+      <div class="rule-li">Over the holidays, load the plan into Scout Map — then it's just record, record, record.</div></div>
+    <div class="card"><h3>Night designations</h3>
+      <p class="hint">Every signed-off night gets a gate address, e.g. <b>S6O-204</b> — Section, year digit, activity letter, then term & night (204 = Term 2, night 4).</p>
+      <div class="rule-li">Letters: C Community · E Creative · O Outdoors · G Growth · X mixed · K Camp · H Hike · P Planning · R Risk · B Badge night. Term 0 = outside term time.</div></div>
+    <div class="card"><h3>Backup</h3>
+      <p class="hint">Data saves on this device/account. Export a copy before big changes, and to move between phone & laptop.</p>
+      <div class="btn-row"><button class="btn ghost" data-act="export">Export data</button>
+        <button class="btn ghost" data-act="import">Import data</button></div></div>
+    <div class="gate-footer">
+      <div class="chevrons">${[1,2,3,4,5,6,7].map(i=>chevSVG(i===7?'done':'pending')).join('')}</div>
+      <div class="desig">Star-Lord Command · designation P3X-797 · chevron seven locked</div>
+    </div></div>`;
+}
+
+/* ===== events ===== */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;
+  const a=t.dataset.act,n=S.night;
+  if(a==='nav'){S.view=t.dataset.v;render();return;}
+  /* tonight */
+  if(a==='narea'){const ar=t.dataset.area;
+    n.areas.includes(ar)?n.areas=n.areas.filter(x=>x!==ar):n.areas.push(ar);
+    save('night');render();return;}
+  if(a==='toggle'){n[t.dataset.f]=!n[t.dataset.f];save('night');render();return;}
+  if(a==='grouptoggle'){const gi=+t.dataset.g;n.openGroup=(n.openGroup===gi?null:gi);save('night');render();return;}
+  if(a==='skilltoggle'){const id=t.dataset.id;
+    const ex=n.targetSkills.find(s=>s.id===id);
+    if(ex)n.targetSkills=n.targetSkills.filter(s=>s.id!==id);
+    else{const p=id.split('|');const grp=OAS_SKILLS[p[0]]&&OAS_SKILLS[p[0]][+p[1]];
+      n.targetSkills.push({id,name:skillName(id),stage:grp?grp[0]:null});}
+    save('night');render();return;}
+  if(a==='addcustom'){const inp=document.getElementById('customSkill'),v=(inp?inp.value:'').trim();
+    if(!v)return;n.targetSkills.push({id:'c|'+uid(),name:v,stage:null});save('night');S._focus='customSkill';render();return;}
+  if(a==='delskill'){n.targetSkills=n.targetSkills.filter(s=>s.id!==t.dataset.id);save('night');render();return;}
+  if(a==='next'){
+    if(n.step===1&&!n.activity.trim()){uiAlert('Give the activity a name first — a credit can only attach to a named activity.');return;}
+    n._lockAnim=n.step;
+    n.step++;save('night');render();return;}
+  if(a==='back'){n.step--;save('night');render();return;}
+  if(a==='roll'){const id=t.dataset.id;
+    n.present.includes(id)?n.present=n.present.filter(x=>x!==id):n.present.push(id);
+    save('night');render();return;}
+  if(a==='credit'){const id=t.dataset.id,c=t.dataset.c;
+    if(c==='-')delete n.credits[id];
+    else if(c==='P'){const ex=n.credits[id];
+      const a0=(ex&&typeof ex==='object'&&n.areas.includes(ex.a))?ex.a:(n.areas[0]||'');
+      n.credits[id]={t:'P',a:a0};}
+    else n.credits[id]={t:c,a:(n.credits[id]&&n.credits[id].a)||n.areas[0]||''};
+    save('night');render();return;}
+  if(a==='creditarea'){const id=t.dataset.id;
+    if(n.credits[id])n.credits[id].a=t.dataset.area;save('night');render();return;}
+  if(a==='skilldone'){const id=t.dataset.id,sk=t.dataset.skill;
+    n.skillsDone[id]=n.skillsDone[id]||{};
+    n.skillsDone[id][sk]?delete n.skillsDone[id][sk]:n.skillsDone[id][sk]=true;
+    save('night');render();return;}
+  if(a==='signoff'){
+    if(!n.activity.trim()||!n.areas.length||!n.signedBy.trim())return;
+    const it=planFind(n.weekId).it;
+    const pick=o=>{const r={};n.present.forEach(id=>{if(o[id]!==undefined)r[id]=o[id];});return r;};
+    const rec={id:uid(),date:n.date,weekLabel:it?itemLabel(it):'',desig:desigFor(n),activity:n.activity,
+      areas:[...n.areas],stream:n.stream,targetSkills:n.targetSkills.map(s=>({...s})),
+      present:[...n.present],credits:JSON.parse(JSON.stringify(pick(n.credits))),
+      skillsDone:JSON.parse(JSON.stringify(pick(n.skillsDone))),
+      logKm:n.logKm,logNights:n.logNights,kmLog:pick(n.kmLog),nightsLog:pick(n.nightsLog),
+      signedBy:n.signedBy};
+    S.nights.push(rec);save('nights');
+    S.lastNight=rec;S.night=freshNight();S.night.saved=true;save('night');render();return;}
+  if(a==='newnight'){S.night=nightFromCurrent();save('night');render();return;}
+  if(a==='copy'){const txt=summaryText(S.lastNight);
+    if(navigator.clipboard)navigator.clipboard.writeText(txt).then(
+      ()=>{t.textContent='Copied ✓';setTimeout(()=>t.textContent='Copy summary',1600);},
+      ()=>fb(txt,t));else fb(txt,t);return;}
+  if(a==='delnight'){const id=t.dataset.id;uiConfirm('Delete this night record?',()=>{
+    S.nights=S.nights.filter(x=>x.id!==id);save('nights');render();});return;}
+  /* plan */
+  if(a==='planview'){S.year.viewT=+t.dataset.t;save('year');render();return;}
+  if(a==='weeks'){const d=+t.dataset.d,its=viewTerm().items;
+    if(d>0){let li=-1;its.forEach((x,i)=>{if(x.kind==='week')li=i;});
+      const nw={id:uid(),kind:'week',type:'Activity',activity:'',areas:[]};
+      li<0?its.push(nw):its.splice(li+1,0,nw);}
+    if(d<0){const wks=its.filter(x=>x.kind==='week');if(wks.length>1){
+      let li=-1;its.forEach((x,i)=>{if(x.kind==='week')li=i;});
+      const rm=its[li];its.splice(li,1);
+      if(S.year.cur&&S.year.cur.id===rm.id)S.year.cur=null;}}
+    save('year');render();return;}
+  if(a==='addevent'){const arr=planContainer(t.dataset.id);if(!arr)return;
+    const i=arr.findIndex(x=>x.id===t.dataset.id);
+    arr.splice(i+1,0,{id:uid(),kind:'event',type:'Camp',activity:'',areas:[]});
+    save('year');render();return;}
+  if(a==='addyearevent'){S.year.events.push({id:uid(),kind:'event',type:'Camp',activity:'',areas:[]});
+    save('year');render();return;}
+  if(a==='delitem'){const id=t.dataset.id;uiConfirm('Remove this event from the plan?',()=>{
+    const arr=planContainer(id);if(!arr)return;
+    if(S.year.cur&&S.year.cur.id===id)S.year.cur=null;
+    arr.splice(arr.findIndex(x=>x.id===id),1);save('year');render();});return;}
+  if(a==='setcurrent'){S.year.cur={t:planFind(t.dataset.id).t,id:t.dataset.id};save('year');
+    if(!S.night.saved&&S.night.step===1){applyCurrent(S.night);save('night');}
+    render();return;}
+  if(a==='wkarea'){const it=planFind(t.dataset.id).it,ar=t.dataset.area;if(!it)return;
+    it.areas.includes(ar)?it.areas=it.areas.filter(x=>x!==ar):it.areas.push(ar);
+    save('year');render();return;}
+  if(a==='rolestoggle'){const it=planFind(t.dataset.id).it;if(!it)return;
+    it._rolesOpen=!it._rolesOpen;render();return;}
+  if(a==='setrole'){const it=planFind(t.dataset.id).it;if(!it)return;
+    it.roles=it.roles||{};const sid=t.dataset.sid,r=t.dataset.r;
+    if(r==='-')delete it.roles[sid];else it.roles[sid]=r;
+    save('year');render();return;}
+  /* troop */
+  if(a==='addscout'){const inp=document.getElementById('newScout'),v=(inp?inp.value:'').trim();
+    if(!v)return;S.roster.push({id:uid(),name:v,section:'Scout',peak:false,milestone:1,memberNo:"",sias:[],priorKm:0,priorNights:0,peakSteps:[false,false,false,false,false,false,false]});
+    save('roster');S._focus='newScout';render();return;}
+  if(a==='scopen'){const s=S.roster.find(x=>x.id===t.dataset.id);s._open=!s._open;render();return;}
+  if(a==='nameedit'){const s=S.roster.find(x=>x.id===t.dataset.id);s._editName=!s._editName;render();return;}
+  if(a==='peak'){const s=S.roster.find(x=>x.id===t.dataset.id);s.peak=!s.peak;save('roster');render();return;}
+  if(a==='peakstep'){const s=S.roster.find(x=>x.id===t.dataset.id);
+    if(!s.peakSteps)s.peakSteps=[false,false,false,false,false,false,false];
+    const i=+t.dataset.i;s.peakSteps[i]=!s.peakSteps[i];save('roster');render();return;}
+  if(a==='addsia'){const id=t.dataset.id,s=S.roster.find(x=>x.id===id);
+    const ar=document.getElementById('siaArea-'+id).value;
+    const de=document.getElementById('siaDesc-'+id).value.trim();
+    const dt=document.getElementById('siaDate-'+id).value;
+    s.sias=s.sias||[];s.sias.push({id:uid(),area:ar,description:de,date:dt});
+    save('roster');render();return;}
+  if(a==='delsia'){const s=S.roster.find(x=>x.id===t.dataset.id);
+    s.sias=(s.sias||[]).filter(x=>x.id!==t.dataset.sia);save('roster');render();return;}
+  if(a==='delscout'){const id=t.dataset.id,s=S.roster.find(x=>x.id===id);
+    uiConfirm('Remove '+(s?s.name:'this member')+'? Their saved night records stay logged.',()=>{
+      S.roster=S.roster.filter(x=>x.id!==id);save('roster');render();});return;}
+  /* comms */
+  if(a==='comsel'){const id=t.dataset.id;S.msgSel[id]?delete S.msgSel[id]:S.msgSel[id]=true;render();return;}
+  if(a==='commsec'){const sec=t.dataset.sec,ppl=commsPeople().filter(p=>p.tag===sec);
+    const allOn=ppl.length&&ppl.every(p=>S.msgSel[p.id]);
+    ppl.forEach(p=>{allOn?delete S.msgSel[p.id]:S.msgSel[p.id]=true;});render();return;}
+  if(a==='buildlinks'){S._waShow=true;render();return;}
+  if(a==='copymsg'){const txt=S.msgText||'';
+    if(navigator.clipboard)navigator.clipboard.writeText(txt).then(
+      ()=>{t.textContent='Copied ✓';setTimeout(()=>t.textContent='Copy message',1600);},
+      ()=>fb(txt,t));else fb(txt,t);return;}
+  if(a==='addcontact'){const nm=(document.getElementById('newCName')||{}).value||'',
+    ph=(document.getElementById('newCPhone')||{}).value||'',
+    tg=(document.getElementById('newCTag')||{}).value||'Venturer';
+    if(!nm.trim())return;
+    S.contacts.push({id:uid(),name:nm.trim(),phone:ph.trim(),tag:tg});save('contacts');render();return;}
+  if(a==='delcontact'){const id=t.dataset.id;const c=S.contacts.find(x=>x.id===id);
+    uiConfirm('Remove '+(c?c.name:'this contact')+'?',()=>{
+      S.contacts=S.contacts.filter(x=>x.id!==id);delete S.msgSel[id];save('contacts');render();});return;}
+  /* welcome */
+  if(a==='faqadd'){S.welcome.faqs.push({id:uid(),q:'',a:''});save('welcome');render();return;}
+  if(a==='faqdel'){const id=t.dataset.id;uiConfirm('Remove this question?',()=>{
+    S.welcome.faqs=S.welcome.faqs.filter(x=>x.id!==id);save('welcome');render();});return;}
+  if(a==='invadd'){S.welcome.invest.push({id:uid(),txt:''});save('welcome');render();return;}
+  if(a==='invdel'){const id=t.dataset.id;uiConfirm('Remove this step?',()=>{
+    S.welcome.invest=S.welcome.invest.filter(x=>x.id!==id);save('welcome');render();});return;}
+  if(a==='fileadd'){S.welcome.files.push({id:uid(),name:'',url:'',note:''});save('welcome');render();return;}
+  if(a==='filedel'){const id=t.dataset.id;uiConfirm('Remove this link?',()=>{
+    S.welcome.files=S.welcome.files.filter(x=>x.id!==id);save('welcome');render();});return;}
+  if(a==='filecopy'){const f=S.welcome.files.find(x=>x.id===t.dataset.id);const txt=(f&&f.url)||'';
+    if(!txt){uiAlert('No link saved on that one yet.');return;}
+    if(navigator.clipboard)navigator.clipboard.writeText(txt).then(
+      ()=>{t.textContent='Copied ✓';setTimeout(()=>t.textContent='Copy link',1600);},
+      ()=>fb(txt,t));else fb(txt,t);return;}
+  /* rules */
+  if(a==='export'){
+    const blob=new Blob([JSON.stringify({roster:S.roster,year:S.year,nights:S.nights,welcome:S.welcome,contacts:S.contacts},null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob),link=document.createElement('a');
+    link.href=url;link.download='starlord-command-backup-'+todayISO()+'.json';link.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);return;}
+  if(a==='import'){uiPrompt('Import data','Paste a Star-Lord Command backup below to restore it.',(txt)=>{
+    if(!txt||!txt.trim())return;
+    try{const d=JSON.parse(txt);
+      if(d.roster)S.roster=d.roster;
+      if(d.year)S.year=migrateYear(d.year,null);else if(d.term)S.year=migrateYear(null,d.term);
+      if(d.nights)S.nights=d.nights;
+      if(d.welcome)S.welcome=d.welcome;if(d.contacts)S.contacts=d.contacts;
+      S.roster.forEach(s=>{if(!s.sias)s.sias=[];if(s.priorKm==null)s.priorKm=0;if(s.priorNights==null)s.priorNights=0;if(s.memberNo==null)s.memberNo="";if(!s.peakSteps)s.peakSteps=[false,false,false,false,false,false,false];});
+      save('roster');save('year');save('nights');save('welcome');save('contacts');render();uiAlert('Backup restored.');}
+    catch(err){uiAlert('That does not look like valid backup data.');}});return;}
+});
+function fb(txt,btn){const ta=document.createElement('textarea');ta.value=txt;
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');btn.textContent='Copied ✓';
+    setTimeout(()=>btn.textContent='Copy summary',1600);}catch(e){}
+  document.body.removeChild(ta);}
+document.addEventListener('input',e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act;
+  if(a==='ntext'){S.night[t.dataset.f]=t.value;save('night');
+    if(t.dataset.f==='signedBy'){const b=document.querySelector('[data-act="signoff"]');
+      if(b){const ok=S.night.activity.trim()&&S.night.areas.length&&t.value.trim();
+        b.disabled=!ok;b.style.opacity=ok?'1':'.45';}}}
+  if(a==='wkact'){const it=planFind(t.dataset.id).it;if(it){it.activity=t.value;save('year');}}
+  if(a==='g1n'||a==='g1p'||a==='g2n'||a==='g2p'||a==='med'){
+    const s=S.roster.find(x=>x.id===t.dataset.id);if(s){
+      s[{g1n:'g1name',g1p:'g1phone',g2n:'g2name',g2p:'g2phone',med:'medical'}[a]]=t.value;save('roster');}}
+  if(a==='commsg'){S.msgText=t.value;}
+  if(a==='faqq'||a==='faqa'){const f=S.welcome.faqs.find(x=>x.id===t.dataset.id);
+    if(f){f[a==='faqq'?'q':'a']=t.value;save('welcome');}}
+  if(a==='invtxt'){const f=S.welcome.invest.find(x=>x.id===t.dataset.id);if(f){f.txt=t.value;save('welcome');}}
+  if(a==='filen'||a==='fileu'||a==='filenote'){const f=S.welcome.files.find(x=>x.id===t.dataset.id);
+    if(f){f[{filen:'name',fileu:'url',filenote:'note'}[a]]=t.value;save('welcome');}}
+  if(a==='kmlog'){const v=t.value;v===''?delete S.night.kmLog[t.dataset.id]:S.night.kmLog[t.dataset.id]=+v;save('night');}
+  if(a==='nightslog'){const v=t.value;v===''?delete S.night.nightsLog[t.dataset.id]:S.night.nightsLog[t.dataset.id]=+v;save('night');}
+  if(a==='priorkm'){const s=S.roster.find(x=>x.id===t.dataset.id);s.priorKm=+t.value||0;save('roster');}
+  if(a==='priornights'){const s=S.roster.find(x=>x.id===t.dataset.id);s.priorNights=+t.value||0;save('roster');}
+  if(a==='scoutname'){const s=S.roster.find(x=>x.id===t.dataset.id);if(s){s.name=t.value;save('roster');
+    const hd=t.closest('.scout');if(hd){const nm=hd.querySelector('.hd .nm');
+      if(nm)nm.innerHTML=esc(t.value)+(s.memberNo?' <span class="mno">#'+esc(s.memberNo)+'</span>':'')+(s.peak?' <span class="peak-star">★</span>':'');}}}
+  if(a==='scoutno'){const s=S.roster.find(x=>x.id===t.dataset.id);if(s){s.memberNo=t.value;save('roster');
+    const hd=t.closest('.scout');if(hd){const nm=hd.querySelector('.hd .nm');
+      if(nm)nm.innerHTML=esc(s.name)+(t.value?' <span class="mno">#'+esc(t.value)+'</span>':'')+(s.peak?' <span class="peak-star">★</span>':'');}}}
+});
+document.addEventListener('change',e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act;
+  if(a==='ntext'){S.night[t.dataset.f]=t.value;save('night');if(t.dataset.f==='stream')render();return;}
+  if(a==='pickweek'){if(t.value){S.year.cur={t:planFind(t.value).t,id:t.value};save('year');}
+    applyCurrent(S.night);save('night');render();return;}
+  if(a==='wktype'){const it=planFind(t.dataset.id).it;if(it){it.type=t.value;save('year');}render();return;}
+  if(a==='termstart'){viewTerm().startDate=t.value;save('year');render();return;}
+  if(a==='evstart'){const it=planFind(t.dataset.id).it;if(it){it.startDate=t.value;save('year');}return;}
+  if(a==='evend'){const it=planFind(t.dataset.id).it;if(it){it.endDate=t.value;save('year');}return;}
+  if(a==='evtype'){const it=planFind(t.dataset.id).it;if(it){it.type=t.value;save('year');}render();return;}
+  if(a==='ctag'){const c=S.contacts.find(x=>x.id===t.dataset.id);if(c){c.tag=t.value;save('contacts');render();}return;}
+  if(a==='setms'){const s=S.roster.find(x=>x.id===t.dataset.id);s.milestone=+t.value;save('roster');render();return;}
+  if(a==='setsec'){const s=S.roster.find(x=>x.id===t.dataset.id);s.section=t.value;save('roster');render();return;}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  if(e.target.id==='customSkill'){e.preventDefault();const v=e.target.value.trim();
+    if(v){S.night.targetSkills.push({id:'c|'+uid(),name:v,stage:null});save('night');S._focus='customSkill';render();}}
+  if(e.target.id==='newScout'){e.preventDefault();const v=e.target.value.trim();
+    if(v){S.roster.push({id:uid(),name:v,section:'Scout',peak:false,milestone:1,memberNo:"",sias:[],priorKm:0,priorNights:0,peakSteps:[false,false,false,false,false,false,false]});
+      save('roster');S._focus='newScout';render();}}
+});
+document.getElementById('modal').addEventListener('click',e=>{
+  if(e.target.id==='modal')closeModal();
+});
+load().then(render);
+</script>
+</body>
+</html>
