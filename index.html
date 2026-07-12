@@ -395,6 +395,36 @@ function dutyPatrol(){
   if(!pats.length)return'';
   let wn=0;for(const x of S.year.terms[f.t].items){if(x.kind==='week')wn++;if(x.id===f.it.id)break;}
   return pats[(wn-1)%pats.length];}
+function roleNames(it,r){if(!it||!it.roles)return'';
+  return S.roster.filter(s=>it.roles[s.id]===r).map(s=>s.name.split(' ')[0]).join(', ');}
+function upcomingEvents(){
+  const today=todayISO();const out=[];
+  S.year.terms.forEach(tm=>tm.items.forEach(it=>{if(it.kind==='event'&&it.date&&it.date>=today)out.push(it);}));
+  (S.year.events||[]).forEach(it=>{if(it.date&&it.date>=today)out.push(it);});
+  out.sort((a,b)=>a.date<b.date?-1:1);
+  return out.slice(0,3).map(it=>(it.activity||it.type)+' — '+fmtD(it.date)).join('  ·  ');}
+function nextWeekInfo(){
+  const f=curItemR();let nxt=null;
+  if(f.t>=0&&f.it){const items=S.year.terms[f.t].items;const i=items.findIndex(x=>x.id===f.it.id);
+    for(let j=i+1;j<items.length;j++){if(items[j].kind==='week'){nxt=items[j];break;}}}
+  if(!nxt)return 'end of term — next term takes over';
+  const L=roleNames(nxt,'L'),A=roleNames(nxt,'A');
+  const pats=[...new Set(S.roster.map(s=>(s.patrol||'').trim()).filter(Boolean))].sort();
+  let ndp='';
+  if(pats.length&&f.t>=0&&f.it){let wn=0;
+    for(const x of S.year.terms[f.t].items){if(x.kind==='week')wn++;if(x.id===f.it.id)break;}
+    ndp=pats[wn%pats.length];}
+  return (nxt.activity||nxt.type||'—')+(L?' · Lead: '+L:'')+(A?' · Assist: '+A:'')+(ndp?' · Flag: '+ndp:'');}
+function runDefs(){
+  const dp=dutyPatrol(),f=curItemR();
+  return {
+    flag:['Flag break & opening',dp?dp+' patrol on flag & pack-up':''],
+    uniform:['Uniform check',''],
+    events:['Events word — what\'s coming up',upcomingEvents()||'nothing on the calendar yet'],
+    act:['Run the activity',S.night.activity||'set the activity in step 1'],
+    books:['Mark books — skills & participates, with tonight\'s lead',roleNames(f.it,'L')?'lead: '+roleNames(f.it,'L'):'no lead assigned for tonight'],
+    next:['Preview next week — who leads, assists, flag patrol',nextWeekInfo()],
+    close:['Flag down & close','']};}
 let R1_TMPL_BYTES=null;
 async function getR1Template(){
   if(R1_TMPL_BYTES)return R1_TMPL_BYTES;
@@ -592,10 +622,14 @@ function fmtD(iso){return new Date(iso+'T00:00').toLocaleDateString('en-AU',{day
 function cssv(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
+function freshRun(){return [
+  {k:'flag',done:false},{k:'uniform',done:false},{k:'events',done:false},
+  {k:'act',done:false},{k:'books',done:false},
+  {k:'next',done:false},{k:'close',done:false}];}
 function freshNight(){return {v:4,step:1,date:todayISO(),weekId:'',activity:'',areas:[],stream:'',openGroup:0,
   targetSkills:[],present:[],credits:{},skillsDone:{},logKm:false,logNights:false,kmLog:{},nightsLog:{},
   signedBy:'',saved:false,review:{worked:'',change:'',next:'',challenge:0,spices:[]},
-  run:[{k:'open',label:'Opening & flag',done:false},{k:'act',label:'Activity',done:false},{k:'close',label:'Close & pack-up',done:false}]};}
+  run:freshRun()};}
 const TERM_DEFS=[['Term 1','2026-02-02',9],['Term 2','2026-04-20',11],['Term 3','2026-07-20',10],['Term 4','2026-10-12',10]];
 function termForDate(d){let idx=0;TERM_DEFS.forEach((t,i)=>{if(d>=t[1])idx=i;});return idx;}
 function freshTermN(i){
@@ -845,7 +879,10 @@ async function load(){
   S.night=(nd&&nd.v===4&&!nd.saved)?nd:nightFromCurrent();
   if(!S.night.review)S.night.review={worked:'',change:'',next:'',challenge:0,spices:[]};
   if(!S.night.review.spices)S.night.review.spices=[];
-  if(!S.night.run)S.night.run=[{k:'open',label:'Opening & flag',done:false},{k:'act',label:'Activity',done:false},{k:'close',label:'Close & pack-up',done:false}];
+  if(!S.night.run)S.night.run=freshRun();
+  else if(S.night.run.length===3&&S.night.run[0].k==='open'){
+    const o=S.night.run;S.night.run=freshRun();
+    S.night.run[0].done=!!o[0].done;S.night.run[3].done=!!o[1].done;S.night.run[6].done=!!o[2].done;}
   save('year');
 }
 function seedWelcome(){return {
@@ -1137,12 +1174,14 @@ function vTonight(){
   return `<div class="view">
     <div class="view-title">Tonight at Scouts</div>
     <div class="view-sub">${fmtD(n.date)} · four steps, then sign off.</div>
-    ${(()=>{const dp=dutyPatrol();const tm=viewTerm?termTimeLabel(S.year.terms[curItemR().t>=0?curItemR().t:S.year.viewT]||{}):'';
-      const rows=n.run.map((r,i)=>`<div class="skrow ${r.done?'on':''}" data-act="runtick" data-i="${i}">
+    ${(()=>{const tm=viewTerm?termTimeLabel(S.year.terms[curItemR().t>=0?curItemR().t:S.year.viewT]||{}):'';
+      const defs=runDefs();
+      const rows=n.run.map((r,i)=>{const d=defs[r.k]||[r.label||r.k,''];
+        return `<div class="skrow ${r.done?'on':''}" data-act="runtick" data-i="${i}">
         <div class="skbox">${r.done?'<svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5l3 3 6-6.5" stroke="#F6F1E2" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
-        <div class="sktext"><b>${r.label}</b></div></div>`).join('');
+        <div class="sktext"><b>${d[0]}</b>${d[1]?`<br><span style="font-size:11px;color:var(--ink-soft)">${esc(d[1])}</span>`:''}</div></div>`;}).join('');
       return `<div class="card" style="padding:12px">
-        <div class="mini-cap" style="margin:0">Run sheet${tm?' · '+tm:''}${dp?` · <span style="color:${patrolColor(dp)}">●</span> ${esc(dp)} on duty — flag & pack-up`:''}</div>
+        <div class="mini-cap" style="margin:0">Run sheet${tm?' · '+tm:''}</div>
         ${rows}</div>`;})()}
     <div class="steps">${chev}</div>${body}
     ${n.step===1?recentNights():''}</div>`;
