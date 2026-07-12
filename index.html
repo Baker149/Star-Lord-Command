@@ -1159,10 +1159,14 @@ function render(){
 }
 function renderNav(){
   if(S.mode==='scout'){
+    const sv=S.scoutView||'tonight';
     document.getElementById('nav').innerHTML=
-      `<button data-act="nav" data-v="plan" class="on">
+      `<button data-act="scoutnav" data-v="tonight" class="${sv==='tonight'?'on':''}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 109 9 7 7 0 01-9-9z"/></svg>
+        <span class="nl">Tonight</span></button>
+      <button data-act="scoutnav" data-v="plan" class="${sv==='plan'?'on':''}">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z M9 4v14 M15 6v14"/></svg>
-        <span class="nl">Patrol Plan</span></button>
+        <span class="nl">Plan</span></button>
       <button data-act="unlockleader">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V7a5 5 0 0110 0v4 M5 11h14v10H5z"/></svg>
         <span class="nl">Leader</span></button>`;
@@ -1582,7 +1586,32 @@ function nightPlanUI(it){
     <span class="rl">Night plan</span><span class="rs">${st}</span>
     <span style="margin-left:auto;flex:none;transform:rotate(${it._planOpen?90:0}deg)">▸</span></div>${body}`;
 }
-function vScout(){
+function vScout(){return (S.scoutView||'tonight')==='plan'?vScoutPlan():vScoutTonight();}
+function vScoutTonight(){
+  const f=curItemR();const it=f.it;
+  if(!it||!(it.activity||'').trim())return `<div class="view">
+    <div class="view-title">Tonight</div>
+    <div class="view-sub">Follow the plan you built — the lead keeps time, the assist keeps it moving.</div>
+    <div class="card"><div class="empty">No plan for tonight yet — build it in the Plan tab, or ask Star-Lord which night is live.</div></div></div>`;
+  const p=ensurePlan(it);
+  const L=roleNames(it,'L'),A=roleNames(it,'A');
+  const sched=(p.sched||[]).map((r,i)=>`<div class="skrow ${r.done?'on':''}" data-act="schedtick" data-id="${it.id}" data-i="${i}">
+    <div class="skbox">${r.done?'<svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5l3 3 6-6.5" stroke="#F6F1E2" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
+    <div class="sktext"><b>${esc([r.d,r.t].filter(Boolean).join(' '))}</b> ${esc(r.w||'')}</div></div>`).join('');
+  return `<div class="view">
+    <div class="view-title">Tonight</div>
+    <div class="view-sub">${esc(it.activity)}${it.time?' · '+esc(it.time):''}${p.where?' · '+esc(p.where):''}</div>
+    <div class="card"><h3>Who's on</h3>
+      <p class="hint" style="margin:0 0 4px"><b>Lead${L?': '+esc(L):' — not set'}</b> · keeps time, runs the plan, reads out the review at the end.</p>
+      <p class="hint" style="margin:0"><b>Assist${A?': '+esc(A):' — not set'}</b> · sets up, explains the rules, manages the gear, records the review.</p></div>
+    <div class="card"><h3>Schedule — tick as you go</h3>
+      ${sched||'<p class="hint" style="margin:0">No time slots yet — the lead builds these in the Plan tab.</p>'}</div>
+    ${p.equipment?`<div class="card"><h3>Equipment</h3><p class="hint" style="margin:0;white-space:pre-wrap">${esc(p.equipment)}</p></div>`:''}
+    ${p.game?`<div class="card"><h3>Game</h3><p class="hint" style="margin:0">${esc(p.game)}</p></div>`:''}
+    <div class="card"><h3>After the night</h3>
+      <p class="hint" style="margin:0">Lead reads the review out. Assist records it. Everyone: reflection goes in your book before you head off.</p></div></div>`;
+}
+function vScoutPlan(){
   const vi=S.year.viewT>=0?S.year.viewT:termForDate(todayISO());
   const chips=S.year.terms.map((tm,i)=>
     `<button class="tchip ${vi===i?'on':''}" data-act="planview" data-t="${i}">${tm.label}</button>`).join('');
@@ -1610,13 +1639,15 @@ function printTermPlan(){
   const rows=t.items.map(it=>{
     if(it.kind==='week'){wn++;
       const nm=it.type==='Activity'?(it.activity||'—'):it.type+' night';
-      return `<tr><td>${weekDate(t,wn)||''}</td><td>${wn}</td><td>${esc(nm)}</td><td>${(it.areas||[]).join(', ')}</td><td>${esc(roleNames(it,'L'))}</td><td>${esc(roleNames(it,'A'))}</td></tr>`;}
-    return `<tr class="ev"><td>${fmtD(it.startDate||it.date||'')||''}</td><td>★</td><td>${esc(it.activity||it.type)}</td><td>${(it.areas||[]).join(', ')}</td><td></td><td></td></tr>`;
+      const tp=[it.time,(it.plan&&it.plan.where)||''].filter(Boolean).join(' · ');
+      return `<tr><td>${weekDate(t,wn)||''}</td><td>${wn}</td><td>${esc(nm)}</td><td>${esc(tp)}</td><td>${(it.areas||[]).join(', ')}</td><td>${esc(roleNames(it,'L'))}</td><td>${esc(roleNames(it,'A'))}</td></tr>`;}
+    const tpe=[it.time,(it.plan&&it.plan.where)||''].filter(Boolean).join(' · ');
+    return `<tr class="ev"><td>${fmtD(it.startDate||it.date||'')||''}</td><td>★</td><td>${esc(it.activity||it.type)}</td><td>${esc(tpe)}</td><td>${(it.areas||[]).join(', ')}</td><td></td><td></td></tr>`;
   }).join('');
   document.getElementById('printArea').innerHTML=
     `<h1>1st Herne Hill — ${esc(t.label)} plan</h1>
      <p class="sub">${esc(termTimeLabel(t)||'')} · Scouts & Venturers · printed ${fmtD(todayISO())}</p>
-     <table><tr><th>Date</th><th>Wk</th><th>Night</th><th>Challenge areas</th><th>Lead</th><th>Assist</th></tr>${rows}</table>`;
+     <table><tr><th>Date</th><th>Wk</th><th>Night</th><th>Time & place</th><th>Challenge areas</th><th>Lead</th><th>Assist</th></tr>${rows}</table>`;
   setTimeout(()=>window.print(),50);
 }
 function vPlan(){
@@ -1809,7 +1840,9 @@ function planTermView(){
     let inner;
     if(it.type==='Activity'){
       inner=`${wncol}<div class="toprow">${tsel}${curBtn}${calBtn}</div>
-        <div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity)}" placeholder="Activity name"></div>${areaChips}${rolesUI(it)}${planSkillsUI(it)}${nightPlanUI(it)}
+        <div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity)}" placeholder="Activity name"></div>
+        <div class="namerow"><input type="text" data-act="wktime" data-id="${it.id}" value="${esc(it.time||'')}" placeholder="Time — e.g. 6:30–8:30 pm" style="flex:.8">
+          <input type="text" data-act="npf" data-f="where" data-id="${it.id}" value="${esc((it.plan&&it.plan.where)||'')}" placeholder="Location — hall, park, off-site" style="flex:1.2"></div>${areaChips}${rolesUI(it)}${planSkillsUI(it)}${nightPlanUI(it)}
         <button class="addevent" style="margin-top:6px" data-act="r1open" data-id="${it.id}">🛡 R1 risk assessment${it.r1?' ✓':''}</button>`;
     }else{
       const lbl=it.type==='Planning'?'Plan next term — Personal Growth, can be a lead/assist'
@@ -2354,6 +2387,8 @@ document.addEventListener('click',e=>{
       save('roster');save('year');save('nights');save('welcome');save('contacts');render();uiAlert('Backup restored.');}
     catch(err){uiAlert('That does not look like valid backup data.');}});return;}
   if(a==='scoutmode'){S.mode='scout';render();return;}
+  if(a==='scoutnav'){S.scoutView=t.dataset.v;render();return;}
+  if(a==='schedtick'){const it=planFind(t.dataset.id).it;if(it){const r=ensurePlan(it).sched[+t.dataset.i];if(r){r.done=!r.done;save('year');render();}}return;}
   if(a==='unlockleader'){
     if(!S.pin){
       uiPrompt('Set the leader PIN','First time on this device — pick the PIN that unlocks leader mode. It sticks until you change it.',(v)=>{
@@ -2414,6 +2449,7 @@ document.addEventListener('input',e=>{
         b.disabled=!ok;b.style.opacity=ok?'1':'.45';}}}
   if(a==='wkact'){const it=planFind(t.dataset.id).it;if(it){it.activity=t.value;save('year');}}
   if(a==='npf'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it)[t.dataset.f]=t.value;save('year');}}
+  if(a==='wktime'){const it=planFind(t.dataset.id).it;if(it){it.time=t.value;save('year');}}
   if(a==='schedf'){const it=planFind(t.dataset.id).it;if(it){const r=ensurePlan(it).sched[+t.dataset.i];if(r){r[t.dataset.f]=t.value;save('year');}}}
   if(a==='nrevf'){S.night.review[t.dataset.f]=t.value;save('night');}
   if(a==='revf'){const tm=viewTerm();tm.review=tm.review||{worked:'',tricky:'',ideas:''};
