@@ -865,6 +865,8 @@ async function load(){
   S.roster=r?JSON.parse(r):SEED.map(s=>({id:uid(),name:s.name,section:'Scout',peak:false,milestone:1,memberNo:s.memberNo||'',sias:[],priorKm:s.priorKm||0,priorNights:s.priorNights||0,peakSteps:TEN_F.slice()}));
   rosterDefaults();
   const mt=await Store.get('muster.meta');S.meta=mt?JSON.parse(mt):{updatedAt:0};
+  S.mode=(await Store.get('muster.mode'))||'leader';
+  S.pin=(await Store.get('muster.pin'))||'';
   if(S._gmPurged||S._rosterDirty){delete S._gmPurged;delete S._rosterDirty;Store.set('muster.roster',JSON.stringify(S.roster));}
   const dv=await Store.get('muster.drive');S.drive=dv?JSON.parse(dv):{clientId:'',fileId:'',lastSync:0,enabled:false,tok:null};
   const y=await Store.get('muster.year');
@@ -1139,11 +1141,21 @@ function nextBadge(total,arr){for(const v of arr)if(v>total)return v;return null
 /* ===== render ===== */
 function render(){
   document.getElementById('main').innerHTML=
+    S.mode==='scout'?vScout():
     ({tonight:vTonight,plan:vPlan,troop:vTroop,comms:vComms,welcome:vWelcome,rules:vRules})[S.view]();
   renderNav();
   if(S._focus){const el=document.getElementById(S._focus);if(el)el.focus();S._focus=null;}
 }
 function renderNav(){
+  if(S.mode==='scout'){
+    document.getElementById('nav').innerHTML=
+      `<button data-act="nav" data-v="plan" class="on">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z M9 4v14 M15 6v14"/></svg>
+        <span class="nl">Patrol Plan</span></button>
+      <button data-act="unlockleader">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V7a5 5 0 0110 0v4 M5 11h14v10H5z"/></svg>
+        <span class="nl">Leader</span></button>`;
+    return;}
   const items=[
     ['tonight','Tonight','M12 3L4 9v11h6v-6h4v6h6V9z'],
     ['plan','Plan','M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z M9 4v14 M15 6v14'],
@@ -1523,6 +1535,56 @@ function vR1(it){
       <button class="btn primary" data-act="r1dl" style="width:100%;margin-top:10px">Download R1 (.xlsx)</button>
       <p class="hint" style="margin-top:7px">Chevron locked — send it up the chain: Group Leader → District → risk team.</p></div></div>`;
 }
+function ensurePlan(it){if(!it.plan)it.plan={how:'',where:'',equipment:'',game:'',permissions:'',assist:'',contingency:'',status:''};return it.plan;}
+function nightPlanUI(it){
+  const p=ensurePlan(it);
+  const st=p.status==='submitted'?'🟡 submitted — ready to check':p.status==='checked'?'✓ checked':'not started';
+  let body='';
+  if(it._planOpen){
+    const F=(f,ph,ta)=>ta
+      ?`<textarea data-act="npf" data-id="${it.id}" data-f="${f}" placeholder="${ph}" style="min-height:44px">${esc(p[f]||'')}</textarea>`
+      :`<input type="text" data-act="npf" data-id="${it.id}" data-f="${f}" value="${esc(p[f]||'')}" placeholder="${ph}">`;
+    const btns=S.mode==='scout'
+      ?(p.status==='submitted'?`<p class="hint" style="margin:6px 0 0">Submitted — Star-Lord will check it over.</p>`
+        :`<button class="btn primary full" data-act="npsubmit" data-id="${it.id}" style="margin-top:8px">Submit plan for Star-Lord to check</button>`)
+      :(p.status==='submitted'
+        ?`<div class="btn-row" style="margin-top:8px"><button class="btn primary" data-act="npcheck" data-id="${it.id}">Mark checked ✓</button><button class="btn ghost" data-act="npback" data-id="${it.id}">Send back</button></div>`
+        :p.status==='checked'?`<div class="btn-row" style="margin-top:8px"><button class="btn ghost sm" data-act="npback" data-id="${it.id}">Reopen</button></div>`:'');
+    body=`<div style="width:100%;margin-top:4px">
+      ${F('how','How are we running it — the plan in a few lines',true)}
+      ${F('where','Where — hall, park, off-site…')}
+      ${F('equipment','Equipment & resources needed',true)}
+      ${F('game','Game — what and when')}
+      ${F('permissions','Permissions needed? (parents, hall, land owner…)')}
+      ${F('assist','Assistance needed? (qualified person, extra leader…)')}
+      ${F('contingency','Contingency — default: roll it to next week, preload next night')}
+      ${btns}</div>`;}
+  return `<div class="roles-bar" data-act="nptoggle" data-id="${it.id}">
+    <span class="rl">Night plan</span><span class="rs">${st}</span>
+    <span style="margin-left:auto;flex:none;transform:rotate(${it._planOpen?90:0}deg)">▸</span></div>${body}`;
+}
+function vScout(){
+  const vi=S.year.viewT>=0?S.year.viewT:termForDate(todayISO());
+  const chips=S.year.terms.map((tm,i)=>
+    `<button class="tchip ${vi===i?'on':''}" data-act="planview" data-t="${i}">${tm.label}</button>`).join('');
+  const t=S.year.terms[vi];let wn=0;
+  const cards=t.items.map(it=>{
+    if(it.kind==='week')wn++;
+    if(!(it.kind==='week'&&it.type==='Activity')&&it.kind!=='event')return'';
+    const L=roleNames(it,'L'),A=roleNames(it,'A');
+    const head=it.kind==='event'?('★ '+(it.activity||it.type)):('Week '+wn+(weekDate(t,wn)?' · '+weekDate(t,wn):''));
+    return `<div class="wk ${it.kind==='event'?'event':''}">
+      <div class="fullrow"><b>${esc(head)}</b></div>
+      <div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity||'')}" placeholder="Activity name"></div>
+      <p class="hint" style="margin:2px 0 4px;width:100%">${L?'Lead: '+esc(L):'No lead yet'}${A?' · Assist: '+esc(A):''}</p>
+      ${planSkillsUI(it)}
+      ${nightPlanUI(it)}</div>`;}).join('');
+  return `<div class="view">
+    <div class="view-title">Patrol Planning</div>
+    <div class="view-sub">Leads: open your night, set the skills you're targeting, fill the plan, hit submit. Star-Lord checks it before the night.</div>
+    <div class="tchips">${chips}</div>
+    ${cards||'<div class="card"><div class="empty">No activities this term yet.</div></div>'}</div>`;
+}
 function vPlan(){
   if(S._r1Id){const f=planFind(S._r1Id);if(f.it&&f.it.r1)return vR1(f.it);S._r1Id=null;}
   const vi=S.year.viewT;
@@ -1533,6 +1595,11 @@ function vPlan(){
   return `<div class="view">
     <div class="view-title">Year Plan</div>
     <div class="view-sub">Four terms plus the events between them. Tonight picks itself from today's date — ● shows it. Pin a night only to override.</div>
+    ${(()=>{let sub=0;S.year.terms.forEach(tm=>tm.items.forEach(it=>{if(it.plan&&it.plan.status==='submitted')sub++;}));
+      (S.year.events||[]).forEach(it=>{if(it.plan&&it.plan.status==='submitted')sub++;});
+      return `<div class="btn-row" style="margin:4px 0 8px">
+        <button class="btn ghost sm" data-act="scoutmode">🖖 Hand to patrol (scout mode)</button>
+        ${sub?`<span class="chip on" style="background:var(--amber);align-self:center">${sub} plan${sub>1?'s':''} ready to check</span>`:''}</div>`;})()}
     <div class="tchips">${chips}</div>
     ${body}</div>`;
 }
@@ -1595,7 +1662,7 @@ function eventCard(it){
       <span class="dp"><label>Finish</label><input type="date" data-act="evend" data-id="${it.id}" value="${it.endDate||''}"></span>
       <span class="dp"><label>Time</label><input type="time" data-act="evetime" data-id="${it.id}" value="${it.timeEnd||''}"></span>
     </div>
-    ${areaChips}${rolesUI(it)}${planSkillsUI(it)}
+    ${areaChips}${rolesUI(it)}${planSkillsUI(it)}${nightPlanUI(it)}
     ${it.startDate?`<button class="addevent" style="margin-top:8px" data-act="ics" data-id="${it.id}">📅 Add to calendar</button>`:''}
     <button class="addevent" style="margin-top:6px" data-act="r1open" data-id="${it.id}">🛡 R1 risk assessment${it.r1?' ✓':''}</button>
     <button class="evdel" data-act="delitem" data-id="${it.id}">✕ Delete this event</button></div>`;
@@ -1708,7 +1775,7 @@ function planTermView(){
     let inner;
     if(it.type==='Activity'){
       inner=`${wncol}<div class="toprow">${tsel}${curBtn}${calBtn}</div>
-        <div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity)}" placeholder="Activity name"></div>${areaChips}${rolesUI(it)}${planSkillsUI(it)}
+        <div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity)}" placeholder="Activity name"></div>${areaChips}${rolesUI(it)}${planSkillsUI(it)}${nightPlanUI(it)}
         <button class="addevent" style="margin-top:6px" data-act="r1open" data-id="${it.id}">🛡 R1 risk assessment${it.r1?' ✓':''}</button>`;
     }else{
       const lbl=it.type==='Planning'?'Plan next term — Personal Growth, can be a lead/assist'
@@ -2332,6 +2399,22 @@ document.addEventListener('click',e=>{
       rosterDefaults();
       save('roster');save('year');save('nights');save('welcome');save('contacts');render();uiAlert('Backup restored.');}
     catch(err){uiAlert('That does not look like valid backup data.');}});return;}
+  if(a==='scoutmode'){
+    const go=()=>{S.mode='scout';Store.set('muster.mode','scout');render();};
+    if(S.pin)go();
+    else uiPrompt('Set a leader PIN','Pick a PIN to get back into leader mode. The patrol won\'t see guardian details or leader tools while scout mode is on.',(v)=>{
+      if(!v||!v.trim())return uiAlert('Need a PIN to switch — otherwise you can\'t get back in.');
+      S.pin=v.trim();Store.set('muster.pin',S.pin);go();});
+    return;}
+  if(a==='unlockleader'){
+    uiPrompt('Leader unlock','Enter the leader PIN.',(v)=>{
+      if((v||'').trim()===S.pin){S.mode='leader';Store.set('muster.mode','leader');render();}
+      else uiAlert('Wrong PIN.');});
+    return;}
+  if(a==='nptoggle'){const it=planFind(t.dataset.id).it;if(it){it._planOpen=!it._planOpen;render();}return;}
+  if(a==='npsubmit'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).status='submitted';save('year');render();}return;}
+  if(a==='npcheck'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).status='checked';save('year');render();}return;}
+  if(a==='npback'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).status='';save('year');render();}return;}
   if(a==='bgive'||a==='bundo'){const s=S.roster.find(x=>x.id===t.dataset.id);if(!s)return;
     s.badges=s.badges||{};
     if(a==='bgive')s.badges[t.dataset.k]=todayISO();else delete s.badges[t.dataset.k];
@@ -2375,6 +2458,7 @@ document.addEventListener('input',e=>{
       if(b){const ok=S.night.activity.trim()&&S.night.areas.length&&(S.night.signedBy||'').trim()&&(S.night.plBy||'').trim();
         b.disabled=!ok;b.style.opacity=ok?'1':'.45';}}}
   if(a==='wkact'){const it=planFind(t.dataset.id).it;if(it){it.activity=t.value;save('year');}}
+  if(a==='npf'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it)[t.dataset.f]=t.value;save('year');}}
   if(a==='commsg'){S.msgText=t.value;}
   if(a==='nrevf'){S.night.review[t.dataset.f]=t.value;save('night');}
   if(a==='revf'){const tm=viewTerm();tm.review=tm.review||{worked:'',tricky:'',ideas:''};
