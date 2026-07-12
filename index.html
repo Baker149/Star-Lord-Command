@@ -545,6 +545,7 @@ const WK_TYPES=['Activity','Planning','Risk Assessment','Badge Night'];
 const EV_TYPES=['Camp','Hike','Weekend Activity','Other'];
 const STREAMS=['Bushcraft','Bushwalking','Camping','Alpine','Cycling','Vertical','Aquatics','Boating','Paddling'];
 const SIA_AREAS=['Adventure & Sport','Arts & Literature','Creating a Better World','Environment','Growth & Development','STEM & Innovation'];
+const WB_IMPORT={"155207":{"name":"Ailia List","section":"Scout","milestone":1,"opening":{"Community":2,"Creative":4,"Outdoors":2},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3,"Vertical":1}},"108852":{"name":"Alexii Doney","section":"Venturer","milestone":3,"opening":{"Community":4,"Creative":1,"Outdoors":2,"Personal Growth":1,"L":1},"oasFrom":{"Bushcraft":5,"Bushwalking":5,"Camping":5,"Vertical":2,"Boating":1}},"144791":{"name":"Ashton Baker","section":"Scout","milestone":2,"opening":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":5,"A":1,"L":1},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3,"Cycling":2,"Vertical":1,"Aquatics":3,"Boating":1,"Paddling":1}},"136717":{"name":"Ben Kelly","section":"Scout","milestone":1,"opening":{"Community":5,"Creative":4,"Outdoors":5,"Personal Growth":3,"A":2},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3,"Vertical":1}},"149622":{"name":"Jesse Rujic","section":"Scout","milestone":1,"opening":{"Community":4,"Creative":3,"Outdoors":2,"Personal Growth":2,"A":1},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3}},"132759":{"name":"Katie Williams","section":"Scout","milestone":3,"opening":{"Community":4,"Creative":4,"Outdoors":4,"Personal Growth":4,"A":4,"L":3},"oasFrom":{"Bushcraft":4,"Bushwalking":4,"Camping":5,"Alpine":1,"Vertical":2,"Boating":1}},"128277":{"name":"Ryan Caelli","section":"Venturer","milestone":2,"opening":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":4,"L":2},"oasFrom":{"Bushcraft":4,"Bushwalking":3,"Camping":4,"Vertical":1}},"105539":{"name":"Sophia Baxter","section":"Venturer","milestone":2,"opening":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":5,"A":2,"L":2},"oasFrom":{"Bushcraft":5,"Bushwalking":5,"Camping":5,"Alpine":1,"Vertical":2,"Boating":1}},"124711":{"name":"Stephanie Baxter","section":"Scout","milestone":3,"opening":{"Community":4,"Creative":4,"Outdoors":4,"Personal Growth":4,"A":4,"L":4},"oasFrom":{"Bushcraft":4,"Bushwalking":3,"Camping":4,"Alpine":1,"Vertical":2}},"149827":{"name":"Tyler Caelli","section":"Scout","milestone":3,"opening":{"Community":4,"Creative":4,"Outdoors":4,"Personal Growth":4,"A":4,"L":2},"oasFrom":{"Bushcraft":4,"Bushwalking":3,"Camping":4,"Vertical":1}},"156063":{"name":"William Gomersall","section":"Scout","milestone":1,"opening":{"Community":1,"Creative":3,"Outdoors":1,"L":1},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3,"Vertical":1}},"170510":{"name":"Kobie Bennett","section":"Scout","milestone":1,"opening":{"Community":1,"Creative":1},"oasFrom":{}},"170428":{"name":"Cooper Wheatly","section":"Scout","milestone":1,"opening":{"A":2,"L":1},"oasFrom":{}}};
 const PEAK_STEPS=[
  ['Intro to Scouting','Complete Introduction to Scouting'],
  ['Intro to Scout Section','Complete Introduction to Scout Section'],
@@ -810,8 +811,10 @@ function rosterDefaults(){
     else while(s.peakSteps.length<10)s.peakSteps.push(false);
     // auto steps (M1-M3, OAS, SIA) are computed live now — clear any latched values
     PEAK_AUTO.forEach(i=>{if(s.peakSteps[i]){s.peakSteps[i]=false;S._rosterDirty=true;}});
-    ['g1name','g1phone','g2name','g2phone','medical'].forEach(k=>{
+    ['medical'].forEach(k=>{
       if(s[k]!=null){delete s[k];S._gmPurged=true;}});
+    if(s.g1name==null)s.g1name='';if(s.g1phone==null)s.g1phone='';if(s.g1email==null)s.g1email='';
+    if(s.g2name==null)s.g2name='';if(s.g2phone==null)s.g2phone='';if(s.g2email==null)s.g2email='';
     if(s.patrol==null)s.patrol='';
     if(s.milestone==null)s.milestone=1;if(s.section==null)s.section='Scout';
     if(!s.msOpening||s.msOpening.Community!=null){
@@ -1109,7 +1112,7 @@ function renderNav(){
     ['troop','Youth','M9 11a3 3 0 100-6 3 3 0 000 6z M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5 M17 11a3 3 0 100-6 M15.5 15c3 .3 5.5 2 5.5 5'],
     ['comms','Comms','M4 5h16v11H9l-5 4z M8 9h8 M8 12h5'],
     ['welcome','New','M9 11a3 3 0 100-6 3 3 0 000 6z M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5 M18 5v6 M15 8h6'],
-    ['rules','Rules','M5 3h11l3 3v15H5z M9 8h7 M9 12h7 M9 16h4']];
+    ['rules','Badges','M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 8.7l5.4-.8z']];
   document.getElementById('nav').innerHTML=items.map(([v,l,d])=>
     `<button data-act="nav" data-v="${v}" class="${S.view===v?'on':''}">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1826,9 +1829,25 @@ function vTroop(){
             <input type="date" data-act="scdate" data-f="dob" data-id="${s.id}" value="${s.dob||''}"></span>
           <span class="dp"><label>Joined Scouting</label>
             <input type="date" data-act="scdate" data-f="joined" data-id="${s.id}" value="${s.joined||''}"></span>
-          <span class="dp"><label>Invested in section</label>
-            <input type="date" data-act="scdate" data-f="sectionStart" data-id="${s.id}" value="${s.sectionStart||''}"></span>
         </div>
+        <div class="mini-cap">Guardians</div>
+        <div class="namerow">
+          <input type="text" data-act="g1n" data-id="${s.id}" value="${esc(s.g1name||'')}" placeholder="Guardian 1 name">
+          <input type="tel" data-act="g1p" data-id="${s.id}" value="${esc(s.g1phone||'')}" placeholder="Mobile">
+        </div>
+        <div class="namerow">
+          <input type="email" data-act="g1e" data-id="${s.id}" value="${esc(s.g1email||'')}" placeholder="Guardian 1 email">
+        </div>
+        <div class="namerow">
+          <input type="text" data-act="g2n" data-id="${s.id}" value="${esc(s.g2name||'')}" placeholder="Guardian 2 name">
+          <input type="tel" data-act="g2p" data-id="${s.id}" value="${esc(s.g2phone||'')}" placeholder="Mobile">
+        </div>
+        <div class="namerow">
+          <input type="email" data-act="g2e" data-id="${s.id}" value="${esc(s.g2email||'')}" placeholder="Guardian 2 email">
+        </div>
+        ${(s.g1phone||s.g2phone)?`<div class="btn-row" style="margin:7px 0 2px">
+          ${s.g1phone?`<a class="btn ghost sm callbtn" href="tel:${esc(s.g1phone)}">📞 ${esc(s.g1name||'G1')}</a>`:''}
+          ${s.g2phone?`<a class="btn ghost sm callbtn" href="tel:${esc(s.g2phone)}">📞 ${esc(s.g2name||'G2')}</a>`:''}</div>`:''}
         <p class="hint" style="margin:4px 0 2px">Participates per challenge area (Milestone ${cur})</p>
         <div class="prog-grid">${grid}</div>
         <div class="al-line">Assists <b>${p.A}/${tg.A}</b> · Leads <b>${p.L}/${tg.L}</b></div>
@@ -1890,9 +1909,6 @@ function vTroop(){
   return `<div class="view">
     <div class="view-title">The Youth</div>
     <div class="view-sub">Every scout's progress in one place. ★ = chasing Peak Award — plan the term around them.</div>
-    <div class="card"><h3>Family contacts & medical</h3>
-      <p class="hint">Lives in Tracey's group-wide contacts file on the Scouts OneDrive (Joeys through to Vents) — not on this device. Open it to view, add or update any family's details.</p>
-      <a class="btn primary" href="https://scoutswa.sharepoint.com/:x:/r/sites/HerneHillScoutGroup/_layouts/15/Doc.aspx?sourcedoc=%7BF82A52D5-A81A-431A-B190-6ADB487ADE38%7D&amp;file=Parent%20Contacts%20-%20Joeys%2C%20Cub%2C%20Scouts%2C%20Vents%20(May%2026).xlsx&amp;action=default&amp;mobileredirect=true" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">📁 Open family records (OneDrive)</a></div>
     <div class="card"><h3>Add a scout</h3>
       <div class="addrow"><input type="text" id="newScout" placeholder="Scout's name">
         <button class="btn primary" data-act="addscout" style="flex:none">Add</button></div></div>
@@ -1903,7 +1919,13 @@ function vTroop(){
 function normPhone(p){let d=(p||'').replace(/[^0-9]/g,'');
   if(d.startsWith('0'))d='61'+d.slice(1);return d;}
 function commsPeople(){
-  const ppl=S.roster.map(s=>({id:s.id,name:s.name,sub:'Parent/guardian',phone:'',tag:'Scouts'}));
+  const ppl=[];
+  S.roster.forEach(s=>{
+    const g1=s.g1name||s.g1phone,g2=s.g2name||s.g2phone;
+    if(g1)ppl.push({id:s.id+'|g1',name:s.g1name||'Guardian 1',sub:s.name,phone:s.g1phone||'',tag:'Scouts'});
+    if(g2)ppl.push({id:s.id+'|g2',name:s.g2name||'Guardian 2',sub:s.name,phone:s.g2phone||'',tag:'Scouts'});
+    if(!g1&&!g2)ppl.push({id:s.id+'|g1',name:s.name,sub:'no guardian saved',phone:'',tag:'Scouts'});
+  });
   S.contacts.forEach(c=>ppl.push({id:c.id,name:c.name,sub:c.tag,phone:c.phone||'',tag:c.tag==='Venturer'?'Venturers':'Leaders'}));
   return ppl;
 }
@@ -1943,7 +1965,7 @@ function vComms(){
         <button class="btn ghost" data-act="copymsg">Copy message</button>
         <button class="btn primary" data-act="buildlinks">Open channels (${selN})</button></div></div>
     <div class="card"><h3>Who's it going to?</h3>
-      <p class="hint">Tick venturers and leaders for one-tap WhatsApp links. Family numbers live in the OneDrive records now, so for parents hit Copy message and paste it into the section group chat.</p>
+      <p class="hint">Tap a section to select everyone in it, or tick people one by one. Each guardian gets their own one-tap WhatsApp link.</p>
       <div class="areachips" style="margin:4px 0 8px">${secChips}</div>
       ${rows||'<div class="empty">No people yet.</div>'}</div>
     ${links}
@@ -1996,33 +2018,31 @@ function vWelcome(){
 }
 
 /* ---- RULES ---- */
+function badgesFor(s){
+  const list=[];
+  const md=msDoneCalc(s);
+  [1,2,3].forEach(m=>{if(md[m-1])list.push({key:'M'+m,label:'Milestone '+m});});
+  const o=oasFor(s.id);
+  STREAMS.forEach(st=>{const v=o.streams[st];if(!v)return;
+    for(let g=(v.from||0)+1;g<=v.cur;g++)list.push({key:'OAS_'+st+'_'+g,label:st+' Stage '+g});});
+  (s.sias||[]).forEach(x=>list.push({key:'SIA_'+x.id,label:'SIA — '+(x.area||'project')}));
+  if(s.peak&&peakStepState(s).every(Boolean))list.push({key:'PEAK',label:'Peak Award ★'});
+  return list;}
 function vRules(){
-  const msRows=Object.entries(MS).map(([m,t])=>
-    `<tr><td><b>Milestone ${m}</b></td><td>${t.P} per area</td><td>${t.A}</td><td>${t.L}</td></tr>`).join('');
+  const cards=S.roster.map(s=>{
+    const earned=badgesFor(s);
+    if(!earned.length)return '';
+    const b=s.badges||{};
+    const pend=earned.filter(e=>!b[e.key]);
+    const given=earned.filter(e=>b[e.key]);
+    return `<div class="card"><h3>${esc(s.name)}</h3>
+      ${pend.map(e=>`<div class="linkrow"><span class="rn">🎖 ${esc(e.label)}</span><button class="btn primary sm" data-act="bgive" data-id="${s.id}" data-k="${e.key}">Given ✓</button></div>`).join('')||'<p class="hint" style="margin:0">Nothing waiting — all presented.</p>'}
+      ${given.length?`<div class="mini-cap" style="margin-top:8px">Presented</div>`+given.map(e=>`<div class="linkrow"><span class="rn" style="color:var(--ink-soft)">✓ ${esc(e.label)} <span class="mno">· ${b[e.key]}</span></span><button class="btn ghost sm" data-act="bundo" data-id="${s.id}" data-k="${e.key}">↺</button></div>`).join(''):''}
+    </div>`;}).join('');
   return `<div class="view">
-    <div class="view-title">Field Rules</div>
-    <div class="view-sub">The system, always in your pocket.</div>
-    <div class="card"><h3>Milestone targets</h3>
-      <p class="hint">Milestones restart each section. Four areas: Community, Creative, Outdoors, Personal Growth.</p>
-      <table class="tbl"><tr><th></th><th>Participates</th><th>Assists</th><th>Leads</th></tr>${msRows}</table>
-      <p class="hint" style="margin-top:9px">Each Milestone needs a personal reflection at the end of that Milestone.</p></div>
-    <div class="card"><h3>The night routine</h3>
-      <div class="rule-li">1 — Set up: name the activity, pick challenge areas, tap the OAS skills from the stream, switch on km/nights logging if needed.</div>
-      <div class="rule-li">2 — Roll: mark who is actually present.</div>
-      <div class="rule-li">3 — Record: per scout, set the milestone credit, tick the OAS skills they demonstrated, enter km/nights.</div>
-      <div class="rule-li">4 — Sign off: you confirm the credits and skills, it saves, you get the workbook entries.</div></div>
-    <div class="card"><h3>Awards & SIAs</h3>
-      <div class="rule-li">Walkabout km and Camper nights add up automatically — set each scout's prior total once in the Youth tab.</div>
-      <div class="rule-li">SIAs are logged per scout in the Youth tab — 6 across 3+ areas for the Peak Award.</div></div>
-    <div class="card"><h3>Term cycle</h3>
-      <div class="rule-li">Block a Planning week and a Risk Assessment week before the holidays.</div>
-      <div class="rule-li">Block a Badge Night for handing badges out.</div>
-      <div class="rule-li">Insert camps & weekend activities between weeks as they come up.</div>
-      <div class="rule-li">On the Planning night, assign Lead/Assist roles to each activity & camp — they pre-fill the credits when that night runs.</div>
-      <div class="rule-li">Over the holidays, load the plan into Scout Map — then it's just record, record, record.</div></div>
-    <div class="card"><h3>Night designations</h3>
-      <p class="hint">Every signed-off night gets a gate address, e.g. <b>S6O-204</b> — Section, year digit, activity letter, then term & night (204 = Term 2, night 4).</p>
-      <div class="rule-li">Letters: C Community · E Creative · O Outdoors · G Growth · X mixed · K Camp · H Hike · P Planning · R Risk · B Badge night. Term 0 = outside term time.</div></div>
+    <div class="view-title">Badge Board</div>
+    <div class="view-sub">Everything earned, everything handed over. Tick it when it hits their shirt.</div>
+    ${cards||'<div class="card"><div class="empty">Nothing earned yet — badges build from signed-off nights.</div></div>'}
     <div class="card"><h3>Google Drive sync</h3>
       <p class="hint">One copy of your data, living in your Google Drive. Plan on the laptop, open the phone, it's there. The app pulls the newest copy on open and pushes your changes a few seconds after you make them.</p>
       <div class="rule-li" id="dstatus">${driveStatusText()}</div>
@@ -2038,6 +2058,9 @@ function vRules(){
       <p class="hint">Data saves on this device/account. Export a copy before big changes, and to move between phone & laptop.</p>
       <div class="btn-row"><button class="btn ghost" data-act="export">Export data</button>
         <button class="btn ghost" data-act="import">Import data</button></div></div>
+    <div class="card"><h3>Import from Tracey's workbooks</h3>
+      <p class="hint">Sets each scout's current milestone, opening balance and OAS starting stages to match the official OAS + Milestone workbooks (snapshot as at May '26). Matches by member number. Only touches those starting values — nothing you've logged on nights changes. Export a backup first.</p>
+      <div class="btn-row"><button class="btn ghost" data-act="wbimport">Preview import</button></div></div>
     <div class="gate-footer">
       <div class="chevrons">${[1,2,3,4,5,6,7].map(i=>chevSVG(i===7?'done':'pending')).join('')}</div>
       <div class="desig">Star-Lord Command · designation P3X-797 · chevron seven locked</div>
@@ -2267,6 +2290,36 @@ document.addEventListener('click',e=>{
       rosterDefaults();
       save('roster');save('year');save('nights');save('welcome');save('contacts');render();uiAlert('Backup restored.');}
     catch(err){uiAlert('That does not look like valid backup data.');}});return;}
+  if(a==='bgive'||a==='bundo'){const s=S.roster.find(x=>x.id===t.dataset.id);if(!s)return;
+    s.badges=s.badges||{};
+    if(a==='bgive')s.badges[t.dataset.k]=todayISO();else delete s.badges[t.dataset.k];
+    save('roster');render();return;}
+  if(a==='wbimport'){
+    const matched=[],unmatched=[];
+    S.roster.forEach(s=>{const w=WB_IMPORT[(s.memberNo||'').trim()];if(w)matched.push([s,w]);});
+    Object.keys(WB_IMPORT).forEach(num=>{
+      if(!S.roster.some(s=>(s.memberNo||'').trim()===num))unmatched.push(WB_IMPORT[num]);});
+    if(!matched.length){uiAlert('No scouts matched by member number. Check member numbers are entered in the Youth tab.');return;}
+    const SH={Community:'C',Creative:'Cr',Outdoors:'O','Personal Growth':'PG',A:'Assist',L:'Lead'};
+    const lines=matched.map(([s,w])=>{
+      const ob=Object.entries(w.opening).map(([k,v])=>`${SH[k]||k} ${v}`).join(', ')||'none';
+      const oas=Object.entries(w.oasFrom).map(([k,v])=>`${k} ${v}`).join(', ')||'none';
+      return `${s.name} → M${w.milestone}  |  ${ob}  |  OAS: ${oas}`;
+    }).join('\n');
+    const extra=unmatched.length?`\n\nNot matched (${unmatched.length}): ${unmatched.map(u=>u.name).join(', ')}. Add their member number to import them.`:'';
+    uiConfirm(`Update ${matched.length} scout${matched.length>1?'s':''} to match the workbooks (milestone, opening balance, OAS start). Nothing logged on nights changes.\n\n${lines}${extra}`,
+      ()=>{
+        matched.forEach(([s,w])=>{
+          s.milestone=w.milestone;
+          s.msOpening=s.msOpening||{1:emptyMS(),2:emptyMS(),3:emptyMS()};
+          const ob=emptyMS();Object.entries(w.opening).forEach(([k,v])=>ob[k]=v);
+          s.msOpening[w.milestone]=ob;
+          s.oasStart=s.oasStart||{};Object.entries(w.oasFrom).forEach(([k,v])=>s.oasStart[k]=v);
+          if(w.section&&!s.section)s.section=w.section;
+        });
+        save('roster');render();uiAlert(`Imported ${matched.length} scout${matched.length>1?'s':''} from the workbooks.`);
+      });
+    return;}
 });
 function fb(txt,btn){const ta=document.createElement('textarea');ta.value=txt;
   document.body.appendChild(ta);ta.select();
@@ -2290,6 +2343,8 @@ document.addEventListener('input',e=>{
     if(s){s.oasStart=s.oasStart||{};s.oasStart[t.dataset.st]=+t.value;save('roster');render();}return;}
   if(a==='scpatrol'){const s=S.roster.find(x=>x.id===t.dataset.id);if(s){s.patrol=t.value;save('roster');}}
   if(a==='scdate'){const s=S.roster.find(x=>x.id===t.dataset.id);if(s){s[t.dataset.f]=t.value;save('roster');}}
+  if(['g1n','g1p','g1e','g2n','g2p','g2e'].includes(a)){const s=S.roster.find(x=>x.id===t.dataset.id);if(s){
+    s[{g1n:'g1name',g1p:'g1phone',g1e:'g1email',g2n:'g2name',g2p:'g2phone',g2e:'g2email'}[a]]=t.value;save('roster');}}
   if(a==='dclientid'){S.drive.clientId=t.value.trim();saveDrive();renderDriveStatus();}
   if(a==='faqq'||a==='faqa'){const f=S.welcome.faqs.find(x=>x.id===t.dataset.id);
     if(f){f[a==='faqq'?'q':'a']=t.value;save('welcome');}}
