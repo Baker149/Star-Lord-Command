@@ -1545,7 +1545,8 @@ function vR1(it){
       <button class="btn primary" data-act="r1dl" style="width:100%;margin-top:10px">Download R1 (.xlsx)</button>
       <p class="hint" style="margin-top:7px">Chevron locked — send it up the chain: Group Leader → District → risk team.</p></div></div>`;
 }
-function ensurePlan(it){if(!it.plan)it.plan={how:'',where:'',equipment:'',game:'',permissions:'',assist:'',contingency:'',status:''};return it.plan;}
+function ensurePlan(it){if(!it.plan)it.plan={how:'',where:'',equipment:'',game:'',permissions:'',assist:'',contingency:'',status:''};
+  if(!it.plan.sched)it.plan.sched=[];if(it.plan.meals==null)it.plan.meals='';return it.plan;}
 function nightPlanUI(it){
   const p=ensurePlan(it);
   const st=p.status==='submitted'?'🟡 submitted — ready to check':p.status==='checked'?'✓ checked':'not started';
@@ -1563,7 +1564,15 @@ function nightPlanUI(it){
     body=`<div style="width:100%;margin-top:4px">
       ${F('how','How are we running it — the plan in a few lines',true)}
       ${F('where','Where — hall, park, off-site…')}
+      <div class="mini-cap" style="margin-top:8px">Schedule — the lead keeps time</div>
+      ${(p.sched||[]).map((r,i)=>`<div class="namerow">
+        ${it.kind==='event'?`<input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="d" value="${esc(r.d||'')}" placeholder="Day" style="flex:.6">`:''}
+        <input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="t" value="${esc(r.t||'')}" placeholder="Time" style="flex:.6">
+        <input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="w" value="${esc(r.w||'')}" placeholder="What's happening" style="flex:2">
+        <button class="btn ghost sm" data-act="scheddel" data-id="${it.id}" data-i="${i}" style="flex:none">✕</button></div>`).join('')}
+      <button class="addevent" data-act="schedadd" data-id="${it.id}">+ add a time slot</button>
       ${F('equipment','Equipment & resources needed',true)}
+      ${it.kind==='event'?F('meals','Meals — day by day, what\'s cooking and who\'s on it',true):''}
       ${F('game','Game — what and when')}
       ${F('permissions','Permissions needed? (parents, hall, land owner…)')}
       ${F('assist','Assistance needed? (qualified person, extra leader…)')}
@@ -2360,6 +2369,8 @@ document.addEventListener('click',e=>{
   if(a==='npsubmit'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).status='submitted';save('year');render();}return;}
   if(a==='npcheck'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).status='checked';save('year');render();}return;}
   if(a==='npback'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).status='';save('year');render();}return;}
+  if(a==='schedadd'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).sched.push({d:'',t:'',w:''});it._planOpen=true;save('year');render();}return;}
+  if(a==='scheddel'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).sched.splice(+t.dataset.i,1);save('year');render();}return;}
   if(a==='bgive'||a==='bundo'){const s=S.roster.find(x=>x.id===t.dataset.id);if(!s)return;
     s.badges=s.badges||{};
     if(a==='bgive')s.badges[t.dataset.k]=todayISO();else delete s.badges[t.dataset.k];
@@ -2404,6 +2415,7 @@ document.addEventListener('input',e=>{
         b.disabled=!ok;b.style.opacity=ok?'1':'.45';}}}
   if(a==='wkact'){const it=planFind(t.dataset.id).it;if(it){it.activity=t.value;save('year');}}
   if(a==='npf'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it)[t.dataset.f]=t.value;save('year');}}
+  if(a==='schedf'){const it=planFind(t.dataset.id).it;if(it){const r=ensurePlan(it).sched[+t.dataset.i];if(r){r[t.dataset.f]=t.value;save('year');}}}
   if(a==='nrevf'){S.night.review[t.dataset.f]=t.value;save('night');}
   if(a==='revf'){const tm=viewTerm();tm.review=tm.review||{worked:'',tricky:'',ideas:''};
     tm.review[t.dataset.f]=t.value;save('year');}
