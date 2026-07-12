@@ -876,7 +876,7 @@ async function load(){
   S.roster=r?JSON.parse(r):SEED.map(s=>({id:uid(),name:s.name,section:'Scout',peak:false,milestone:1,memberNo:s.memberNo||'',sias:[],priorKm:s.priorKm||0,priorNights:s.priorNights||0,peakSteps:TEN_F.slice()}));
   rosterDefaults();
   const mt=await Store.get('muster.meta');S.meta=mt?JSON.parse(mt):{updatedAt:0};
-  S.mode=(await Store.get('muster.mode'))||'leader';
+  S.mode='scout';  // everyone lands in scout mode; the PIN is the leader key
   S.pin=(await Store.get('muster.pin'))||'';
   if(S._gmPurged||S._rosterDirty){delete S._gmPurged;delete S._rosterDirty;Store.set('muster.roster',JSON.stringify(S.roster));}
   const dv=await Store.get('muster.drive');S.drive=dv?JSON.parse(dv):{clientId:'',fileId:'',lastSync:0,enabled:false,tok:null};
@@ -1632,7 +1632,7 @@ function vPlan(){
     ${(()=>{let sub=0;S.year.terms.forEach(tm=>tm.items.forEach(it=>{if(it.plan&&it.plan.status==='submitted')sub++;}));
       (S.year.events||[]).forEach(it=>{if(it.plan&&it.plan.status==='submitted')sub++;});
       return `<div class="btn-row" style="margin:4px 0 8px">
-        <button class="btn ghost sm" data-act="scoutmode">🖖 Hand to patrol (scout mode)</button>
+        <button class="btn ghost sm" data-act="scoutmode">🖖 Back to scout mode</button>
         ${sub?`<span class="chip on" style="background:var(--amber);align-self:center">${sub} plan${sub>1?'s':''} ready to check</span>`:''}</div>`;})()}
     <div class="tchips">${chips}</div>
     ${body}</div>`;
@@ -2353,16 +2353,15 @@ document.addEventListener('click',e=>{
       rosterDefaults();
       save('roster');save('year');save('nights');save('welcome');save('contacts');render();uiAlert('Backup restored.');}
     catch(err){uiAlert('That does not look like valid backup data.');}});return;}
-  if(a==='scoutmode'){
-    const go=()=>{S.mode='scout';Store.set('muster.mode','scout');render();};
-    if(S.pin)go();
-    else uiPrompt('Set a leader PIN','Pick a PIN to get back into leader mode. The patrol won\'t see guardian details or leader tools while scout mode is on.',(v)=>{
-      if(!v||!v.trim())return uiAlert('Need a PIN to switch — otherwise you can\'t get back in.');
-      S.pin=v.trim();Store.set('muster.pin',S.pin);go();});
-    return;}
+  if(a==='scoutmode'){S.mode='scout';render();return;}
   if(a==='unlockleader'){
+    if(!S.pin){
+      uiPrompt('Set the leader PIN','First time on this device — pick the PIN that unlocks leader mode. It sticks until you change it.',(v)=>{
+        if(!v||!v.trim())return uiAlert('Need a PIN.');
+        S.pin=v.trim();Store.set('muster.pin',S.pin);S.mode='leader';render();});
+      return;}
     uiPrompt('Leader unlock','Enter the leader PIN.',(v)=>{
-      if((v||'').trim()===S.pin){S.mode='leader';Store.set('muster.mode','leader');render();}
+      if((v||'').trim()===S.pin){S.mode='leader';render();}
       else uiAlert('Wrong PIN.');});
     return;}
   if(a==='nptoggle'){const it=planFind(t.dataset.id).it;if(it){it._planOpen=!it._planOpen;render();}return;}
