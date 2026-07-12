@@ -628,7 +628,7 @@ function freshRun(){return [
   {k:'next',done:false},{k:'close',done:false}];}
 function freshNight(){return {v:4,step:1,date:todayISO(),weekId:'',activity:'',areas:[],stream:'',openGroup:0,
   targetSkills:[],present:[],credits:{},skillsDone:{},logKm:false,logNights:false,kmLog:{},nightsLog:{},
-  signedBy:'',saved:false,review:{worked:'',change:'',next:'',challenge:0,spices:[]},
+  signedBy:'',plBy:'',saved:false,review:{worked:'',change:'',next:'',challenge:0,spices:[]},
   run:freshRun()};}
 const TERM_DEFS=[['Term 1','2026-02-02',9],['Term 2','2026-04-20',11],['Term 3','2026-07-20',10],['Term 4','2026-10-12',10]];
 function termForDate(d){let idx=0;TERM_DEFS.forEach((t,i)=>{if(d>=t[1])idx=i;});return idx;}
@@ -879,6 +879,7 @@ async function load(){
   S.night=(nd&&nd.v===4&&!nd.saved)?nd:nightFromCurrent();
   if(!S.night.review)S.night.review={worked:'',change:'',next:'',challenge:0,spices:[]};
   if(!S.night.review.spices)S.night.review.spices=[];
+  if(S.night.plBy==null)S.night.plBy='';
   if(!S.night.run)S.night.run=freshRun();
   else if(S.night.run.length===3&&S.night.run[0].k==='open'){
     const o=S.night.run;S.night.run=freshRun();
@@ -1304,10 +1305,10 @@ function stepSignoff(){
   const cnt={P:0,A:0,L:0,'-':0};
   n.present.forEach(id=>{const c=n.credits[id];cnt[c?(typeof c==='string'?c:c.t):'-']++;});
   let skT=0;Object.values(n.skillsDone).forEach(o=>skT+=Object.values(o).filter(Boolean).length);
-  const ready=n.activity.trim()&&n.areas.length&&n.signedBy.trim();
+  const ready=n.activity.trim()&&n.areas.length&&n.signedBy.trim()&&(n.plBy||'').trim();
   return `<div class="step-tag"><span class="n">Step 4 — Leader sign-off</span></div>
   <div class="card"><h3>Confirm & save</h3>
-    <p class="hint">By signing off you confirm — as the leader — that the milestone credits and the OAS skills recorded tonight are accurate, for every scout. Nothing reaches the workbooks until you do.</p>
+    <p class="hint">Two approvals lock the night in: the patrol leader (unit council) confirms the skills they ticked with each scout, then you countersign as leader. Nothing reaches the workbooks until both names are on it.</p>
     <div style="display:flex;gap:8px;margin:8px 0 4px;flex-wrap:wrap">
       <span class="chip on" style="background:var(--moss)">${cnt.P} participate</span>
       <span class="chip on" style="background:var(--amber)">${cnt.A} assist</span>
@@ -1315,7 +1316,8 @@ function stepSignoff(){
       <span class="chip on" style="background:var(--ink-faint)">${cnt['-']} attended</span>
       <span class="chip on" style="background:var(--pine)">${skT} OAS skill ticks</span>
     </div>
-    <label class="fld">Signed off by (leader name)</label>
+    <div class="mini-cap" style="margin-top:10px">Unit council approval (patrol leader)</div>
+    <input type="text" data-act="ntext" data-f="plBy" value="${esc(n.plBy||'')}" placeholder="PL's name — they ticked it, they approve it">
     <div class="mini-cap" style="margin-top:10px">60-second review with the youth</div>
     <input type="text" data-act="nrevf" data-f="worked" value="${esc(n.review.worked)}" placeholder="What worked well?">
     <input type="text" data-act="nrevf" data-f="change" value="${esc(n.review.change)}" placeholder="What would we change?">
@@ -1328,7 +1330,7 @@ function stepSignoff(){
       ${SPICES.map(sp=>`<span class="chip ${n.review.spices.includes(sp)?'on':''}" data-act="nspice" data-s="${sp}">${sp}</span>`).join('')}</div>
     <div class="mini-cap" style="margin-top:10px">Signed off by (leader name)</div>
     <input type="text" data-act="ntext" data-f="signedBy" value="${esc(n.signedBy)}" placeholder="Your name">
-    ${!ready?`<p class="warn">Need: activity name, at least one challenge area, and your name.</p>`:''}
+    ${!ready?`<p class="warn">Need: activity name, at least one challenge area, the PL's approval name, and your name.</p>`:''}
   </div>
   <div class="btn-row"><button class="btn ghost" data-act="back">← Back</button>
     <button class="btn clay" data-act="signoff" style="flex:2;${ready?'':'opacity:.45'}" ${ready?'':'disabled'}>Confirm & save night</button></div>`;
@@ -1393,7 +1395,8 @@ ${block(byT.L)}
 Attended only — no milestone credit:
   ${attended.length?attended.join(', '):'(none)'}${extra}
 
-Signed off by:  ${n.signedBy}`;
+Approved (unit council):  ${n.plBy||'—'}
+Signed off by (leader):  ${n.signedBy}`;
 }
 function recentNights(){
   if(!S.nights.length)return'';
@@ -2146,7 +2149,7 @@ document.addEventListener('click',e=>{
     n.skillsDone[id][sk]?delete n.skillsDone[id][sk]:n.skillsDone[id][sk]=true;
     save('night');render();return;}
   if(a==='signoff'){
-    if(!n.activity.trim()||!n.areas.length||!n.signedBy.trim())return;
+    if(!n.activity.trim()||!n.areas.length||!n.signedBy.trim()||!(n.plBy||'').trim())return;
     const it=planFind(n.weekId).it;
     const pick=o=>{const r={};n.present.forEach(id=>{if(o[id]!==undefined)r[id]=o[id];});return r;};
     const rec={id:uid(),date:n.date,weekLabel:it?itemLabel(it):'',desig:desigFor(n),activity:n.activity,review:{...(n.review||{})},
@@ -2154,7 +2157,7 @@ document.addEventListener('click',e=>{
       present:[...n.present],credits:JSON.parse(JSON.stringify(pick(n.credits))),
       skillsDone:JSON.parse(JSON.stringify(pick(n.skillsDone))),
       logKm:n.logKm,logNights:n.logNights,kmLog:pick(n.kmLog),nightsLog:pick(n.nightsLog),
-      signedBy:n.signedBy};
+      signedBy:n.signedBy,plBy:n.plBy||''};
     S.nights.push(rec);save('nights');
     S.lastNight=rec;S.night=freshNight();S.night.saved=true;save('night');render();return;}
   if(a==='newnight'){S.night=nightFromCurrent();save('night');render();return;}
@@ -2368,8 +2371,8 @@ function fb(txt,btn){const ta=document.createElement('textarea');ta.value=txt;
 document.addEventListener('input',e=>{
   const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act;
   if(a==='ntext'){S.night[t.dataset.f]=t.value;save('night');
-    if(t.dataset.f==='signedBy'){const b=document.querySelector('[data-act="signoff"]');
-      if(b){const ok=S.night.activity.trim()&&S.night.areas.length&&t.value.trim();
+    if(t.dataset.f==='signedBy'||t.dataset.f==='plBy'){const b=document.querySelector('[data-act="signoff"]');
+      if(b){const ok=S.night.activity.trim()&&S.night.areas.length&&(S.night.signedBy||'').trim()&&(S.night.plBy||'').trim();
         b.disabled=!ok;b.style.opacity=ok?'1':'.45';}}}
   if(a==='wkact'){const it=planFind(t.dataset.id).it;if(it){it.activity=t.value;save('year');}}
   if(a==='commsg'){S.msgText=t.value;}
