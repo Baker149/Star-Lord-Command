@@ -1556,46 +1556,80 @@ function ensurePlan(it){if(!it.plan)it.plan={how:'',where:'',equipment:'',game:'
   if(p.aaTeam==null)p.aaTeam='';if(p.aaTeamWhich==null)p.aaTeamWhich='';
   if(p.assist){if(!p.aaTeamWhich){p.aaTeamWhich=p.assist;p.aaTeam='yes';}delete p.assist;}
   return p;}
+function planStepsDone(it){
+  const p=ensurePlan(it);
+  return {
+    1:!!(it.targetSkills&&it.targetSkills.length),
+    2:!!((it.activity||'').trim()&&(p.where||'').trim()&&(p.how||'').trim()),
+    3:p.sched.length>0&&p.sched.every(r=>(r.t||'').trim()&&(r.w||'').trim()),
+    4:!!((p.leadAction||'').trim()&&(p.assistAction||'').trim()),
+    5:!!((p.equipment||'').trim()&&(p.contingency||'').trim()&&p.aaTeam)};}
 function nightPlanUI(it){
   const p=ensurePlan(it);
-  const st=p.status==='submitted'?'🟡 submitted — awaiting approval':p.status==='checked'?'✓ approved':'not started';
+  const done=planStepsDone(it);
+  const allDone=[1,2,3,4,5].every(s=>done[s]);
+  const cur=it._planStep||[1,2,3,4,5].find(s=>!done[s])||5;
+  const st=p.status==='submitted'?'🟡 submitted — awaiting approval':p.status==='checked'?'✓ approved':allDone?'ready to submit':'step '+cur+' of 5';
   let body='';
   if(it._planOpen){
     const F=(f,ph,ta)=>ta
       ?`<textarea data-act="npf" data-id="${it.id}" data-f="${f}" placeholder="${ph}" style="min-height:44px">${esc(p[f]||'')}</textarea>`
       :`<input type="text" data-act="npf" data-id="${it.id}" data-f="${f}" value="${esc(p[f]||'')}" placeholder="${ph}">`;
+    const left=[1,2,3,4,5].filter(s=>!done[s]);
     const btns=S.mode==='scout'
       ?(p.status==='submitted'?`<p class="hint" style="margin:6px 0 0">Submitted — Star-Lord will check it over.</p>`
-        :`<button class="btn primary full" data-act="npsubmit" data-id="${it.id}" style="margin-top:8px">Submit plan for Star-Lord to check</button>`)
+        :allDone?`<button class="btn primary full" data-act="npsubmit" data-id="${it.id}" style="margin-top:8px">Submit plan for Star-Lord to check</button>`
+        :`<button class="btn primary full" disabled style="margin-top:8px;opacity:.45">Submit — finish step${left.length>1?'s':''} ${left.join(', ')} first</button>`)
       :(p.status==='submitted'
         ?`<div class="btn-row" style="margin-top:8px"><button class="btn primary" data-act="npcheck" data-id="${it.id}">Approve plan ✓</button><button class="btn ghost" data-act="npback" data-id="${it.id}">Send back</button></div>`
         :p.status==='checked'?`<div class="btn-row" style="margin-top:8px"><button class="btn ghost sm" data-act="npback" data-id="${it.id}">Reopen</button></div>`:'');
     body=`<div style="width:100%;margin-top:4px">
-      <div class="mini-cap">Activity information</div>
-      ${F('where','Location — hall, park, off-site…')}
-      ${F('how','Activity description — what\'s actually happening',true)}
-      <div class="mini-cap" style="margin-top:8px">Night run sheet — the lead keeps time</div>
-      ${(p.sched||[]).map((r,i)=>`<div class="namerow">
-        ${it.kind==='event'?`<input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="d" value="${esc(r.d||'')}" placeholder="Day" style="flex:.6">`:''}
-        <input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="t" value="${esc(r.t||'')}" placeholder="Time" style="flex:.6">
-        <input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="w" value="${esc(r.w||'')}" placeholder="What's happening" style="flex:2">
-        <button class="btn ghost sm" data-act="scheddel" data-id="${it.id}" data-i="${i}" style="flex:none">✕</button></div>`).join('')}
-      <button class="addevent" data-act="schedadd" data-id="${it.id}">+ add a time slot</button>
-      <div class="mini-cap" style="margin-top:8px">Materials or equipment required</div>
-      ${F('equipment','List everything the night needs',true)}
-      ${it.kind==='event'?F('meals','Meals — day by day, what\'s cooking and who\'s on it',true):''}
-      <div class="mini-cap" style="margin-top:8px">Action required by lead</div>
-      ${F('leadAction','What the lead must do before & on the night',true)}
-      <div class="mini-cap" style="margin-top:8px">Action required by assist</div>
-      ${F('assistAction','What the assist must do before & on the night',true)}
-      ${F('game','Game — what and when')}
-      ${F('permissions','Permissions needed? (parents, hall, land owner…)')}
-      <div class="mini-cap" style="margin-top:8px">Adventurous Activity team required?</div>
-      <div class="btn-row" style="margin:2px 0 4px">
-        <button class="btn ${p.aaTeam==='no'?'primary':'ghost'} sm" data-act="aateam" data-id="${it.id}" data-v="no">No</button>
-        <button class="btn ${p.aaTeam==='yes'?'primary':'ghost'} sm" data-act="aateam" data-id="${it.id}" data-v="yes">Yes</button></div>
-      ${p.aaTeam==='yes'?F('aaTeamWhich','Which team is required?'):''}
-      ${F('contingency','Contingency — default: roll it to next week, preload next night')}
+      <div class="btn-row" style="margin:2px 0 8px">
+        ${[1,2,3,4,5].map(s=>`<button class="btn ${cur===s?'primary':'ghost'} sm" data-act="npstep" data-id="${it.id}" data-s="${s}" style="min-width:38px">${done[s]?'✓':s}</button>`).join('')}</div>
+      ${cur===1?`
+        <div class="mini-cap">Step 1 — What skills are we chasing?</div>
+        <p class="hint" style="margin:0 0 4px">Pick the OAS stream and tick the skills this night will knock off. That's the whole point of the night.</p>
+        ${planSkillsUI(it)}`:''}
+      ${cur===2?`
+        <div class="mini-cap">Activity information</div>
+        <p class="hint" style="margin:0 0 4px">Name the activity in the card title above, then nail down where and what's actually happening.</p>
+        ${F('where','Location — e.g. hall, Whiteman Park, river reserve')}
+        ${F('how','Activity description — e.g. patrol relay building 3 flat lashings into a trestle',true)}`:''}
+      ${cur===3?`
+        <div class="mini-cap">Night run sheet — the lead keeps time</div>
+        <p class="hint" style="margin:0 0 4px">Put a time on every line — e.g. 6:45. Add, reword or bin lines to fit your night. Pick who owns each one.</p>
+        ${(p.sched||[]).map((r,i)=>`<div class="namerow">
+          ${it.kind==='event'?`<input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="d" value="${esc(r.d||'')}" placeholder="Day" style="flex:.5">`:''}
+          <input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="t" value="${esc(r.t||'')}" placeholder="e.g. 6:45" style="flex:.5">
+          <input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="w" value="${esc(r.w||'')}" placeholder="What's happening" style="flex:1.7">
+          <select data-act="schedo" data-id="${it.id}" data-i="${i}" style="flex:.6;width:auto">
+            <option value="P" ${(r.o||'P')==='P'?'selected':''}>Patrol</option>
+            <option value="L" ${r.o==='L'?'selected':''}>Lead</option>
+            <option value="A" ${r.o==='A'?'selected':''}>Assist</option></select>
+          <button class="btn ghost sm" data-act="scheddel" data-id="${it.id}" data-i="${i}" style="flex:none">✕</button></div>`).join('')}
+        <button class="addevent" data-act="schedadd" data-id="${it.id}">+ add a time slot</button>
+        ${F('game','Game — what and when, e.g. Steal the Bacon after the activity')}`:''}
+      ${cur===4?`
+        <div class="mini-cap">Who does what</div>
+        <p class="hint" style="margin:0 0 4px">Lead${roleNames(it,'L')?': '+esc(roleNames(it,'L')):' not set'} · Assist${roleNames(it,'A')?': '+esc(roleNames(it,'A')):' not set'} — roles get picked at the planning night.</p>
+        <div class="mini-cap" style="margin-top:8px">Action required by lead</div>
+        ${F('leadAction','e.g. Confirm gear with Star-Lord Tuesday, brief safety at 6:50',true)}
+        <div class="mini-cap" style="margin-top:8px">Action required by assist</div>
+        ${F('assistAction','e.g. Set up stations before flag, run the sign-in sheet',true)}`:''}
+      ${cur===5?`
+        <div class="mini-cap">Materials or equipment required</div>
+        ${F('equipment','e.g. 8 poles, 12 ropes, first-aid kit, buckets x2',true)}
+        ${it.kind==='event'?F('meals','Meals — day by day, what\'s cooking and who\'s on it',true):''}
+        ${F('permissions','Permissions needed? (parents, hall, land owner…)')}
+        <div class="mini-cap" style="margin-top:8px">Adventurous Activity team required?</div>
+        <div class="btn-row" style="margin:2px 0 4px">
+          <button class="btn ${p.aaTeam==='no'?'primary':'ghost'} sm" data-act="aateam" data-id="${it.id}" data-v="no">No</button>
+          <button class="btn ${p.aaTeam==='yes'?'primary':'ghost'} sm" data-act="aateam" data-id="${it.id}" data-v="yes">Yes</button></div>
+        ${p.aaTeam==='yes'?F('aaTeamWhich','Which team is required?'):''}
+        ${F('contingency','Contingency — e.g. wet weather: roll to next week, preload knots night')}`:''}
+      <div class="btn-row" style="margin-top:8px">
+        ${cur>1?`<button class="btn ghost sm" data-act="npstep" data-id="${it.id}" data-s="${cur-1}">← Back</button>`:''}
+        ${cur<5?`<button class="btn ghost sm" data-act="npstep" data-id="${it.id}" data-s="${cur+1}">Next →</button>`:''}</div>
       ${btns}</div>`;}
   return `<div class="roles-bar" data-act="nptoggle" data-id="${it.id}">
     <span class="rl">Night plan</span><span class="rs">${st}</span>
@@ -1610,9 +1644,10 @@ function vScoutTonight(){
     <div class="card"><div class="empty">No plan for tonight yet — build it in the Plan tab, or ask Star-Lord which night is live.</div></div></div>`;
   const p=ensurePlan(it);
   const L=roleNames(it,'L'),A=roleNames(it,'A');
+  const own=r=>r.o==='L'?(roleNames(it,'L')||'Lead'):r.o==='A'?(roleNames(it,'A')||'Assist'):r.o==='P'?'Patrol':'';
   const sched=(p.sched||[]).map((r,i)=>`<div class="skrow ${r.done?'on':''}" data-act="schedtick" data-id="${it.id}" data-i="${i}">
     <div class="skbox">${r.done?'<svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5l3 3 6-6.5" stroke="#F6F1E2" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
-    <div class="sktext"><b>${esc([r.d,r.t].filter(Boolean).join(' '))}</b> ${esc(r.w||'')}</div></div>`).join('');
+    <div class="sktext"><b>${esc([r.d,r.t].filter(Boolean).join(' '))}</b>${own(r)?' <b style="color:var(--pine)">'+esc(own(r))+':</b>':''} ${esc(r.w||'')}</div></div>`).join('');
   return `<div class="view">
     <div class="view-title">Tonight</div>
     <div class="view-sub">${esc(it.activity)}${it.time?' · '+esc(it.time):''}${p.where?' · '+esc(p.where):''}</div>
@@ -1642,7 +1677,6 @@ function vScoutPlan(){
       <div class="fullrow"><b>${esc(head)}</b></div>
       <div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity||'')}" placeholder="Activity name"></div>
       <p class="hint" style="margin:2px 0 4px;width:100%">${L?'Lead: '+esc(L):'No lead yet'}${A?' · Assist: '+esc(A):''}</p>
-      ${planSkillsUI(it)}
       ${nightPlanUI(it)}</div>`;}).join('');
   return `<div class="view">
     <div class="view-title">Patrol Planning</div>
@@ -1744,7 +1778,7 @@ function eventCard(it){
       <span class="dp"><label>Finish</label><input type="date" data-act="evend" data-id="${it.id}" value="${it.endDate||''}"></span>
       <span class="dp"><label>Time</label><input type="time" data-act="evetime" data-id="${it.id}" value="${it.timeEnd||''}"></span>
     </div>
-    ${areaChips}${rolesUI(it)}${planSkillsUI(it)}${nightPlanUI(it)}
+    ${areaChips}${rolesUI(it)}${nightPlanUI(it)}
     ${it.startDate?`<button class="addevent" style="margin-top:8px" data-act="ics" data-id="${it.id}">📅 Add to calendar</button>`:''}
     <button class="addevent" style="margin-top:6px" data-act="r1open" data-id="${it.id}">🛡 R1 risk assessment${it.r1?' ✓':''}</button>
     <button class="evdel" data-act="delitem" data-id="${it.id}">✕ Delete this event</button></div>`;
@@ -1859,7 +1893,7 @@ function planTermView(){
       inner=`${wncol}<div class="toprow">${tsel}${curBtn}${calBtn}</div>
         <div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity)}" placeholder="Activity name"></div>
         <div class="namerow"><input type="text" data-act="wktime" data-id="${it.id}" value="${esc(it.time||'')}" placeholder="Time — e.g. 6:30–8:30 pm" style="flex:.8">
-          <input type="text" data-act="npf" data-f="where" data-id="${it.id}" value="${esc((it.plan&&it.plan.where)||'')}" placeholder="Location — hall, park, off-site" style="flex:1.2"></div>${areaChips}${rolesUI(it)}${planSkillsUI(it)}${nightPlanUI(it)}
+          <input type="text" data-act="npf" data-f="where" data-id="${it.id}" value="${esc((it.plan&&it.plan.where)||'')}" placeholder="Location — hall, park, off-site" style="flex:1.2"></div>${areaChips}${rolesUI(it)}${nightPlanUI(it)}
         <button class="addevent" style="margin-top:6px" data-act="r1open" data-id="${it.id}">🛡 R1 risk assessment${it.r1?' ✓':''}</button>`;
     }else{
       const lbl=it.type==='Planning'?'Plan next term — Personal Growth, can be a lead/assist'
@@ -2416,7 +2450,18 @@ document.addEventListener('click',e=>{
       if((v||'').trim()===S.pin){S.mode='leader';render();}
       else uiAlert('Wrong PIN.');});
     return;}
-  if(a==='nptoggle'){const it=planFind(t.dataset.id).it;if(it){it._planOpen=!it._planOpen;render();}return;}
+  if(a==='nptoggle'){const it=planFind(t.dataset.id).it;if(it){
+    it._planOpen=!it._planOpen;
+    if(it._planOpen){const p=ensurePlan(it);
+      if(!p.sched.length){p.sched=[
+        {t:'',w:'Flag break & opening',o:'P'},
+        {t:'',w:it.activity||'Main activity',o:'L'},
+        {t:'',w:'Game',o:'A'},
+        {t:'',w:'Review — lead reads it out',o:'L'},
+        {t:'',w:'Flag down & close',o:'P'}];save('year');}
+      it._planStep=[1,2,3,4,5].find(s=>!planStepsDone(it)[s])||5;}
+    render();}return;}
+  if(a==='npstep'){const it=planFind(t.dataset.id).it;if(it){it._planStep=Math.min(5,Math.max(1,+t.dataset.s));render();}return;}
   if(a==='npsubmit'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).status='submitted';save('year');render();}return;}
   if(a==='npcheck'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).status='checked';save('year');render();}return;}
   if(a==='npback'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).status='';save('year');render();}return;}
@@ -2511,6 +2556,7 @@ document.addEventListener('change',e=>{
   if(a==='evend'){const it=planFind(t.dataset.id).it;if(it){it.endDate=t.value;save('year');}return;}
   if(a==='evstime'){const it=planFind(t.dataset.id).it;if(it){it.timeStart=t.value;save('year');}return;}
   if(a==='evetime'){const it=planFind(t.dataset.id).it;if(it){it.timeEnd=t.value;save('year');}return;}
+  if(a==='schedo'){const it=planFind(t.dataset.id).it;if(it){const r=ensurePlan(it).sched[+t.dataset.i];if(r){r.o=t.value;save('year');render();}}return;}
   if(a==='ttimes'){viewTerm().timeStart=t.value;save('year');render();return;}
   if(a==='ttimee'){viewTerm().timeEnd=t.value;save('year');render();return;}
   if(a==='evtype'){const it=planFind(t.dataset.id).it;if(it){it.type=t.value;save('year');}render();return;}
