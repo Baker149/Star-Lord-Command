@@ -1336,6 +1336,10 @@ function stepRecord(){
 }
 function stepSignoff(){
   const n=S.night;
+  // pull the patrol's review answers in, once, where the leader hasn't written anything
+  const _pi=curItemR().it;const _pr=(_pi&&_pi.plan&&_pi.plan.review)||{};let _merged=false;
+  ['worked','change','next'].forEach(f=>{if(!(n.review[f]||'').trim()&&(_pr[f]||'').trim()){n.review[f]=_pr[f];_merged=true;}});
+  if(_merged)save('night');
   const cnt={P:0,A:0,L:0,'-':0};
   n.present.forEach(id=>{const c=n.credits[id];cnt[c?(typeof c==='string'?c:c.t):'-']++;});
   let skT=0;Object.values(n.skillsDone).forEach(o=>skT+=Object.values(o).filter(Boolean).length);
@@ -1353,6 +1357,7 @@ function stepSignoff(){
     <div class="mini-cap" style="margin-top:10px">Unit council approval (patrol leader)</div>
     <input type="text" data-act="ntext" data-f="plBy" value="${esc(n.plBy||'')}" placeholder="PL's name — they ticked it, they approve it">
     <div class="mini-cap" style="margin-top:10px">60-second review with the youth</div>
+    ${(_pi&&_pi.plan&&(_pi.plan.review.worked||_pi.plan.review.change||_pi.plan.review.next))?`<p class="hint" style="margin:0 0 4px">Pre-filled from the patrol's review — tweak if you need.</p>`:''}
     <input type="text" data-act="nrevf" data-f="worked" value="${esc(n.review.worked)}" placeholder="What worked well?">
     <input type="text" data-act="nrevf" data-f="change" value="${esc(n.review.change)}" placeholder="What would we change?">
     <input type="text" data-act="nrevf" data-f="next" value="${esc(n.review.next)}" placeholder="Next time we should…">
@@ -1607,7 +1612,8 @@ function nightPlanUI(it){
       ${cur===2?`
         <div class="mini-cap">Activity information</div>
         <p class="hint" style="margin:0 0 4px">Name the activity in the card title above, then nail down where and what's actually happening.</p>
-        ${F('where','Location — e.g. hall, Whiteman Park, river reserve')}
+        ${S.mode==='scout'?F('where','Location — e.g. hall, Whiteman Park, river reserve')
+          :`<p class="hint" style="margin:2px 0 4px">Location: <b>${esc(p.where||'—')}</b> — edit it in the card row above.</p>`}
         ${F('how','Activity description — e.g. patrol relay building 3 flat lashings into a trestle',true)}`:''}
       ${cur===3?`
         <div class="mini-cap">Night run sheet — the lead keeps time</div>
@@ -2245,7 +2251,7 @@ function vRules(){
     <div class="view-title">Badge Board</div>
     <div class="view-sub">Everything earned, everything handed over. Tick it when it hits their shirt.</div>
     ${cards||'<div class="card"><div class="empty">Nothing earned yet — badges build from signed-off nights.</div></div>'}
-    <div class="card"><h3>Google Drive sync</h3>
+    <div class="card"><h3>Data — sync, backup, import</h3>
       <p class="hint">One copy of your data, living in your Google Drive. Plan on the laptop, open the phone, it's there. The app pulls the newest copy on open and pushes your changes a few seconds after you make them.</p>
       <div class="rule-li" id="dstatus">${driveStatusText()}</div>
       ${S.drive.clientId?'':`<label class="fld" style="margin-top:8px">Google Client ID (one-time setup)</label>
@@ -2255,13 +2261,13 @@ function vRules(){
           <button class="btn ghost" data-act="ddisconnect">Disconnect</button>`
         :`<button class="btn primary" data-act="dconnect">Connect Google Drive</button>`}
       </div>
-      ${S.drive.clientId?`<p class="hint" style="margin-top:7px">Client ID set. <span data-act="dclearid" style="text-decoration:underline;cursor:pointer">Change it</span></p>`:''}</div>
-    <div class="card"><h3>Backup</h3>
+      ${S.drive.clientId?`<p class="hint" style="margin-top:7px">Client ID set. <span data-act="dclearid" style="text-decoration:underline;cursor:pointer">Change it</span></p>`:''}
+      <div class="mini-cap" style="margin-top:12px">Backup</div>
       <p class="hint">Data saves on this device/account. Export a copy before big changes, and to move between phone & laptop.</p>
       <div class="btn-row"><button class="btn ghost" data-act="export">Export data</button>
-        <button class="btn ghost" data-act="import">Import data</button></div></div>
-    <div class="card"><h3>Import from Tracey's workbooks</h3>
-      <p class="hint">Sets each scout's current milestone, opening balance and OAS starting stages to match the official OAS + Milestone workbooks (snapshot as at May '26). Matches by member number. Only touches those starting values — nothing you've logged on nights changes. Export a backup first.</p>
+        <button class="btn ghost" data-act="import">Import data</button></div>
+      <div class="mini-cap" style="margin-top:12px">Import from Tracey's workbooks</div>
+      <p class="hint">Sets milestone, opening balance and OAS starting stages to the official workbooks (May '26 snapshot), matched by member number. Nothing logged on nights changes. Export a backup first.</p>
       <div class="btn-row"><button class="btn ghost" data-act="wbimport">Preview import</button></div></div>
     <div class="gate-footer">
       <div class="chevrons">${[1,2,3,4,5,6,7].map(i=>chevSVG(i===7?'done':'pending')).join('')}</div>
