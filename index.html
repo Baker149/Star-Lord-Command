@@ -1549,11 +1549,16 @@ function vR1(it){
       <button class="btn primary" data-act="r1dl" style="width:100%;margin-top:10px">Download R1 (.xlsx)</button>
       <p class="hint" style="margin-top:7px">Chevron locked — send it up the chain: Group Leader → District → risk team.</p></div></div>`;
 }
-function ensurePlan(it){if(!it.plan)it.plan={how:'',where:'',equipment:'',game:'',permissions:'',assist:'',contingency:'',status:''};
-  if(!it.plan.sched)it.plan.sched=[];if(it.plan.meals==null)it.plan.meals='';return it.plan;}
+function ensurePlan(it){if(!it.plan)it.plan={how:'',where:'',equipment:'',game:'',permissions:'',contingency:'',status:''};
+  const p=it.plan;
+  if(!p.sched)p.sched=[];if(p.meals==null)p.meals='';
+  if(p.leadAction==null)p.leadAction='';if(p.assistAction==null)p.assistAction='';
+  if(p.aaTeam==null)p.aaTeam='';if(p.aaTeamWhich==null)p.aaTeamWhich='';
+  if(p.assist){if(!p.aaTeamWhich){p.aaTeamWhich=p.assist;p.aaTeam='yes';}delete p.assist;}
+  return p;}
 function nightPlanUI(it){
   const p=ensurePlan(it);
-  const st=p.status==='submitted'?'🟡 submitted — ready to check':p.status==='checked'?'✓ checked':'not started';
+  const st=p.status==='submitted'?'🟡 submitted — awaiting approval':p.status==='checked'?'✓ approved':'not started';
   let body='';
   if(it._planOpen){
     const F=(f,ph,ta)=>ta
@@ -1563,23 +1568,33 @@ function nightPlanUI(it){
       ?(p.status==='submitted'?`<p class="hint" style="margin:6px 0 0">Submitted — Star-Lord will check it over.</p>`
         :`<button class="btn primary full" data-act="npsubmit" data-id="${it.id}" style="margin-top:8px">Submit plan for Star-Lord to check</button>`)
       :(p.status==='submitted'
-        ?`<div class="btn-row" style="margin-top:8px"><button class="btn primary" data-act="npcheck" data-id="${it.id}">Mark checked ✓</button><button class="btn ghost" data-act="npback" data-id="${it.id}">Send back</button></div>`
+        ?`<div class="btn-row" style="margin-top:8px"><button class="btn primary" data-act="npcheck" data-id="${it.id}">Approve plan ✓</button><button class="btn ghost" data-act="npback" data-id="${it.id}">Send back</button></div>`
         :p.status==='checked'?`<div class="btn-row" style="margin-top:8px"><button class="btn ghost sm" data-act="npback" data-id="${it.id}">Reopen</button></div>`:'');
     body=`<div style="width:100%;margin-top:4px">
-      ${F('how','How are we running it — the plan in a few lines',true)}
-      ${F('where','Where — hall, park, off-site…')}
-      <div class="mini-cap" style="margin-top:8px">Schedule — the lead keeps time</div>
+      <div class="mini-cap">Activity information</div>
+      ${F('where','Location — hall, park, off-site…')}
+      ${F('how','Activity description — what\'s actually happening',true)}
+      <div class="mini-cap" style="margin-top:8px">Night run sheet — the lead keeps time</div>
       ${(p.sched||[]).map((r,i)=>`<div class="namerow">
         ${it.kind==='event'?`<input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="d" value="${esc(r.d||'')}" placeholder="Day" style="flex:.6">`:''}
         <input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="t" value="${esc(r.t||'')}" placeholder="Time" style="flex:.6">
         <input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="w" value="${esc(r.w||'')}" placeholder="What's happening" style="flex:2">
         <button class="btn ghost sm" data-act="scheddel" data-id="${it.id}" data-i="${i}" style="flex:none">✕</button></div>`).join('')}
       <button class="addevent" data-act="schedadd" data-id="${it.id}">+ add a time slot</button>
-      ${F('equipment','Equipment & resources needed',true)}
+      <div class="mini-cap" style="margin-top:8px">Materials or equipment required</div>
+      ${F('equipment','List everything the night needs',true)}
       ${it.kind==='event'?F('meals','Meals — day by day, what\'s cooking and who\'s on it',true):''}
+      <div class="mini-cap" style="margin-top:8px">Action required by lead</div>
+      ${F('leadAction','What the lead must do before & on the night',true)}
+      <div class="mini-cap" style="margin-top:8px">Action required by assist</div>
+      ${F('assistAction','What the assist must do before & on the night',true)}
       ${F('game','Game — what and when')}
       ${F('permissions','Permissions needed? (parents, hall, land owner…)')}
-      ${F('assist','Assistance needed? (qualified person, extra leader…)')}
+      <div class="mini-cap" style="margin-top:8px">Adventurous Activity team required?</div>
+      <div class="btn-row" style="margin:2px 0 4px">
+        <button class="btn ${p.aaTeam==='no'?'primary':'ghost'} sm" data-act="aateam" data-id="${it.id}" data-v="no">No</button>
+        <button class="btn ${p.aaTeam==='yes'?'primary':'ghost'} sm" data-act="aateam" data-id="${it.id}" data-v="yes">Yes</button></div>
+      ${p.aaTeam==='yes'?F('aaTeamWhich','Which team is required?'):''}
       ${F('contingency','Contingency — default: roll it to next week, preload next night')}
       ${btns}</div>`;}
   return `<div class="roles-bar" data-act="nptoggle" data-id="${it.id}">
@@ -1603,7 +1618,9 @@ function vScoutTonight(){
     <div class="view-sub">${esc(it.activity)}${it.time?' · '+esc(it.time):''}${p.where?' · '+esc(p.where):''}</div>
     <div class="card"><h3>Who's on</h3>
       <p class="hint" style="margin:0 0 4px"><b>Lead${L?': '+esc(L):' — not set'}</b> · keeps time, runs the plan, reads out the review at the end.</p>
-      <p class="hint" style="margin:0"><b>Assist${A?': '+esc(A):' — not set'}</b> · sets up, explains the rules, manages the gear, records the review.</p></div>
+      ${p.leadAction?`<p class="hint" style="margin:0 0 6px;padding-left:10px;white-space:pre-wrap">→ ${esc(p.leadAction)}</p>`:''}
+      <p class="hint" style="margin:0"><b>Assist${A?': '+esc(A):' — not set'}</b> · sets up, explains the rules, manages the gear, records the review.</p>
+      ${p.assistAction?`<p class="hint" style="margin:0;padding-left:10px;white-space:pre-wrap">→ ${esc(p.assistAction)}</p>`:''}</div>
     <div class="card"><h3>Schedule — tick as you go</h3>
       ${sched||'<p class="hint" style="margin:0">No time slots yet — the lead builds these in the Plan tab.</p>'}</div>
     ${p.equipment?`<div class="card"><h3>Equipment</h3><p class="hint" style="margin:0;white-space:pre-wrap">${esc(p.equipment)}</p></div>`:''}
@@ -2403,6 +2420,7 @@ document.addEventListener('click',e=>{
   if(a==='npsubmit'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).status='submitted';save('year');render();}return;}
   if(a==='npcheck'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).status='checked';save('year');render();}return;}
   if(a==='npback'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).status='';save('year');render();}return;}
+  if(a==='aateam'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).aaTeam=t.dataset.v;it._planOpen=true;save('year');render();}return;}
   if(a==='schedadd'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).sched.push({d:'',t:'',w:''});it._planOpen=true;save('year');render();}return;}
   if(a==='scheddel'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).sched.splice(+t.dataset.i,1);save('year');render();}return;}
   if(a==='bgive'||a==='bundo'){const s=S.roster.find(x=>x.id===t.dataset.id);if(!s)return;
