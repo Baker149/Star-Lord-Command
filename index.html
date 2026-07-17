@@ -721,7 +721,9 @@ function applyCurrent(n){
   const it=curItemR().it;
   if(!it){n.weekId='';return;}
   n.weekId=it.id;
-  if(it.stream){n.stream=it.stream;n.targetSkills=(it.targetSkills||[]).map(s=>({id:s.id,name:s.name,stage:s.stage}));}
+  if((it.targetSkills&&it.targetSkills.length)||it.stream){
+    n.targetSkills=(it.targetSkills||[]).map(s=>({id:s.id,name:s.name,stage:s.stage}));
+    n.stream=it.stream||(n.targetSkills[0]?n.targetSkills[0].id.split('|')[0]:'');}
   if(it.kind==='event'){n.activity=it.activity||it.type;n.areas=[...(it.areas||[])];
     if(it.type==='Hike')n.logKm=true;if(it.type==='Camp')n.logNights=true;}
   else if(it.type==='Activity'){n.activity=it.activity||'';n.areas=[...(it.areas||[])];}
@@ -823,7 +825,8 @@ function chevSVG(state,extra){
 
 function oasFor(sid){
   const done=new Set();
-  S.nights.forEach(n=>{((n.skillsDone||{})[sid]||[]).forEach(id=>done.add(id)); });
+  S.nights.forEach(n=>{const v=(n.skillsDone||{})[sid];
+    (Array.isArray(v)?v:Object.keys(v||{})).forEach(id=>done.add(id)); });
   const s=S.roster.find(x=>x.id===sid)||{};
   const start=s.oasStart||{};
   const out={streams:{},prog:0,cores:0};
@@ -1216,11 +1219,16 @@ function vTonight(){
       return `<div class="card" style="padding:12px">
         <div class="mini-cap" style="margin:0">Run sheet${tm?' · '+tm:''}</div>
         ${rows}</div>`;})()}
-    ${(()=>{const st=n.stream||((curItemR().it||{}).stream)||'';if(!st||!S.roster.length)return'';
-      const buckets={};S.roster.forEach(s=>{const c=((oasFor(s.id).streams||{})[st]||{cur:0}).cur;(buckets[c]=buckets[c]||[]).push(s.name.split(' ')[0]);});
-      const brows=Object.keys(buckets).sort((a,b)=>b-a).map(k=>`<p class="hint" style="margin:2px 0"><b>S${k}</b> — ${esc(buckets[k].join(', '))}</p>`).join('');
-      return `<div class="card"><h3>${esc(st)} tonight — where everyone sits</h3>
-        <p class="hint" style="margin:0 0 4px">Stretch the top, buddy them with the newest. Same activity, different stage targets.</p>${brows}</div>`;})()}
+    ${(()=>{if(!S.roster.length)return'';
+      let sts=[...new Set((n.targetSkills||[]).map(s=>s.id.split('|')[0]))];
+      if(!sts.length){const st=n.stream||((curItemR().it||{}).stream)||'';if(st)sts=[st];}
+      if(!sts.length)return'';
+      const secs=sts.map(st=>{
+        const buckets={};S.roster.forEach(s=>{const c=((oasFor(s.id).streams||{})[st]||{cur:0}).cur;(buckets[c]=buckets[c]||[]).push(s.name.split(' ')[0]);});
+        const brows=Object.keys(buckets).sort((a,b)=>b-a).map(k=>`<p class="hint" style="margin:2px 0"><b>S${k}</b> — ${esc(buckets[k].join(', '))}</p>`).join('');
+        return `${sts.length>1?`<div class="mini-cap" style="margin-top:8px">${esc(st)}</div>`:''}${brows}`;}).join('');
+      return `<div class="card"><h3>${sts.length>1?'Tonight\'s streams — where everyone sits':esc(sts[0])+' tonight — where everyone sits'}</h3>
+        <p class="hint" style="margin:0 0 4px">Stretch the top, buddy them with the newest. Same activity, different stage targets.</p>${secs}</div>`;})()}
     <div class="steps">${chev}</div>${body}
     ${n.step===1?recentNights():''}</div>`;
 }
@@ -1406,10 +1414,14 @@ function summaryText(n){
     return ks.length?ks.map(a=>'    '+a+':  '+o[a].join(', ')).join('\n'):'    (none)';};
   let oas;
   if(n.targetSkills&&n.targetSkills.length){
-    oas=n.targetSkills.map(sk=>{
-      const got=n.present.filter(id=>n.skillsDone[id]&&n.skillsDone[id][sk.id]).map(nm);
-      const tag=sk.stage?'[S'+sk.stage+'] ':'';
-      return '  '+tag+sk.name+'\n     -> '+(got.length?got.join(', '):'(none)');}).join('\n');
+    const byStream={};
+    n.targetSkills.forEach(sk=>{const st=sk.id.split('|')[0];(byStream[st]=byStream[st]||[]).push(sk);});
+    oas=Object.keys(byStream).map(st=>{
+      const lines=byStream[st].map(sk=>{
+        const got=n.present.filter(id=>n.skillsDone[id]&&n.skillsDone[id][sk.id]).map(nm);
+        const tag=sk.stage?'[S'+sk.stage+'] ':'';
+        return '  '+tag+sk.name+'\n     -> '+(got.length?got.join(', '):'(none)');}).join('\n');
+      return (Object.keys(byStream).length>1?'  ['+st+' sheet]\n':'')+lines;}).join('\n\n');
   }else oas='  (no OAS skills logged tonight)';
   let extra='';
   if(n.logKm){const ks=n.present.filter(id=>n.kmLog[id]).map(id=>'  '+nm(id)+':  '+n.kmLog[id]+' km');
@@ -1421,7 +1433,8 @@ ${fmtD(n.date)} ${n.date.slice(0,4)}  ·  ${n.weekLabel||'unscheduled'}
 Activity:  ${n.activity}
 Challenge areas:  ${(n.areas||[]).join(', ')||'—'}
 
-> OAS WORKBOOK${n.stream?'  —  '+n.stream+' sheet':''}
+> OAS WORKBOOK${(()=>{const ss=[...new Set((n.targetSkills||[]).map(s=>s.id.split('|')[0]))];
+  return ss.length===1?'  —  '+ss[0]+' sheet':(ss.length===0&&n.stream?'  —  '+n.stream+' sheet':'');})()}
 Tick Y for each skill, only for the scouts listed:
 ${oas}
 
@@ -1610,7 +1623,7 @@ function nightPlanUI(it){
         <p class="hint" style="margin:0 0 4px">Pick the OAS stream and tick the skills this night will knock off. That's the whole point of the night.</p>
         ${planSkillsUI(it)}
         ${(it.targetSkills&&it.targetSkills.length)?`<div class="mini-cap" style="margin-top:8px">How will we cover each one?</div>`+it.targetSkills.map(ts=>`
-          <p class="hint" style="margin:4px 0 2px">S${ts.stage||''} · ${esc(ts.name||ts.id)}</p>
+          <p class="hint" style="margin:4px 0 2px">${esc(ts.id.split('|')[0])} S${ts.stage||''} · ${esc(ts.name||ts.id)}</p>
           <input type="text" data-act="npskillhow" data-id="${it.id}" data-k="${esc(ts.id)}" value="${esc((p.skillHow||{})[ts.id]||'')}" placeholder="e.g. each patrol does it twice, PL checks it off">`).join(''):''}`:''}
       ${cur===2?`
         <div class="mini-cap">Activity information</div>
@@ -1684,7 +1697,7 @@ function vScoutTonight(){
       <p class="hint" style="margin:0"><b>Assist${A?': '+esc(A):' — not set'}</b> · sets up, explains the rules, manages the gear, records the review.</p>
       ${p.assistAction?`<p class="hint" style="margin:0;padding-left:10px;white-space:pre-wrap">→ ${esc(p.assistAction)}</p>`:''}</div>
     ${(it.targetSkills&&it.targetSkills.length)?`<div class="card"><h3>Skills we're covering</h3>
-      ${it.targetSkills.map(ts=>`<p class="hint" style="margin:2px 0"><b>S${ts.stage||''} ${esc(ts.name||ts.id)}</b>${(p.skillHow||{})[ts.id]?' — '+esc(p.skillHow[ts.id]):''}</p>`).join('')}</div>`:''}
+      ${it.targetSkills.map(ts=>`<p class="hint" style="margin:2px 0"><b>${esc(ts.id.split('|')[0])} S${ts.stage||''} — ${esc(ts.name||ts.id)}</b>${(p.skillHow||{})[ts.id]?' · '+esc(p.skillHow[ts.id]):''}</p>`).join('')}</div>`:''}
     <div class="card"><h3>Schedule — tick as you go</h3>
       ${sched||'<p class="hint" style="margin:0">No time slots yet — the lead builds these in the Plan tab.</p>'}</div>
     ${p.equipment?`<div class="card"><h3>Equipment</h3><p class="hint" style="margin:0;white-space:pre-wrap">${esc(p.equipment)}</p></div>`:''}
@@ -1776,7 +1789,7 @@ function rolesUI(it){
 function planSkillsUI(it){
   const streams=Object.keys(OAS_SKILLS);
   const sel=`<select data-act="planstream" data-id="${it.id}" style="width:100%">
-    <option value="">Skills to cover — pick an OAS stream…</option>
+    <option value="">Browse an OAS stream — ticks keep when you switch…</option>
     ${streams.map(st=>`<option ${it.stream===st?'selected':''}>${st}</option>`).join('')}</select>`;
   let body='';
   if(it.stream&&OAS_SKILLS[it.stream]){
@@ -1794,7 +1807,7 @@ function planSkillsUI(it){
         ${esc(grp[1])}<span class="cnt">${selN?selN+' picked':''}</span>
         <span class="ar" style="transform:rotate(${open?90:0}deg)">▸</span></div>${rows}`;
     }).join('');
-    body=`<p class="hint" style="margin:4px 0 2px">${picked} skill${picked===1?'':'s'} targeted — these flow into Tonight when this is the current night.</p>`+body;
+    body=`<p class="hint" style="margin:4px 0 2px">${picked} skill${picked===1?'':'s'} targeted across all streams — camps can mix Camping, Bushwalking, Bushcraft and more. They flow into Tonight when this night runs.</p>`+body;
   }
   return `<div style="width:100%;margin-top:6px">${sel}${body}</div>`;
 }
@@ -2619,7 +2632,7 @@ document.addEventListener('change',e=>{
   if(a==='ttimes'){viewTerm().timeStart=t.value;save('year');render();return;}
   if(a==='ttimee'){viewTerm().timeEnd=t.value;save('year');render();return;}
   if(a==='evtype'){const it=planFind(t.dataset.id).it;if(it){it.type=t.value;save('year');}render();return;}
-  if(a==='planstream'){const it=planFind(t.dataset.id).it;if(it){it.stream=t.value;it.targetSkills=[];it._openG=null;save('year');}render();return;}
+  if(a==='planstream'){const it=planFind(t.dataset.id).it;if(it){it.stream=t.value;it._openG=null;save('year');}render();return;}
   if(a==='ctag'){const c=S.contacts.find(x=>x.id===t.dataset.id);if(c){c.tag=t.value;save('contacts');render();}return;}
   if(a==='setms'){const s=S.roster.find(x=>x.id===t.dataset.id);
     // "Started at" = arrival milestone anchor for the opening balance.
