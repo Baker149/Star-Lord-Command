@@ -371,6 +371,9 @@ nav button .nl{font-size:9.5px;font-weight:700}
 .gate-footer .chevrons{display:flex;justify-content:center;gap:4px;margin-bottom:8px}
 .gate-footer .chv{width:18px;height:17px}
 .gate-footer .desig{font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint)}
+.stg{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:50%;color:#fff;font-weight:700;font-size:11px;line-height:1}
+.stg.mv{box-shadow:0 0 0 2px var(--amber)}
+.stg.z{background:var(--line);color:var(--ink-faint);font-weight:600}
 #printArea{display:none}
 @media print{
   body>*{display:none!important}
@@ -2007,16 +2010,24 @@ function troopPatrols(){
       ${rows}</div>`;
   }).join('');
 }
+function stgColor(n){return 'hsl('+(210-(n-1)*21)+',62%,40%)';}
+function stgChip(n,moved){
+  if(!n)return '<span class="stg z">·</span>';
+  return '<span class="stg'+(moved?' mv':'')+'" style="background:'+stgColor(n)+'">'+n+'</span>';}
 function troopOAS(){
   const abbr={Bushcraft:'Bc',Bushwalking:'Bw',Camping:'Cp',Alpine:'Al',Cycling:'Cy',Vertical:'Vt',Aquatics:'Aq',Boating:'Bo',Paddling:'Pd'};
-  const head=STREAMS.map(st=>`<th title="${st}">${abbr[st]}</th>`).join('');
+  const head=STREAMS.map(st=>`<th title="${st}" style="padding:4px 2px">${abbr[st]}</th>`).join('');
   const rows=S.roster.map(s=>{const o=oasFor(s.id);
     const cells=STREAMS.map(st=>{const v=o.streams[st]||{from:0,cur:0};
-      return `<td style="text-align:center;${v.cur>v.from?'font-weight:700;color:var(--pine)':''}${v.cur>=5?';background:rgba(95,163,54,.14)':''}">${v.cur||'·'}</td>`;}).join('');
-    return `<tr><td style="white-space:nowrap">${esc(s.name.split(' ')[0])} <span class="mno">${esc(s.section[0])}</span></td>${cells}</tr>`;}).join('');
+      return `<td style="text-align:center;padding:3px 2px">${stgChip(v.cur,v.cur>v.from)}</td>`;}).join('');
+    return `<tr><td style="white-space:nowrap;padding:3px 4px">${esc(s.name.split(' ')[0])} <span class="mno">${esc(s.section[0])}</span></td>${cells}</tr>`;}).join('');
+  const scale=[1,2,3,4,5,6,7,8,9].map(n=>stgChip(n,false)).join(' ');
+  const key=STREAMS.map(st=>`<b>${abbr[st]}</b> ${st}`).join(' · ');
   return `<div class="card" style="overflow-x:auto"><h3>OAS — current stage per stream</h3>
-    <p class="hint" style="margin:0 0 6px">Bold = moved since they arrived · green = stage 5+ · stages run to 9.</p>
-    <table style="width:100%;border-collapse:collapse;font-size:12px" class="oasgrid"><tr><th style="text-align:left">Scout</th>${head}</tr>${rows}</table></div>`;
+    <p class="hint" style="margin:0 0 4px">${scale} &nbsp;cold → hot: stage 1 just starting, stage 9 peak of the scheme.</p>
+    <p class="hint" style="margin:0 0 4px"><span class="stg z">·</span> not started yet · <span class="stg mv" style="background:${stgColor(3)}">3</span> amber ring = moved up since they arrived.</p>
+    <table style="width:100%;border-collapse:collapse;font-size:12px" class="oasgrid"><tr><th style="text-align:left">Scout</th>${head}</tr>${rows}</table>
+    <p class="hint" style="margin:8px 0 0">${key}</p></div>`;
 }
 function troopChart(){
   const SECS=['Joey','Cub','Scout','Venturer'];
