@@ -1754,7 +1754,7 @@ function vScoutPlan(){
   const chips=S.year.terms.map((tm,i)=>
     `<button class="tchip ${vi===i?'on':''}" data-act="planview" data-t="${i}">${tm.label}</button>`).join('');
   const t=S.year.terms[vi];let wn=0;
-  const cards=t.items.map(it=>{
+  const cards=termMerged(t,vi).map(it=>{
     if(it.kind==='week')wn++;
     if(!(it.kind==='week'&&it.type==='Activity')&&it.kind!=='event')return'';
     const L=roleNames(it,'L'),A=roleNames(it,'A');
@@ -1772,8 +1772,9 @@ function vScoutPlan(){
 }
 function printTermPlan(){
   const t=viewTerm();if(!t)return;
+  const ti=S.year.viewT>=0?S.year.viewT:termForDate(todayISO());
   let wn=0;
-  const rows=t.items.map(it=>{
+  const rows=termMerged(t,ti).map(it=>{
     if(it.kind==='week'){wn++;
       const nm=it.type==='Activity'?(it.activity||'—'):it.type+' night';
       const tp=[it.time,(it.plan&&it.plan.where)||''].filter(Boolean).join(' · ');
@@ -1947,22 +1948,36 @@ function reviewBlock(ti,editable){
     <textarea data-act="revf" data-f="tricky" style="min-height:46px" placeholder="Change or drop this">${esc(r.tricky)}</textarea>
     <div class="mini-cap">Ideas for next term</div>
     <textarea data-act="revf" data-f="ideas" style="min-height:46px" placeholder="Youth suggestions, activities to chase, gear to sort">${esc(r.ideas)}</textarea>`;}
+function yearEventsForTerm(ti){
+  return (S.year.events||[]).filter(e=>{const d=e.startDate||e.date;return d&&termForDate(d)===ti;})
+    .sort((a,b)=>((a.startDate||a.date)<(b.startDate||b.date)?-1:1));}
+function termMerged(t,ti){
+  const yevs=yearEventsForTerm(ti);
+  const merged=[];let wc=0,yi=0;
+  t.items.forEach(it=>{
+    if(it.kind==='week'){wc++;const wd=weekDateISO(t,wc);
+      while(yi<yevs.length&&wd&&(yevs[yi].startDate||yevs[yi].date)<wd){merged.push(Object.assign({_yr:true},yevs[yi]));yi++;}}
+    merged.push(it);});
+  while(yi<yevs.length){merged.push(Object.assign({_yr:true},yevs[yi]));yi++;}
+  return merged;}
 function planTermView(){
   S._curId=(curItemR().it||{}).id;
   const t=viewTerm();
+  const ti=S.year.viewT>=0?S.year.viewT:termForDate(todayISO());
   const counts={Community:0,Creative:0,Outdoors:0,'Personal Growth':0};
   let weekCount=0,evCount=0;
   t.items.forEach(it=>{
     if(it.kind==='week'){weekCount++;if(it.type==='Activity')it.areas.forEach(a=>counts[a]!=null&&counts[a]++);}
     else{evCount++;it.areas.forEach(a=>counts[a]!=null&&counts[a]++);}});
+  yearEventsForTerm(ti).forEach(e=>{evCount++;(e.areas||[]).forEach(a=>counts[a]!=null&&counts[a]++);});
   const bal=AREAS.map(a=>{const c=counts[a],pct=Math.min(100,c/2*100);
     return `<div class="bal-row"><span class="bn">${a}</span>
       <div class="bal-track"><div class="bal-fill" style="width:${pct}%;background:${cssv(AREA_VAR[a])}"></div></div>
       <span class="bc">${c}/2</span></div>`;}).join('');
   let wn=0;
-  const rows=t.items.map(it=>{
+  const rows=termMerged(t,ti).map(it=>{
     const cur=S._curId===it.id;
-    if(it.kind!=='week')return eventCard(it)+`<button class="addevent" data-act="addevent" data-id="${it.id}">+ insert event below</button>`;
+    if(it.kind!=='week')return (it._yr?`<div class="hint" style="margin:6px 0 -4px">📌 From the year planner — edits sync both ways</div>`:'')+eventCard(it)+(it._yr?'':`<button class="addevent" data-act="addevent" data-id="${it.id}">+ insert event below</button>`);
     wn++;
     const curBtn=`<button class="cur-btn ${cur?'on':''}" data-act="setcurrent" data-id="${it.id}">${cur?'● This week':'Pin night'}</button>`;
     const areaChips=`<div class="areachips">${AREAS.map(a=>
