@@ -943,14 +943,22 @@ function tokenValid(){return S.drive&&S.drive.tok&&S.drive.tok.v&&Date.now()<S.d
 function appRedirect(){let p=location.pathname;
   if(p.endsWith('index.html'))p=p.slice(0,-'index.html'.length);
   return location.origin+p;}
+let _redirFail=false;
 function parseAuthHash(){
-  if(!location.hash||location.hash.indexOf('access_token')<0)return;
+  if(!location.hash)return;
+  const h=location.hash;
+  if(h.indexOf('access_token')<0&&h.indexOf('error=')<0)return;
   try{
-    const p=new URLSearchParams(location.hash.slice(1));
-    let ok=true;
-    try{ok=p.get('state')===localStorage.getItem('muster.dstate');}catch(e){}
-    if(ok&&p.get('access_token'))
-      _authPending={v:p.get('access_token'),exp:Date.now()+((+p.get('expires_in')||3600)-90)*1000};
+    const p=new URLSearchParams(h.slice(1));
+    if(p.get('error')){_redirFail=true;}
+    else{
+      let ok=true;
+      try{ok=p.get('state')===localStorage.getItem('muster.dstate');}catch(e){}
+      if(ok&&p.get('access_token')){
+        _authPending={v:p.get('access_token'),exp:Date.now()+((+p.get('expires_in')||3600)-90)*1000};
+        try{localStorage.removeItem('muster.dnr');}catch(e){}
+      }
+    }
   }catch(e){}
   try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
 }
@@ -979,18 +987,30 @@ function freshToken(interactive){
   return new Promise(res=>{_tokWaiter=res;
     try{tc.requestAccessToken({prompt:interactive?'consent':''});}
     catch(e){_tokWaiter=null;_lastSilentFail=Date.now();res(false);}});}
-function driveConnect(){
+function driveAuthURL(silent){
   const cid=(S.drive.clientId||'').trim();
-  if(!cid){uiAlert('Paste your Google Client ID in first — I will walk you through getting it.');return;}
+  if(!cid)return null;
   const st=uid()+uid();
   try{localStorage.setItem('muster.dstate',st);}catch(e){}
-  const u='https://accounts.google.com/o/oauth2/v2/auth'
+  return 'https://accounts.google.com/o/oauth2/v2/auth'
     +'?client_id='+encodeURIComponent(cid)
     +'&redirect_uri='+encodeURIComponent(appRedirect())
     +'&response_type=token'
     +'&scope='+encodeURIComponent('https://www.googleapis.com/auth/drive.file')
-    +'&include_granted_scopes=true&state='+st;
-  location.href=u;
+    +'&include_granted_scopes=true'+(silent?'&prompt=none':'')+'&state='+st;
+}
+function _navTo(u){location.href=u;}
+function driveConnect(){
+  const u=driveAuthURL(false);
+  if(!u){uiAlert('Paste your Google Client ID in first — I will walk you through getting it.');return;}
+  _navTo(u);
+}
+function canSilentRedirect(){
+  try{const t=+localStorage.getItem('muster.dnr')||0;return Date.now()-t>480000;}catch(e){return true;}}
+function driveSilentRedirect(){
+  const u=driveAuthURL(true);if(!u)return false;
+  try{localStorage.setItem('muster.dnr',String(Date.now()));}catch(e){}
+  _navTo(u);return true;
 }
 async function dFetch(url,opts){
   const r=await fetch(url,Object.assign({},opts,{headers:Object.assign(
@@ -1049,8 +1069,11 @@ async function _driveSyncInner(mode){
   if(!tokenValid()){
     const got=await freshToken(mode==='manual');
     if(!got){
-      if(mode==='manual'){if(gisReady())uiAlert('Google sign-in did not complete — try Sync again.');else driveConnect();}
-      else if(gisReady()){S.drive.status='Link renewing failed — tap Sync';renderDriveStatus();}
+      if(mode==='manual'){if(gisReady())uiAlert('Google sign-in did not complete — try Sync again.');else driveConnect();return;}
+      // invisible renewal: bounce through Google with prompt=none (works where iOS blocks the iframe trick)
+      if(document.visibilityState==='visible'&&navigator.onLine!==false&&canSilentRedirect()){
+        S.drive.status='Renewing link…';renderDriveStatus();driveSilentRedirect();return;}
+      S.drive.status='Link down — tap Sync to sign back in';renderDriveStatus();
       return;}}
   S.drive.status='Syncing…';renderDriveStatus();
   try{
@@ -1092,6 +1115,7 @@ function driveStatusText(){
 }
 function driveBoot(){
   if(_authPending){S.drive.tok=_authPending;S.drive.enabled=true;_authPending=null;saveDrive();render();}
+  if(_redirFail){_redirFail=false;S.drive.status='Link down — tap Sync to sign back in';renderDriveStatus();}
   if(S.drive.enabled)driveSync('auto');
   if(S.drive.enabled)setTimeout(()=>{if(!tokenValid())driveSync('auto');},1800);
   // hands-free sync: push straight away when you leave, pull when you come back
