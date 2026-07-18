@@ -1015,7 +1015,10 @@ function applyRemote(env){
   if(S.year.cur&&!planFind(S.year.cur.id).it)S.year.cur=null;
   if(!S.night.saved&&S.night.step===1){applyCurrent(S.night);save('night');}
 }
+let _syncBusy=false;
 async function driveSync(mode){
+  if(!S.drive.enabled||_syncBusy)return;_syncBusy=true;try{await _driveSyncInner(mode);}finally{_syncBusy=false;}}
+async function _driveSyncInner(mode){
   if(!S.drive.enabled)return;
   if(!tokenValid()){
     if(mode==='manual')driveConnect();
@@ -1041,7 +1044,7 @@ async function driveSync(mode){
 function queuePush(){
   if(!S.drive||!S.drive.enabled||!tokenValid())return;
   clearTimeout(_pushTimer);
-  _pushTimer=setTimeout(()=>driveSync('auto'),4000);
+  _pushTimer=setTimeout(()=>driveSync('auto'),1500);
 }
 function driveAgo(){
   if(!S.drive.lastSync)return'';
@@ -1062,6 +1065,11 @@ function driveStatusText(){
 function driveBoot(){
   if(_authPending){S.drive.tok=_authPending;S.drive.enabled=true;_authPending=null;saveDrive();render();}
   if(S.drive.enabled&&tokenValid())driveSync('auto');
+  // hands-free sync: push straight away when you leave, pull when you come back
+  const kick=()=>{if(S.drive&&S.drive.enabled&&tokenValid()){clearTimeout(_pushTimer);driveSync('auto');}};
+  document.addEventListener('visibilitychange',kick);
+  window.addEventListener('pagehide',kick);
+  window.addEventListener('focus',kick);
 }
 
 /* custom dialogs — native confirm/alert/prompt are blocked in sandboxed frames */
@@ -2276,7 +2284,7 @@ function vRules(){
     <div class="view-sub">Everything earned, everything handed over. Tick it when it hits their shirt.</div>
     ${cards||'<div class="card"><div class="empty">Nothing earned yet — badges build from signed-off nights.</div></div>'}
     <div class="card"><h3>Data — sync, backup, import</h3>
-      <p class="hint">One copy of your data, living in your Google Drive. Plan on the laptop, open the phone, it's there. The app pulls the newest copy on open and pushes your changes a few seconds after you make them.</p>
+      <p class="hint">One copy of your data, living in your Google Drive. It syncs itself: changes push a couple of seconds after you make them and whenever you switch away or close the app, and it pulls the newest copy every time you open or come back to it. Google's link does expire after an hour of no use — if the status says the link is down, one tap of Sync now signs it back in.</p>
       <div class="rule-li" id="dstatus">${driveStatusText()}</div>
       ${S.drive.clientId?'':`<label class="fld" style="margin-top:8px">Google Client ID (one-time setup)</label>
       <input type="text" data-act="dclientid" value="" placeholder="Paste the Client ID here">`}
