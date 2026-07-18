@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="./manifest.json">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <meta name="theme-color" content="#1B1B47">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
@@ -953,6 +954,31 @@ function parseAuthHash(){
   }catch(e){}
   try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
 }
+let _tokClient=null,_tokWaiter=null,_lastSilentFail=0;
+function gisReady(){return !!(window.google&&google.accounts&&google.accounts.oauth2);}
+function ensureTokClient(){
+  if(_tokClient)return _tokClient;
+  if(!gisReady()||!S.drive.clientId)return null;
+  _tokClient=google.accounts.oauth2.initTokenClient({
+    client_id:S.drive.clientId,
+    scope:'https://www.googleapis.com/auth/drive.file',
+    callback:(resp)=>{const w=_tokWaiter;_tokWaiter=null;
+      if(resp&&resp.access_token){
+        S.drive.tok={v:resp.access_token,exp:Date.now()+((resp.expires_in||3600)-60)*1000};
+        S.drive.enabled=true;_lastSilentFail=0;saveDrive();renderDriveStatus();
+        if(w)w(true);}
+      else{_lastSilentFail=Date.now();if(w)w(false);}},
+    error_callback:()=>{const w=_tokWaiter;_tokWaiter=null;_lastSilentFail=Date.now();if(w)w(false);}
+  });
+  return _tokClient;}
+function freshToken(interactive){
+  if(tokenValid())return Promise.resolve(true);
+  if(!interactive&&Date.now()-_lastSilentFail<300000)return Promise.resolve(false);
+  const tc=ensureTokClient();
+  if(!tc)return Promise.resolve(false);
+  return new Promise(res=>{_tokWaiter=res;
+    try{tc.requestAccessToken({prompt:interactive?'consent':''});}
+    catch(e){_tokWaiter=null;_lastSilentFail=Date.now();res(false);}});}
 function driveConnect(){
   const cid=(S.drive.clientId||'').trim();
   if(!cid){uiAlert('Paste your Google Client ID in first — I will walk you through getting it.');return;}
@@ -1021,9 +1047,11 @@ async function driveSync(mode){
 async function _driveSyncInner(mode){
   if(!S.drive.enabled)return;
   if(!tokenValid()){
-    if(mode==='manual')driveConnect();
-    else{S.drive.status='Link down — tap Sync to reconnect';renderDriveStatus();}
-    return;}
+    const got=await freshToken(mode==='manual');
+    if(!got){
+      if(mode==='manual'){if(gisReady())uiAlert('Google sign-in did not complete — try Sync again.');else driveConnect();}
+      else if(gisReady()){S.drive.status='Link renewing failed — tap Sync';renderDriveStatus();}
+      return;}}
   S.drive.status='Syncing…';renderDriveStatus();
   try{
     const id=await driveFindFile();
@@ -1064,9 +1092,10 @@ function driveStatusText(){
 }
 function driveBoot(){
   if(_authPending){S.drive.tok=_authPending;S.drive.enabled=true;_authPending=null;saveDrive();render();}
-  if(S.drive.enabled&&tokenValid())driveSync('auto');
+  if(S.drive.enabled)driveSync('auto');
+  if(S.drive.enabled)setTimeout(()=>{if(!tokenValid())driveSync('auto');},1800);
   // hands-free sync: push straight away when you leave, pull when you come back
-  const kick=()=>{if(S.drive&&S.drive.enabled&&tokenValid()){clearTimeout(_pushTimer);driveSync('auto');}};
+  const kick=()=>{if(S.drive&&S.drive.enabled&&(tokenValid()||gisReady())){clearTimeout(_pushTimer);driveSync('auto');}};
   document.addEventListener('visibilitychange',kick);
   window.addEventListener('pagehide',kick);
   window.addEventListener('focus',kick);
@@ -2284,7 +2313,7 @@ function vRules(){
     <div class="view-sub">Everything earned, everything handed over. Tick it when it hits their shirt.</div>
     ${cards||'<div class="card"><div class="empty">Nothing earned yet — badges build from signed-off nights.</div></div>'}
     <div class="card"><h3>Data — sync, backup, import</h3>
-      <p class="hint">One copy of your data, living in your Google Drive. It syncs itself: changes push a couple of seconds after you make them and whenever you switch away or close the app, and it pulls the newest copy every time you open or come back to it. Google's link does expire after an hour of no use — if the status says the link is down, one tap of Sync now signs it back in.</p>
+      <p class="hint">One copy of your data, living in your Google Drive. It syncs itself: changes push a couple of seconds after you make them and whenever you switch away or close the app, and it pulls the newest copy every time you open or come back to it. The Google link renews itself quietly in the background — you'll only ever see a sign-in if you've logged out of Google on that device.</p>
       <div class="rule-li" id="dstatus">${driveStatusText()}</div>
       ${S.drive.clientId?'':`<label class="fld" style="margin-top:8px">Google Client ID (one-time setup)</label>
       <input type="text" data-act="dclientid" value="" placeholder="Paste the Client ID here">`}
@@ -2493,7 +2522,10 @@ document.addEventListener('click',e=>{
       ()=>{t.textContent='Copied ✓';setTimeout(()=>t.textContent='Copy link',1600);},
       ()=>fb(txt,t));else fb(txt,t);return;}
   /* drive */
-  if(a==='dconnect'){driveConnect();return;}
+  if(a==='dconnect'){
+    if(gisReady()&&S.drive.clientId){freshToken(true).then(ok=>{if(ok)driveSync('auto');else driveConnect();});}
+    else driveConnect();
+    return;}
   if(a==='dsync'){driveSync('manual');return;}
   if(a==='ddisconnect'){S.drive.enabled=false;S.drive.tok=null;S.drive.status='';saveDrive();render();return;}
   if(a==='dclearid'){uiConfirm('Clear the saved Client ID?',()=>{
