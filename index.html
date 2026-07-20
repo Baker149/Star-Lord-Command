@@ -593,7 +593,7 @@ const STREAMS=['Bushcraft','Bushwalking','Camping','Alpine','Cycling','Vertical'
 Object.keys(OAS_SKILLS).forEach(st=>{for(let n=6;n<=9;n++){
   if(!OAS_SKILLS[st].some(g=>g[0]===n))OAS_SKILLS[st].push([n,'Stage '+n+' — Advanced',['Stage '+n+' requirements met — assessed & signed off']]);}});
 const SIA_AREAS=['Adventure & Sport','Arts & Literature','Creating a Better World','Environment','Growth & Development','STEM & Innovation'];
-const WB_IMPORT={"155207":{"name":"Ailia List","section":"Scout","milestone":1,"opening":{"Community":2,"Creative":4,"Outdoors":2},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3,"Vertical":1}},"108852":{"name":"Alexii Doney","section":"Venturer","milestone":3,"opening":{"Community":4,"Creative":1,"Outdoors":2,"Personal Growth":1,"L":1},"oasFrom":{"Bushcraft":5,"Bushwalking":5,"Camping":5,"Vertical":2,"Boating":1}},"144791":{"name":"Ashton Baker","section":"Scout","milestone":2,"opening":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":5,"A":1,"L":1},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3,"Cycling":2,"Vertical":1,"Aquatics":3,"Boating":1,"Paddling":1}},"136717":{"name":"Ben Kelly","section":"Scout","milestone":1,"opening":{"Community":5,"Creative":4,"Outdoors":5,"Personal Growth":3,"A":2},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3,"Vertical":1}},"149622":{"name":"Jesse Rujic","section":"Scout","milestone":1,"opening":{"Community":4,"Creative":3,"Outdoors":2,"Personal Growth":2,"A":1},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3}},"132759":{"name":"Katie Williams","section":"Scout","milestone":3,"opening":{"Community":4,"Creative":4,"Outdoors":4,"Personal Growth":4,"A":4,"L":3},"oasFrom":{"Bushcraft":4,"Bushwalking":4,"Camping":5,"Alpine":1,"Vertical":2,"Boating":1}},"128277":{"name":"Ryan Caelli","section":"Venturer","milestone":2,"opening":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":4,"L":2},"oasFrom":{"Bushcraft":4,"Bushwalking":3,"Camping":4,"Vertical":1}},"105539":{"name":"Sophia Baxter","section":"Venturer","milestone":2,"opening":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":5,"A":2,"L":2},"oasFrom":{"Bushcraft":5,"Bushwalking":5,"Camping":5,"Alpine":1,"Vertical":2,"Boating":1}},"124711":{"name":"Stephanie Baxter","section":"Scout","milestone":3,"opening":{"Community":4,"Creative":4,"Outdoors":4,"Personal Growth":4,"A":4,"L":4},"oasFrom":{"Bushcraft":4,"Bushwalking":3,"Camping":4,"Alpine":1,"Vertical":2}},"149827":{"name":"Tyler Caelli","section":"Scout","milestone":3,"opening":{"Community":4,"Creative":4,"Outdoors":4,"Personal Growth":4,"A":4,"L":2},"oasFrom":{"Bushcraft":4,"Bushwalking":3,"Camping":4,"Vertical":1}},"156063":{"name":"William Gomersall","section":"Scout","milestone":1,"opening":{"Community":1,"Creative":3,"Outdoors":1,"L":1},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3,"Vertical":1}},"170510":{"name":"Kobie Bennett","section":"Scout","milestone":1,"opening":{"Community":1,"Creative":1},"oasFrom":{}},"170428":{"name":"Cooper Wheatly","section":"Scout","milestone":1,"opening":{"A":2,"L":1},"oasFrom":{}}};
+const WB_IMPORT={"155207":{"name":"Ailia List","section":"Scout","milestone":1,"opening":{"Community":2,"Creative":4,"Outdoors":3,"A":1},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3,"Vertical":1},"dob":"2014-10-02","invest":"2022-05-05","priorKm":100,"priorNights":25,"sias":[{"area":"Adventure & Sport","description":"Vertical Challenges OneCamp 2026","date":"2026-05-21"}]},"108852":{"name":"Alexii Doney","section":"Venturer","milestone":3,"opening":{"Community":4,"Creative":1,"Outdoors":3,"Personal Growth":2,"A":1},"oasFrom":{"Bushcraft":5,"Bushwalking":5,"Camping":5,"Vertical":2,"Boating":1},"dob":"2009-09-05","invest":"2016-05-20","priorKm":200,"priorNights":50,"sias":[]},"144791":{"name":"Ashton Baker","section":"Scout","milestone":2,"opening":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":5,"L":1},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3,"Cycling":2,"Vertical":1,"Aquatics":3,"Boating":1,"Paddling":1},"dob":"2014-10-23","invest":"2023-04-04","priorKm":100,"priorNights":25,"sias":[{"area":"STEM & Innovation","description":"Robo Academy & STEM One Camp 2026","date":"2026-05-21"}]},"136717":{"name":"Ben Kelly","section":"Scout","milestone":1,"opening":{"Community":6,"Creative":4,"Outdoors":6,"Personal Growth":5,"A":2},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3,"Vertical":1},"dob":"2014-03-12","invest":"2019-08-29","priorKm":100,"priorNights":25,"sias":[]},"149622":{"name":"Jesse Rujic","section":"Scout","milestone":1,"opening":{"Community":5,"Creative":3,"Outdoors":2,"Personal Growth":3,"A":1},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3},"dob":"2013-04-17","invest":"2021-07-19","priorKm":10,"priorNights":0,"sias":[]},"132759":{"name":"Katie Williams","section":"Scout","milestone":3,"opening":{"Community":4,"Creative":4,"Outdoors":4,"Personal Growth":4,"A":4,"L":4},"oasFrom":{"Bushcraft":5,"Bushwalking":4,"Camping":6,"Alpine":1,"Vertical":2,"Boating":1},"dob":"2013-02-12","invest":"2018-10-25","priorKm":400,"priorNights":50,"sias":[{"area":"Adventure & Sport","description":"Starlight Superswim Goalie Athletics Running JDS Twisted Olympics","date":"2024-10-17"},{"area":"Arts & Literature","description":"Reading challenge","date":"2025-03-22"},{"area":"Creating a Better World","description":"Young Yarkins","date":"2024-10-17"},{"area":"Growth & Development","description":"Youth Support First Aid and Reviews (ach 13/07/2026)","date":"2024-10-17"}]},"128277":{"name":"Ryan Caelli","section":"Venturer","milestone":2,"opening":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":4,"L":2},"oasFrom":{"Bushcraft":4,"Bushwalking":3,"Camping":4,"Vertical":1},"dob":"2008-06-26","invest":"2018-07-17","priorKm":150,"priorNights":25,"sias":[]},"105539":{"name":"Sophia Baxter","section":"Venturer","milestone":2,"opening":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":5,"A":2,"L":2},"oasFrom":{"Bushcraft":5,"Bushwalking":5,"Camping":6,"Alpine":1,"Vertical":2,"Boating":1},"dob":"2009-09-30","invest":"2016-02-11","priorKm":200,"priorNights":50,"sias":[]},"124711":{"name":"Stephanie Baxter","section":"Scout","milestone":3,"opening":{"Community":4,"Creative":4,"Outdoors":4,"Personal Growth":4,"A":4,"L":4},"oasFrom":{"Bushcraft":5,"Bushwalking":3,"Camping":4,"Alpine":1,"Vertical":2},"dob":"2011-09-20","invest":"2018-03-08","priorKm":200,"priorNights":25,"sias":[{"area":"Adventure & Sport","description":"Twisted Olympics 24-Hour Rogaining","date":"2024-09-19"},{"area":"Arts & Literature","description":"(i) Horse Painting (ii) Steam Punk Snail (iii) SEWING (iv) Scouts art Craft Activities","date":""},{"area":"Growth & Development","description":"First Aid (ach 13/07/2026)","date":""}]},"149827":{"name":"Tyler Caelli","section":"Scout","milestone":3,"opening":{"Community":4,"Creative":4,"Outdoors":4,"Personal Growth":4,"A":4,"L":2},"oasFrom":{"Bushcraft":4,"Bushwalking":3,"Camping":4,"Vertical":1},"dob":"2011-01-05","invest":"2021-07-28","priorKm":100,"priorNights":10,"sias":[{"area":"Adventure & Sport","description":"Starlight Walking Fundraiser Twisted Olympics","date":"2024-09-19"},{"area":"Arts & Literature","description":"Instruct Cooking","date":"2026-02-05"},{"area":"Creating a Better World","description":"Community Service (MM/Fundraiser)","date":"2023-08-31"},{"area":"Growth & Development","description":"Tools Construction & Emergency Prep","date":"2023-07-27"}]},"156063":{"name":"William Gomersall","section":"Scout","milestone":1,"opening":{"Community":5,"Creative":3,"Outdoors":3,"Personal Growth":1,"L":1},"oasFrom":{"Bushcraft":3,"Bushwalking":3,"Camping":3,"Vertical":1},"dob":"2014-10-07","invest":"2022-06-20","priorKm":150,"priorNights":25,"sias":[]},"170510":{"name":"Kobie Bennett","section":"Scout","milestone":1,"opening":{"Community":4,"Outdoors":1,"Personal Growth":2},"oasFrom":{},"dob":"2012-08-23","invest":"2026-04-24","priorKm":0,"priorNights":0,"sias":[]},"170428":{"name":"Cooper Wheatly","section":"Scout","milestone":1,"opening":{"Community":2,"Outdoors":1,"Personal Growth":1},"oasFrom":{},"dob":"2012-10-29","invest":"2026-05-21","priorKm":0,"priorNights":0,"sias":[]},"171082":{"name":"Morrison Kingston","section":"Scout","milestone":1,"opening":{"Community":1,"Outdoors":1,"Personal Growth":1},"oasFrom":{"Camping":1},"dob":"","invest":"2026-07-02","priorKm":10,"priorNights":0,"sias":[]},"171134":{"name":"Sara Guerra","section":"Scout","milestone":1,"opening":{"Community":1,"Outdoors":1},"oasFrom":{},"dob":"2013-08-04","invest":"2026-07-02","priorKm":0,"priorNights":0,"sias":[]}};
 const PEAK_STEPS=[
  ['Intro to Scouting','Complete Introduction to Scouting'],
  ['Intro to Scout Section','Complete Introduction to Scout Section'],
@@ -609,17 +609,21 @@ const TEN_F=[false,false,false,false,false,false,false,false,false,false];
 const KM_BADGES=[10,50,100,150,200,300,400,500,750,1000];
 const NIGHT_BADGES=[10,25,50,75,100,150,200,250,300];
 const SEED=[
-  {name:"Ailia List",memberNo:"155207",priorKm:100,priorNights:25},
-  {name:"Ashton Baker",memberNo:"144791",priorKm:100,priorNights:25},
-  {name:"Ben Kelly",memberNo:"136717",priorKm:100,priorNights:25},
-  {name:"Jesse Rujic",memberNo:"149622",priorKm:10,priorNights:10},
-  {name:"Katie Williams",memberNo:"132759",priorKm:400,priorNights:50},
-  {name:"Stephanie Baxter",memberNo:"124711",priorKm:200,priorNights:25},
-  {name:"Tyler Caelli",memberNo:"149827",priorKm:100,priorNights:0},
-  {name:"William Gomersall",memberNo:"156063",priorKm:150,priorNights:0},
-  {name:"Kobie Bennett",memberNo:"170510",priorKm:0,priorNights:0},
-  {name:"Cooper Wheatly",memberNo:"170428",priorKm:0,priorNights:0},
-  {name:"Morrison Kingston",memberNo:"",priorKm:0,priorNights:0}
+  {name:"Ailia List",memberNo:"155207",section:"Scout",priorKm:100,priorNights:25},
+  {name:"Alexii Doney",memberNo:"108852",section:"Venturer",priorKm:200,priorNights:50},
+  {name:"Ashton Baker",memberNo:"144791",section:"Scout",priorKm:100,priorNights:25},
+  {name:"Ben Kelly",memberNo:"136717",section:"Scout",priorKm:100,priorNights:25},
+  {name:"Jesse Rujic",memberNo:"149622",section:"Scout",priorKm:10,priorNights:0},
+  {name:"Katie Williams",memberNo:"132759",section:"Scout",priorKm:400,priorNights:50},
+  {name:"Ryan Caelli",memberNo:"128277",section:"Venturer",priorKm:150,priorNights:25},
+  {name:"Sophia Baxter",memberNo:"105539",section:"Venturer",priorKm:200,priorNights:50},
+  {name:"Stephanie Baxter",memberNo:"124711",section:"Scout",priorKm:200,priorNights:25},
+  {name:"Tyler Caelli",memberNo:"149827",section:"Scout",priorKm:100,priorNights:10},
+  {name:"William Gomersall",memberNo:"156063",section:"Scout",priorKm:150,priorNights:25},
+  {name:"Kobie Bennett",memberNo:"170510",section:"Scout",priorKm:0,priorNights:0},
+  {name:"Cooper Wheatly",memberNo:"170428",section:"Scout",priorKm:0,priorNights:0},
+  {name:"Morrison Kingston",memberNo:"171082",section:"Scout",priorKm:10,priorNights:0},
+  {name:"Sara Guerra",memberNo:"171134",section:"Scout",priorKm:0,priorNights:0}
 ];
 
 const Store=(()=>{
@@ -883,7 +887,7 @@ function rosterDefaults(){
 }
 async function load(){
   const r=await Store.get('muster.roster');
-  S.roster=r?JSON.parse(r):SEED.map(s=>({id:uid(),name:s.name,section:'Scout',peak:false,milestone:1,memberNo:s.memberNo||'',sias:[],priorKm:s.priorKm||0,priorNights:s.priorNights||0,peakSteps:TEN_F.slice()}));
+  S.roster=r?JSON.parse(r):SEED.map(s=>({id:uid(),name:s.name,section:s.section||'Scout',peak:false,milestone:1,memberNo:s.memberNo||'',sias:[],priorKm:s.priorKm||0,priorNights:s.priorNights||0,peakSteps:TEN_F.slice()}));
   rosterDefaults();
   const mt=await Store.get('muster.meta');S.meta=mt?JSON.parse(mt):{updatedAt:0};
   S.mode='scout';  // everyone lands in scout mode; the PIN is the leader key
@@ -2367,7 +2371,7 @@ function vRules(){
       <div class="btn-row"><button class="btn ghost" data-act="export">Export data</button>
         <button class="btn ghost" data-act="import">Import data</button></div>
       <div class="mini-cap" style="margin-top:12px">Import from Tracey's workbooks</div>
-      <p class="hint">Sets milestone, opening balance and OAS starting stages to the official workbooks (May '26 snapshot), matched by member number. Nothing logged on nights changes. Export a backup first.</p>
+      <p class="hint">Sets milestone, opening balance, OAS starting stages, DOB, invested date, km & nights badge levels and SIA projects to the official workbooks (June '26 snapshot). Matches by member number, then by name. Scouts in the workbooks but not here get added. Nothing logged on nights changes. Export a backup first.</p>
       <div class="btn-row"><button class="btn ghost" data-act="wbimport">Preview import</button></div></div>
     <div class="gate-footer">
       <div class="chevrons">${[1,2,3,4,5,6,7].map(i=>chevSVG(i===7?'done':'pending')).join('')}</div>
@@ -2622,29 +2626,50 @@ document.addEventListener('click',e=>{
     if(a==='bgive')s.badges[t.dataset.k]=todayISO();else delete s.badges[t.dataset.k];
     save('roster');render();return;}
   if(a==='wbimport'){
-    const matched=[],unmatched=[];
-    S.roster.forEach(s=>{const w=WB_IMPORT[(s.memberNo||'').trim()];if(w)matched.push([s,w]);});
-    Object.keys(WB_IMPORT).forEach(num=>{
-      if(!S.roster.some(s=>(s.memberNo||'').trim()===num))unmatched.push(WB_IMPORT[num]);});
-    if(!matched.length){uiAlert('No scouts matched by member number. Check member numbers are entered in the Youth tab.');return;}
+    const norm=n=>(n||'').toLowerCase().replace(/[^a-z]/g,'').slice(0,14);
+    const matched=[],unmatchedWb=[];
+    S.roster.forEach(s=>{
+      let w=WB_IMPORT[(s.memberNo||'').trim()];
+      if(!w){const hit=Object.entries(WB_IMPORT).find(([num,x])=>norm(x.name)===norm(s.name));
+        if(hit){w=hit[1];s._wbNum=hit[0];}}
+      if(w)matched.push([s,w]);});
+    Object.entries(WB_IMPORT).forEach(([num,w])=>{
+      if(!matched.some(([s]) =>WB_IMPORT[(s.memberNo||'').trim()]===w||s._wbNum===num))unmatchedWb.push([num,w]);});
+    if(!matched.length&&!unmatchedWb.length){uiAlert('Nothing to import.');return;}
     const SH={Community:'C',Creative:'Cr',Outdoors:'O','Personal Growth':'PG',A:'Assist',L:'Lead'};
     const lines=matched.map(([s,w])=>{
       const ob=Object.entries(w.opening).map(([k,v])=>`${SH[k]||k} ${v}`).join(', ')||'none';
       const oas=Object.entries(w.oasFrom).map(([k,v])=>`${k} ${v}`).join(', ')||'none';
-      return `${s.name} → M${w.milestone}  |  ${ob}  |  OAS: ${oas}`;
+      const sia=(w.sias&&w.sias.length)?` | ${w.sias.length} SIA`:'';
+      return `${s.name} → M${w.milestone} | ${ob} | OAS: ${oas}${sia}`;
     }).join('\n');
-    const extra=unmatched.length?`\n\nNot matched (${unmatched.length}): ${unmatched.map(u=>u.name).join(', ')}. Add their member number to import them.`:'';
-    uiConfirm(`Update ${matched.length} scout${matched.length>1?'s':''} to match the workbooks (milestone, opening balance, OAS start). Nothing logged on nights changes.\n\n${lines}${extra}`,
+    const addTxt=unmatchedWb.length?`\n\nNew from the workbooks — will be added: ${unmatchedWb.map(([n,w])=>w.name).join(', ')}.`:'';
+    uiConfirm(`Update ${matched.length} scout${matched.length===1?'':'s'} to the June '26 workbooks (milestone, opening balance, OAS start, DOB, invested date, km & nights badges, SIA projects). Nothing logged on nights changes.\n\n${lines}${addTxt}`,
       ()=>{
-        matched.forEach(([s,w])=>{
+        const apply=(s,w,num)=>{
+          if(num&&!(s.memberNo||'').trim())s.memberNo=num;
           s.milestone=w.milestone;
           s.msOpening=s.msOpening||{1:emptyMS(),2:emptyMS(),3:emptyMS()};
           const ob=emptyMS();Object.entries(w.opening).forEach(([k,v])=>ob[k]=v);
           s.msOpening[w.milestone]=ob;
           s.oasStart=s.oasStart||{};Object.entries(w.oasFrom).forEach(([k,v])=>s.oasStart[k]=v);
-          if(w.section&&!s.section)s.section=w.section;
-        });
-        save('roster');render();uiAlert(`Imported ${matched.length} scout${matched.length>1?'s':''} from the workbooks.`);
+          if(w.section)s.section=w.section;
+          if(w.dob)s.dob=w.dob;
+          if(w.invest)s.joined=w.invest;
+          if(w.priorKm!=null)s.priorKm=w.priorKm;
+          if(w.priorNights!=null)s.priorNights=w.priorNights;
+          s.sias=s.sias||[];
+          (w.sias||[]).forEach(x=>{
+            const key=norm(x.area)+'|'+norm(x.description);
+            if(!s.sias.some(e=>norm(e.area)+'|'+norm(e.description)===key))
+              s.sias.push({id:uid(),area:x.area,description:x.description,date:x.date||''});});
+        };
+        matched.forEach(([s,w])=>{apply(s,w,s._wbNum);delete s._wbNum;});
+        unmatchedWb.forEach(([num,w])=>{
+          const s={id:uid(),name:w.name,section:w.section||'Scout',peak:false,milestone:1,memberNo:num,sias:[],priorKm:0,priorNights:0,peakSteps:TEN_F.slice()};
+          S.roster.push(s);apply(s,w,num);});
+        rosterDefaults();
+        save('roster');render();uiAlert(`Imported ${matched.length+unmatchedWb.length} scouts from the June workbooks.`);
       });
     return;}
 });
