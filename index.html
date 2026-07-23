@@ -920,6 +920,11 @@ async function load(){
   S.roster=r?JSON.parse(r):SEED.map(s=>({id:uid(),name:s.name,section:s.section||'Scout',peak:false,milestone:1,memberNo:s.memberNo||'',sias:[],priorKm:s.priorKm||0,priorNights:s.priorNights||0,peakSteps:TEN_F.slice()}));
   rosterDefaults();
   const mt=await Store.get('muster.meta');S.meta=mt?JSON.parse(mt):{updatedAt:0};
+  // per-key clock: each synced area carries its own timestamp so a change to one
+  // never claims authority over the others. Seed from the old single clock.
+  if(!S.meta.keyAt||typeof S.meta.keyAt!=='object')S.meta.keyAt={};
+  ['roster','year','nights','welcome','contacts'].forEach(k=>{
+    if(typeof S.meta.keyAt[k]!=='number')S.meta.keyAt[k]=S.meta.updatedAt||0;});
   S.mode='scout';  // everyone lands in scout mode; the PIN is the leader key
   S.pin=(await Store.get('muster.pin'))||'';
   if(S._gmPurged||S._rosterDirty){delete S._gmPurged;delete S._rosterDirty;Store.set('muster.roster',JSON.stringify(S.roster));}
@@ -941,7 +946,11 @@ async function load(){
   else if(S.night.run.length===3&&S.night.run[0].k==='open'){
     const o=S.night.run;S.night.run=freshRun();
     S.night.run[0].done=!!o[0].done;S.night.run[3].done=!!o[1].done;S.night.run[6].done=!!o[2].done;}
-  save('year');
+  // Persist the migrated year locally, but do NOT stamp the sync clock. Opening the
+  // app is not an edit — stamping here made every device claim the newest term plan,
+  // which is what made the plan appear and disappear between devices.
+  {const yAfter=JSON.stringify(S.year);
+   if(yAfter!==(y||''))Store.set('muster.year',yAfter);}
 }
 function seedWelcome(){return {
   faqs:[
@@ -966,7 +975,9 @@ function seedWelcome(){return {
   ]};}
 const SYNC_KEYS=['roster','year','nights','welcome','contacts'];
 const save=k=>{Store.set('muster.'+k,JSON.stringify(S[k]));
-  if(SYNC_KEYS.includes(k)){S.meta.updatedAt=Date.now();
+  if(SYNC_KEYS.includes(k)){const now=Date.now();
+    S.meta.updatedAt=now;
+    S.meta.keyAt=S.meta.keyAt||{};S.meta.keyAt[k]=now;
     Store.set('muster.meta',JSON.stringify(S.meta));queuePush();}};
 
 /* ===== Google Drive sync ===== */
@@ -1064,7 +1075,8 @@ async function driveFindFile(){
   S.drive.fileId=(j.files&&j.files[0]&&j.files[0].id)||'';
   saveDrive();return S.drive.fileId;
 }
-function envelope(){return JSON.stringify({updatedAt:S.meta.updatedAt,app:'star-lord-command',
+function envelope(){return JSON.stringify({updatedAt:S.meta.updatedAt,keyAt:S.meta.keyAt||{},
+  app:'star-lord-command',
   data:{roster:S.roster,year:S.year,nights:S.nights,welcome:S.welcome,contacts:S.contacts}});}
 async function drivePush(){
   const body=envelope();
@@ -1081,19 +1093,37 @@ async function drivePush(){
     const j=await r.json();S.drive.fileId=j.id||'';
   }
 }
-function applyRemote(env){
+// Merge remote into local key by key. Returns {pulled:[],pushNeeded:bool}.
+// A key is only taken from remote if remote's clock for THAT key is newer.
+function remoteKeyAt(env,k){
+  const ka=env.keyAt&&typeof env.keyAt==='object'?env.keyAt:null;
+  if(ka&&typeof ka[k]==='number')return ka[k];
+  return env.updatedAt||0;   // old envelopes had one clock for everything
+}
+function mergeRemote(env){
   const d=env.data||{};
-  if(d.roster)S.roster=d.roster;
-  if(d.year)S.year=migrateYear(d.year,null);
-  if(d.nights)S.nights=d.nights;
-  if(d.welcome)S.welcome=d.welcome;
-  if(d.contacts)S.contacts=d.contacts;
-  rosterDefaults();
-  SYNC_KEYS.forEach(k=>Store.set('muster.'+k,JSON.stringify(S[k])));
-  S.meta.updatedAt=env.updatedAt||Date.now();
+  const pulled=[];let pushNeeded=false;
+  S.meta.keyAt=S.meta.keyAt||{};
+  SYNC_KEYS.forEach(k=>{
+    const rAt=remoteKeyAt(env,k), lAt=S.meta.keyAt[k]||0;
+    const has=Object.prototype.hasOwnProperty.call(d,k)&&d[k]!=null;
+    if(has&&rAt>lAt){
+      if(k==='year')S.year=migrateYear(d.year,null);else S[k]=d[k];
+      S.meta.keyAt[k]=rAt;pulled.push(k);
+    }else if(lAt>rAt){pushNeeded=true;}
+  });
+  if(pulled.length){
+    rosterDefaults();
+    pulled.forEach(k=>Store.set('muster.'+k,JSON.stringify(S[k])));
+  }
+  S.meta.updatedAt=Math.max(S.meta.updatedAt||0,env.updatedAt||0,
+    ...SYNC_KEYS.map(k=>S.meta.keyAt[k]||0));
   Store.set('muster.meta',JSON.stringify(S.meta));
-  if(S.year.cur&&!planFind(S.year.cur.id).it)S.year.cur=null;
-  if(!S.night.saved&&S.night.step===1){applyCurrent(S.night);save('night');}
+  if(pulled.includes('year')){
+    if(S.year.cur&&!planFind(S.year.cur.id).it)S.year.cur=null;
+    if(!S.night.saved&&S.night.step===1){applyCurrent(S.night);save('night');}
+  }
+  return {pulled,pushNeeded};
 }
 let _syncBusy=false;
 async function driveSync(mode){
@@ -1117,8 +1147,12 @@ async function _driveSyncInner(mode){
       const r=await dFetch('https://www.googleapis.com/drive/v3/files/'+id+'?alt=media');
       let env=null;try{env=JSON.parse(await r.text());}catch(e){}
       if(!env||!env.data){await drivePush();}
-      else if((env.updatedAt||0)>S.meta.updatedAt){applyRemote(env);render();}
-      else if(S.meta.updatedAt>(env.updatedAt||0)){await drivePush();}
+      else{
+        const {pulled,pushNeeded}=mergeRemote(env);
+        // push if anything of ours is newer, or if we pulled (so the file holds the union)
+        if(pushNeeded||pulled.length)await drivePush();
+        if(pulled.length)render();
+      }
     }
     S.drive.lastSync=Date.now();S.drive.status='';saveDrive();renderDriveStatus();
   }catch(e){
