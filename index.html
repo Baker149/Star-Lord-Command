@@ -595,17 +595,40 @@ Object.keys(OAS_SKILLS).forEach(st=>{for(let n=6;n<=9;n++){
   if(!OAS_SKILLS[st].some(g=>g[0]===n))OAS_SKILLS[st].push([n,'Stage '+n+' — Advanced',['Stage '+n+' requirements met — assessed & signed off']]);}});
 const SIA_AREAS=['Adventure & Sport','Arts & Literature','Creating a Better World','Environment','Growth & Development','STEM & Innovation'];
 const MS_DOC={"155207":{"name":"Ailia List","section":"Scout","milestone":1,"opening":{"1":{"Community":2,"Creative":4,"Outdoors":3,"Personal Growth":0,"A":1,"L":0}},"joined":"2025-11-06","intro":false,"introDate":"","priorKm":135,"priorNights":27,"sias":[{"area":"Adventure & Sport","description":"","date":""}],"dob":"2014-10-02"},"144791":{"name":"Ashton Baker","section":"Scout","milestone":1,"opening":{"1":{"Community":6,"Creative":4,"Outdoors":5,"Personal Growth":3,"A":2,"L":1}},"joined":"2025-11-27","intro":false,"introDate":"","priorKm":126,"priorNights":38,"sias":[{"area":"STEM & Innovation","description":"","date":""}],"dob":"2014-10-23"},"136717":{"name":"Ben Kelly","section":"Scout","milestone":1,"opening":{"1":{"Community":6,"Creative":4,"Outdoors":6,"Personal Growth":5,"A":2,"L":0}},"joined":"2025-07-31","intro":false,"introDate":"","priorKm":145,"priorNights":28,"sias":[],"dob":"2014-03-12"},"170428":{"name":"Cooper Wheatly","section":"Scout","milestone":1,"opening":{"1":{"Community":2,"Creative":0,"Outdoors":1,"Personal Growth":1,"A":0,"L":0}},"joined":"2026-04-22","intro":false,"introDate":"","priorKm":7,"priorNights":0,"sias":[],"dob":"2012-10-29"},"149622":{"name":"Jesse Rujic","section":"Scout","milestone":1,"opening":{"1":{"Community":5,"Creative":3,"Outdoors":2,"Personal Growth":3,"A":1,"L":0}},"joined":"2025-06-11","intro":false,"introDate":"","priorKm":32,"priorNights":9,"sias":[],"dob":"2013-04-17"},"132759":{"name":"Katie Williams","section":"Scout","milestone":3,"opening":{"1":{"Community":6,"Creative":6,"Outdoors":6,"Personal Growth":6,"A":2,"L":1},"2":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":5,"A":3,"L":2},"3":{"Community":4,"Creative":4,"Outdoors":4,"Personal Growth":4,"A":4,"L":4}},"joined":"2024-02-09","intro":true,"introDate":"2024-06-13","priorKm":404,"priorNights":56,"sias":[{"area":"Adventure & Sport","description":"","date":""},{"area":"Arts & Literature","description":"","date":""},{"area":"Creating a Better World","description":"","date":""},{"area":"Growth & Development","description":"","date":""}],"dob":"2013-02-12"},"170510":{"name":"Kobie Bennett","section":"Scout","milestone":1,"opening":{"1":{"Community":4,"Creative":0,"Outdoors":1,"Personal Growth":2,"A":0,"L":0}},"joined":"2026-09-04","intro":false,"introDate":"","priorKm":7,"priorNights":0,"sias":[],"dob":"2012-08-23"},"171082":{"name":"Morrison Kingston","section":"Scout","milestone":1,"opening":{"1":{"Community":1,"Creative":0,"Outdoors":1,"Personal Growth":1,"A":0,"L":0}},"joined":"","intro":false,"introDate":"","priorKm":13,"priorNights":2,"sias":[],"dob":""},"171134":{"name":"Sara Guerra","section":"Scout","milestone":1,"opening":{"1":{"Community":1,"Creative":0,"Outdoors":1,"Personal Growth":0,"A":0,"L":0}},"joined":"","intro":false,"introDate":"","priorKm":7,"priorNights":0,"sias":[],"dob":"2013-08-04"},"124711":{"name":"Stephanie Baxter","section":"Scout","milestone":3,"opening":{"1":{"Community":6,"Creative":6,"Outdoors":6,"Personal Growth":6,"A":2,"L":1},"2":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":5,"A":3,"L":2},"3":{"Community":4,"Creative":4,"Outdoors":4,"Personal Growth":4,"A":4,"L":4}},"joined":"2023-12-07","intro":true,"introDate":"2024-06-13","priorKm":237,"priorNights":41,"sias":[{"area":"Adventure & Sport","description":"","date":""},{"area":"Arts & Literature","description":"","date":""},{"area":"Growth & Development","description":"","date":""}],"dob":"2011-09-20"},"149827":{"name":"Tyler Caelli","section":"Scout","milestone":3,"opening":{"1":{"Community":6,"Creative":6,"Outdoors":6,"Personal Growth":6,"A":2,"L":1},"2":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":5,"A":3,"L":2},"3":{"Community":4,"Creative":4,"Outdoors":4,"Personal Growth":4,"A":4,"L":2}},"joined":"2023-05-11","intro":true,"introDate":"2024-06-13","priorKm":109,"priorNights":22,"sias":[{"area":"Adventure & Sport","description":"","date":""},{"area":"Arts & Literature","description":"","date":""},{"area":"Creating a Better World","description":"","date":""},{"area":"Growth & Development","description":"","date":""}],"dob":"2011-01-05"},"156063":{"name":"William Gomersall","section":"Scout","milestone":1,"opening":{"1":{"Community":5,"Creative":3,"Outdoors":3,"Personal Growth":1,"A":0,"L":1}},"joined":"2025-11-23","intro":false,"introDate":"","priorKm":188,"priorNights":26,"sias":[],"dob":"2014-10-07"},"108852":{"name":"Alexii Doney","section":"Venturer","milestone":3,"opening":{"1":{"Community":6,"Creative":6,"Outdoors":6,"Personal Growth":6,"A":2,"L":1},"2":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":5,"A":3,"L":2},"3":{"Community":4,"Creative":1,"Outdoors":3,"Personal Growth":2,"A":1,"L":0}},"joined":"2024-11-22","intro":false,"introDate":"","priorKm":208,"priorNights":56,"sias":[],"dob":"2009-09-05"},"105539":{"name":"Sophia Baxter","section":"Venturer","milestone":2,"opening":{"1":{"Community":6,"Creative":6,"Outdoors":6,"Personal Growth":6,"A":2,"L":1},"2":{"Community":5,"Creative":5,"Outdoors":5,"Personal Growth":5,"A":2,"L":2}},"joined":"2024-09-09","intro":false,"introDate":"","priorKm":235,"priorNights":70,"sias":[],"dob":"2009-09-30"}};
-const PEAK_STEPS=[
- ['Intro to Scouting','Complete Introduction to Scouting'],
- ['Intro to Scout Section','Complete Introduction to Scout Section'],
- ['Milestone 1','Earn Milestone 1'],
- ['Milestone 2','Earn Milestone 2'],
- ['Milestone 3','Earn Milestone 3'],
- ['Outdoor Adventure Skills','Stage 5 in Bushcraft, Bushwalking & Camping — 10 stage progressions total'],
- ['Special Interest Areas','6 projects across 3+ areas, 8 hrs each'],
- ['Adventurous Journey','Plan & lead a 3-day, 2-night journey'],
- ['Leadership / PD course','Leadership or personal development course — a weekend or more'],
- ['Personal Reflection','Reflect on the climb — then the Australian Scout Award']];
+const SECTION_REQS={
+ Scout:{next:'Venturer',intro:'Introduction to Scout Section',
+   siaHrs:8,siaAreas:3,oasProg:10,oasCores:3,
+   journey:'Plan & lead a 3-day, 2-night journey',
+   course:'Leadership or personal development course',
+   award:'Australian Scout Award'},
+ Venturer:{next:'Rover',intro:'Introduction to Venturer Scout Section',
+   siaHrs:12,siaAreas:3,oasProg:14,oasCores:3,oasHigh:6,
+   journey:'Plan & lead a 4-day, 3-night journey — include one member from outside the Unit',
+   course:'Leadership or personal development course — a weekend or more',
+   award:"King's Scout Award"},
+ Rover:{next:'',intro:'Introduction to Rover Scout Section',
+   siaHrs:18,siaAreas:4,oasProg:14,oasCores:0,oasHigh:6,
+   journey:'Plan & lead a 4-day, 3-night journey — three Rovers, two from different Units',
+   course:'Leadership or personal development course — at least 30 hours',
+   award:'Baden-Powell Scout Award'}};
+function reqs(sec){return SECTION_REQS[sec]||SECTION_REQS.Scout;}
+function peakStepsFor(sec){
+  const q=reqs(sec);
+  const oasTxt=q.oasHigh
+    ?`Stage 5 in Bushcraft, Bushwalking & Camping — ${q.oasProg} progressions, ${q.oasHigh} at stage 4+`
+    :`Stage 5 in Bushcraft, Bushwalking & Camping — ${q.oasProg} stage progressions total`;
+  return [
+   ['Intro to Scouting','Complete Introduction to Scouting'],
+   [q.intro.replace('Introduction to','Intro to'),'Complete '+q.intro],
+   ['Milestone 1','Earn Milestone 1'],
+   ['Milestone 2','Earn Milestone 2'],
+   ['Milestone 3','Earn Milestone 3'],
+   ['Outdoor Adventure Skills',oasTxt],
+   ['Special Interest Areas',`6 projects across ${q.siaAreas}+ areas, ${q.siaHrs} hrs each`],
+   ['Adventurous Journey',q.journey],
+   ['Leadership / PD course',q.course],
+   ['Personal Reflection','Reflect on the climb — then the '+q.award]];}
+const PEAK_STEPS=peakStepsFor('Scout');
 function norm2(n){return (n||"").toLowerCase().replace(/[^a-z]/g,"").slice(0,14);}
 const TEN_F=[false,false,false,false,false,false,false,false,false,false];
 const KM_BADGES=[10,50,100,150,200,300,400,500,750,1000];
@@ -845,8 +868,11 @@ function oasFor(sid){
       if(ok)cur=stage;else break;}
     out.streams[st]={from,cur};
     out.prog+=Math.max(0,cur-from);
+    if(cur>=4)out.high=(out.high||0)+1;
     if(['Bushcraft','Bushwalking','Camping'].includes(st)&&cur>=5)out.cores++;});
-  out.done=out.cores===3&&out.prog>=10;
+  out.high=out.high||0;
+  const q=reqs(s.section);
+  out.done=out.prog>=q.oasProg&&out.cores>=q.oasCores&&(!q.oasHigh||out.high>=q.oasHigh);
   return out;}
 function msDoneCalc(s){
   // M1..M3 done flags come straight from the roll-up: a milestone is done when
@@ -862,7 +888,9 @@ function peakStepState(s){
   const md=msDoneCalc(s);const o=oasFor(s.id);const siaN=(s.sias||[]).length;
   const out=stored.slice();
   out[2]=md[0];out[3]=md[1];out[4]=md[2];
-  out[5]=o.done;out[6]=siaN>=6;
+  const q=reqs(s.section);
+  const areaN=new Set((s.sias||[]).map(x=>x.area).filter(Boolean)).size;
+  out[5]=o.done;out[6]=siaN>=6&&areaN>=q.siaAreas;
   return out;}
 function rosterDefaults(){
   S.roster.forEach(s=>{if(!s.sias)s.sias=[];if(s.priorKm==null)s.priorKm=0;if(s.priorNights==null)s.priorNights=0;if(s.memberNo==null)s.memberNo="";
@@ -2248,7 +2276,7 @@ function vTroop(){
         ${s.peak?(()=>{
           const ps=peakStepState(s),locked=ps.filter(Boolean).length;
           const first=esc(s.name.split(' ')[0]);
-          const rows=PEAK_STEPS.map((st,i)=>{
+          const rows=peakStepsFor(s.section).map((st,i)=>{
             if(ps[i])return'';
             const hint=i===6?' · '+(s.sias?s.sias.length:0)+' logged here':'';
             const auto=[2,3,4,5,6].includes(i);
@@ -2256,9 +2284,9 @@ function vTroop(){
               <div class="skbox" style="flex:none"></div>
               <div class="climb-txt"><b>${i+1}. ${st[0]}</b>${auto?' <span style="font-size:10px;color:var(--ink-faint)">(auto)</span>':''}<br><span>${esc(st[1])+esc(hint)}</span></div></div>`;}).join('');
           return `<div class="subhd">The climb — ${locked} of 10</div>
-        <p class="hint" style="margin:0 0 4px">${first}'s route to the Australian Scout Award.</p>
+        <p class="hint" style="margin:0 0 4px">${first}'s route to the ${reqs(s.section).award}.</p>
         ${peakMountain(s)}
-        ${locked===10?'<div class="conn-line" style="margin:2px 0 7px">Summit — Australian Scout Award · gate dialled</div>'
+        ${locked===10?'<div class="conn-line" style="margin:2px 0 7px">Summit — '+reqs(s.section).award+' · gate dialled</div>'
           :'<div class="conn-line" style="margin:2px 0 7px">'+(10-locked)+' to go — any order, it\'s a zigzag</div>'}
         <div class="climb-list">${rows}</div>`;
         })():''}
@@ -2272,7 +2300,7 @@ function vTroop(){
             <div class="an">${ntN?'next badge: '+ntN:'all badges earned'}</div>
             <div class="pr"><label>prior</label><input type="number" min="0" data-act="priornights" data-id="${s.id}" value="${s.priorNights||0}"></div></div>
         </div>
-        <div class="subhd">Special Interest Areas — ${sias.length}/6 · ${areaSet.size} area${areaSet.size===1?'':'s'}</div>
+        <div class="subhd">Special Interest Areas — ${sias.length}/6 · ${areaSet.size}/${reqs(s.section).siaAreas} areas · ${reqs(s.section).siaHrs} hrs each</div>
         <p class="hint" style="margin-top:0">Peak Award needs 6 SIAs across 3+ areas. Recorded here, not in the term plan.</p>
         ${siaList}
         <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">
@@ -2287,10 +2315,17 @@ function vTroop(){
             ${[1,2,3].map(m=>`<option value="${m}" ${s.milestone==m?'selected':''}>M${m}</option>`).join('')}</select>
           <label style="margin-left:6px">Section</label>
           <select data-act="setsec" data-id="${s.id}" style="width:auto;flex:none">
-            ${['Joey','Cub','Scout','Venturer'].map(x=>`<option ${s.section===x?'selected':''}>${x}</option>`).join('')}</select></div>
+            ${['Joey','Cub','Scout','Venturer','Rover'].map(x=>`<option ${s.section===x?'selected':''}>${x}</option>`).join('')}</select></div>
+        ${(()=>{const h=s.history||[];if(!h.length)return '';
+          return `<div class="hint" style="margin:6px 0 0;padding:7px 9px;background:var(--paper-2,rgba(0,0,0,.03));border-radius:8px">
+            <b>Previously</b><br>${h.map(x=>{
+              const ms=(x.milestones||[]).filter(Boolean).length;
+              return `${esc(x.section)} · ${x.from?esc(x.from)+' to ':''}${esc(x.to||'')} · ${ms} of 3 milestones · ${(x.sias||[]).length} SIA${(x.sias||[]).length===1?'':'s'}`;
+            }).join('<br>')}</div>`;})()}
         <p class="hint" style="margin:4px 0 0">"Started at" = the milestone they were up to when you began tracking here. Lower milestones count as done; set their part-done credits in the opening balance below. Their <b>current</b> milestone (M${cur}) is worked out from everything logged.</p>
         <div class="btn-row" style="margin-top:6px">
           <button class="btn ghost sm" data-act="peak" data-id="${s.id}">${s.peak?'★ Peak Award — yes':'☆ Mark as Peak Award'}</button>
+          ${reqs(s.section).next?`<button class="btn ghost sm" data-act="moveup" data-id="${s.id}">↑ Move up to ${reqs(s.section).next}s</button>`:''}
           <button class="btn ghost sm" data-act="delscout" data-id="${s.id}" style="flex:none;color:var(--clay)">Remove</button>
         </div></div></div>`;}).join('');
   return `<div class="view">
@@ -2793,6 +2828,35 @@ document.addEventListener('click',e=>{
           delete s._obM;delete s._obEdit;});
         save('roster');render();
         uiAlert('Cleared. Open a scout in the Youth tab to set their milestone, opening balance, OAS start stages and SIA projects by hand.');
+      });
+    return;}
+  if(a==='moveup'){
+    const s=S.roster.find(x=>x.id===t.dataset.id);if(!s)return;
+    const from=s.section, to=reqs(from).next;
+    if(!to){uiAlert(s.name+' is already in the top section.');return;}
+    const st=peakStepState(s);
+    const msDone=[st[2],st[3],st[4]];
+    const nq=reqs(to);
+    uiConfirm(`Move ${s.name} up from ${from}s to ${to}s?\n\nSTARTS AGAIN in the new section:\n· Milestones back to M1 — ${msDone.filter(Boolean).length} of 3 earned as a ${from} is kept on their record\n· Special Interest Areas start again — now 6 projects across ${nq.siaAreas}+ areas at ${nq.siaHrs} hours each\n· New ${nq.intro}\n· New Adventurous Journey, leadership course and personal reflection\n\nCARRIES OVER:\n· Walkabout km and nights under canvas keep rolling\n· All OAS stages and skills\n· Introduction to Scouting\n· Contacts, member number, date of birth\n\nNothing is deleted — their ${from} record is kept on the card.`,
+      ()=>{
+        const o=oasFor(s.id);
+        const snap={};Object.entries(o.streams).forEach(([k,v])=>{if(v.cur)snap[k]=v.cur;});
+        s.history=s.history||[];
+        s.history.push({section:from,from:s.joined||'',to:todayISO(),
+          milestones:msDone,sias:(s.sias||[]).map(x=>({area:x.area,description:x.description||'',date:x.date||''})),
+          km:s.priorKm||0,nights:s.priorNights||0,oas:snap,
+          journey:!!s.peakSteps[7],course:!!s.peakSteps[8],reflection:!!s.peakSteps[9]});
+        s.section=to;
+        s.milestone=1;
+        s.msOpening={1:emptyMS(),2:emptyMS(),3:emptyMS()};
+        s.sias=[];
+        s.joined=todayISO();
+        if(!s.peakSteps||s.peakSteps.length<10)s.peakSteps=TEN_F.slice();
+        s.peakSteps[1]=false;s.peakSteps[7]=false;s.peakSteps[8]=false;s.peakSteps[9]=false;
+        s.patrol='';s.prole='';
+        rosterDefaults();
+        save('roster');render();
+        uiAlert(`${s.name} is now a ${to}. Milestones and SIAs start again, km, nights and OAS carry over. Their ${from} record is on the card under "Previously".`);
       });
     return;}
   if(a==='msdocimport'){
