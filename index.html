@@ -441,6 +441,57 @@ function runDefs(){
     books:['Mark books — skills & participates, with tonight\'s lead',roleNames(f.it,'L')?'lead: '+roleNames(f.it,'L'):'no lead assigned for tonight'],
     next:['Preview next week — who leads, assists, flag patrol',nextWeekInfo()],
     close:['Flag down & close','']};}
+
+/* ===== one night timeline, shared by both modes =====
+   The plan's schedule is the spine — those rows tick in leader mode and scout
+   mode alike, off the same p.sched[i].done, so a tick in one shows in the other.
+   The leader-only admin rows wrap around that middle and stay on S.night.run. */
+function runRow(k){
+  S.night.run=S.night.run||freshRun();
+  let r=S.night.run.find(x=>x.k===k);
+  if(!r){r={k,done:false};S.night.run.push(r);}
+  return r;}
+function schedRowOwner(it,r){
+  return r.o==='L'?(roleNames(it,'L')||'Lead')
+       :r.o==='A'?(roleNames(it,'A')||'Assist')
+       :r.o==='P'?'Patrol':'';}
+function timelineRows(it){
+  const defs=runDefs();
+  const L=k=>{const d=defs[k]||[k,''];const r=runRow(k);
+    return {kind:'leader',k,label:d[0],sub:d[1]||'',done:!!r.done};};
+  const p=it?ensurePlan(it):null;
+  const sched=(p&&p.sched||[]).filter(r=>((r.t||'')+(r.w||'')).trim());
+  // no schedule on the plan — fall back to the standalone run sheet
+  if(!sched.length)return freshRun().map(x=>L(x.k));
+  const S_=(i)=>{const r=sched[i];
+    return {kind:'shared',i,t:r.t||'',w:r.w||'',o:r.o||'',done:!!r.done,sub:'',
+            label:[r.d,r.t].filter(Boolean).join(' '),owner:schedRowOwner(it,r)};};
+  const dp=dutyPatrol();
+  const rows=[];
+  const first=S_(0);
+  if(dp)first.sub=dp+' patrol on flag & pack-up';
+  rows.push(first);
+  rows.push(L('uniform'));rows.push(L('events'));
+  for(let i=1;i<sched.length-1;i++)rows.push(S_(i));
+  rows.push(L('books'));rows.push(L('next'));
+  if(sched.length>1)rows.push(S_(sched.length-1));
+  return rows;}
+function timelineHTML(it,leaderMode){
+  const tickSVG='<svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5l3 3 6-6.5" stroke="#F6F1E2" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const rows=timelineRows(it).filter(r=>leaderMode||r.kind==='shared');
+  if(!rows.length)return '';
+  return rows.map(r=>{
+    const tick=r.kind==='shared'
+      ? `data-act="schedtick" data-id="${it.id}" data-i="${r.i}"`
+      : `data-act="runtick" data-k="${r.k}"`;
+    const main=r.kind==='shared'
+      ? `<b>${esc(r.label)}</b>${r.owner?' <b style="color:var(--pine)">'+esc(r.owner)+':</b>':''} ${esc(r.w)}`
+      : `<b>${esc(r.label)}</b>`;
+    const sub=r.sub?`<br><span style="font-size:11px;color:var(--ink-soft)">${esc(r.sub)}</span>`:'';
+    const only=(leaderMode&&r.kind==='leader')?' <span style="font-size:10px;color:var(--ink-soft)">· leader</span>':'';
+    return `<div class="skrow ${r.done?'on':''}" ${tick}>
+      <div class="skbox">${r.done?tickSVG:''}</div>
+      <div class="sktext">${main}${only}${sub}</div></div>`;}).join('');}
 let R1_TMPL_BYTES=null;
 async function getR1Template(){
   if(R1_TMPL_BYTES)return R1_TMPL_BYTES;
@@ -1342,14 +1393,13 @@ function vTonight(){
     <div class="view-title">Tonight at Scouts</div>
     <div class="view-sub">${fmtD(n.date)} · four steps, then sign off.</div>
     ${(()=>{const tm=viewTerm?termTimeLabel(S.year.terms[curItemR().t>=0?curItemR().t:S.year.viewT]||{}):'';
-      const defs=runDefs();
-      const rows=n.run.map((r,i)=>{const d=defs[r.k]||[r.label||r.k,''];
-        return `<div class="skrow ${r.done?'on':''}" data-act="runtick" data-i="${i}">
-        <div class="skbox">${r.done?'<svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5l3 3 6-6.5" stroke="#F6F1E2" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
-        <div class="sktext"><b>${d[0]}</b>${d[1]?`<br><span style="font-size:11px;color:var(--ink-soft)">${esc(d[1])}</span>`:''}</div></div>`;}).join('');
+      const it=curItemR().it;
+      const rows=timelineHTML(it,true);
+      const shared=it&&(ensurePlan(it).sched||[]).length;
       return `<div class="card" style="padding:12px">
         <div class="mini-cap" style="margin:0">Run sheet${tm?' · '+tm:''}</div>
-        ${rows}</div>`;})()}
+        ${rows}
+        ${shared?'<p class="hint" style="margin:7px 0 0">The timed rows are the same ones the scouts tick — tick here or there, it counts once.</p>':''}</div>`;})()}
     ${(()=>{if(!S.roster.length)return'';
       let sts=[...new Set((n.targetSkills||[]).map(s=>s.id.split('|')[0]))];
       if(!sts.length){const st=n.stream||((curItemR().it||{}).stream)||'';if(st)sts=[st];}
@@ -1815,10 +1865,7 @@ function vScoutTonight(){
     <div class="card"><div class="empty">No plan for tonight yet — build it in the Plan tab, or ask Star-Lord which night is live.</div></div></div>`;
   const p=ensurePlan(it);
   const L=roleNames(it,'L'),A=roleNames(it,'A');
-  const own=r=>r.o==='L'?(roleNames(it,'L')||'Lead'):r.o==='A'?(roleNames(it,'A')||'Assist'):r.o==='P'?'Patrol':'';
-  const sched=(p.sched||[]).map((r,i)=>`<div class="skrow ${r.done?'on':''}" data-act="schedtick" data-id="${it.id}" data-i="${i}">
-    <div class="skbox">${r.done?'<svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5l3 3 6-6.5" stroke="#F6F1E2" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
-    <div class="sktext"><b>${esc([r.d,r.t].filter(Boolean).join(' '))}</b>${own(r)?' <b style="color:var(--pine)">'+esc(own(r))+':</b>':''} ${esc(r.w||'')}</div></div>`).join('');
+  const sched=timelineHTML(it,false);
   return `<div class="view">
     <div class="view-title">Tonight</div>
     <div class="view-sub">${esc(it.activity)}${it.time?' · '+esc(it.time):''}${p.where?' · '+esc(p.where):''}</div>
@@ -2534,7 +2581,7 @@ document.addEventListener('click',e=>{
   if(a==='r1back'){S._r1Id=null;render();return;}
   if(a==='r1help'){S._r1Help=!S._r1Help;render();return;}
   if(a==='nchal'){S.night.review.challenge=+t.dataset.v;save('night');render();return;}
-  if(a==='runtick'){const r=S.night.run[+t.dataset.i];if(r){r.done=!r.done;save('night');render();}return;}
+  if(a==='runtick'){const r=t.dataset.k?runRow(t.dataset.k):S.night.run[+t.dataset.i];if(r){r.done=!r.done;save('night');render();}return;}
   if(a==='nspice'){const sp=t.dataset.s,arr=S.night.review.spices;
     const i=arr.indexOf(sp);i>=0?arr.splice(i,1):arr.push(sp);save('night');render();return;}
   if(a==='ideaused'){const rec=S.nights.find(x=>x.id===t.dataset.id);
