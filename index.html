@@ -2354,7 +2354,7 @@ function vTroop(){
             <p class="hint" style="margin:7px 0 0">Editing M${em}${em===(s.milestone||1)?' — the milestone they are on now':''}. Targets for M${em}: ${MS[em].P} per area, ${MS[em].A} assists, ${MS[em].L} leads.</p>
             <div class="btn-row" style="margin-top:7px"><button class="btn ghost sm" data-act="obclear" data-id="${s.id}" data-m="${em}">Clear M${em}</button>
             <button class="btn ghost sm" data-act="obtoggle" data-id="${s.id}">Done</button></div></div>`;})()}
-        ${s.peak?(()=>{
+        ${s._open?(()=>{
           const ps=peakStepState(s),locked=ps.filter(Boolean).length;
           const first=esc(s.name.split(' ')[0]);
           const rows=peakStepsFor(s.section).map((st,i)=>{
@@ -2364,7 +2364,7 @@ function vTroop(){
             return `<div class="climb-row" ${auto?'':`data-act="peakstep" data-id="${s.id}" data-i="${i}"`}>
               <div class="skbox" style="flex:none"></div>
               <div class="climb-txt"><b>${i+1}. ${st[0]}</b>${auto?' <span style="font-size:10px;color:var(--ink-faint)">(auto)</span>':''}<br><span>${esc(st[1])+esc(hint)}</span></div></div>`;}).join('');
-          return `<div class="subhd">The climb — ${locked} of 10</div>
+          return `<div class="subhd">The climb — ${locked} of 10${s.peak?' · ★ chasing it':''}</div>
         <p class="hint" style="margin:0 0 4px">${first}'s route to the ${reqs(s.section).award}.</p>
         ${peakMountain(s)}
         ${locked===10?'<div class="conn-line" style="margin:2px 0 7px">Summit — '+reqs(s.section).award+' · gate dialled</div>'
