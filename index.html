@@ -115,6 +115,11 @@ header:before{content:"";position:absolute;inset:0;pointer-events:none;
 .ppill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;
   color:var(--ink-soft);background:var(--card-2);border:1px solid var(--line);border-radius:20px;
   padding:2px 8px 2px 5px;margin-left:6px;vertical-align:1px}
+.focusbar{display:flex;align-items:center;gap:6px;margin:0 0 10px;padding:7px 9px;
+  background:var(--ink);border-radius:11px;position:sticky;top:0;z-index:20}
+.focusbar .fb-lbl{flex:1;text-align:center;font-size:11.5px;font-weight:800;
+  letter-spacing:.05em;color:#F6F1E2;text-transform:uppercase}
+.focusbar .btn{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.22);color:#F6F1E2}
 .patchip{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;
   padding:2px 7px 2px 5px;border-radius:20px;background:rgba(0,0,0,.05);
   border:1px solid var(--line-soft);white-space:nowrap;margin-left:5px;vertical-align:middle}
@@ -479,16 +484,94 @@ function patrolChip(name,role){
   if(!name)return'';
   return `<span class="patchip"><span class="pdot" style="background:${patrolColor(name)}"></span>${esc(name)}${role?' · '+esc(role):''}</span>`;}
 const DUTY_RE=/flag|opening parade|\bgame\b|clos(e|ing)|pack.?up/i;
-/* Built-in guidance so nobody has to go back to the Plan tab mid-night.
-   A note written on the row in the plan wins over these. */
+/* Nobody types these. They're assembled on the night from the roster, the plan,
+   the patrol rotation and the calendar, so they stay right as the term moves. */
+function pendingBadges(){
+  const out=[];
+  S.roster.forEach(s=>{const given=s.badges||{};
+    badgesFor(s).forEach(b=>{if(!given[b.key])out.push(s.name.split(' ')[0]+' — '+b.label);});});
+  return out;}
+function needsIntro(){
+  return S.roster.filter(s=>!(s.peakSteps||[])[1]).map(s=>s.name.split(' ')[0]);}
+function firstLine(txt,max){
+  const t=(txt||'').trim();if(!t)return'';
+  const s=t.split(/(?<=[.!?])\s+/)[0]||t;
+  return s.length>max?s.slice(0,max-1).trim()+'…':s;}
+function nextWeekItem(){
+  const f=curItemR();if(f.t<0||!f.it)return null;
+  const items=S.year.terms[f.t].items,i=items.findIndex(x=>x.id===f.it.id);
+  for(let j=i+1;j<items.length;j++)if(items[j].kind==='week')return items[j];
+  return null;}
+function nextDutyPatrol(){
+  const f=curItemR();
+  const pats=[...new Set(S.roster.map(s=>(s.patrol||'').trim()).filter(Boolean))].sort();
+  if(!pats.length||f.t<0||!f.it)return'';
+  let wn=0;for(const x of S.year.terms[f.t].items){if(x.kind==='week')wn++;if(x.id===f.it.id)break;}
+  return pats[wn%pats.length];}
+function earnedTonight(){
+  const n=S.night;if(!n)return[];
+  const out=new Set();
+  Object.entries(n.credits||{}).forEach(([id,c])=>{
+    const ty=c&&(typeof c==='string'?c:c.t);
+    if(ty==='P'||ty==='A'||ty==='L'){const s=S.roster.find(x=>x.id===id);if(s)out.add(s.name.split(' ')[0]);}});
+  Object.entries(n.skillsDone||{}).forEach(([id,o])=>{
+    if(Object.values(o||{}).some(Boolean)){const s=S.roster.find(x=>x.id===id);if(s)out.add(s.name.split(' ')[0]);}});
+  return [...out];}
+
+/* Two different jobs, so two different briefs.
+   Youth get the script — what to say and announce.
+   Leaders get the oversight — what to watch for and what to land before they go home. */
+function openingBrief(it,leader){
+  const p=it?ensurePlan(it):null,L=roleNames(it,'L'),A=roleNames(it,'A'),dp=dutyPatrol();
+  const b=[];
+  if(leader){
+    b.push('<b>Let them run it.</b> Step in only if it stalls.'+(dp?' '+esc(dp)+' patrol is on.':''));
+    const ni=needsIntro();
+    if(ni.length)b.push('<b>Still to do Intro to Section ('+ni.length+')</b>\n'+esc(ni.join(', ')));
+    if(!L||!A)b.push('<b>No '+(!L&&!A?'lead or assist':!L?'lead':'assist')+' assigned</b>\nSort it before the activity starts.');
+    if(p&&p.permNeeded==='yes')b.push('<b>Paperwork outstanding</b>\n'+esc(firstLine(p.permissions,120)||'permissions still to sort'));
+    return b.join('\n\n');
+  }
+  b.push('<b>Flag break and salute.</b>'+(dp?' '+esc(dp)+' patrol on the flag.':''));
+  if(it&&(it.activity||'').trim()){
+    const one=firstLine(p&&p.how,150);
+    b.push('<b>Tonight</b>\n'+esc(it.activity)+(one?' — '+esc(one):''));}
+  if(L||A)b.push('<b>Running it</b>\n'+(L?'Lead: '+esc(L):'')+(L&&A?'   ·   ':'')+(A?'Assist: '+esc(A):''));
+  const ev=upcomingEvents();
+  if(ev)b.push('<b>Coming up</b>\n'+esc(ev));
+  return b.join('\n\n');}
+function closingBrief(it,leader){
+  const p=it?ensurePlan(it):null;
+  const b=[];
+  if(leader){
+    const earned=earnedTonight();
+    if(earned.length)b.push('<b>Books to sign before they go ('+earned.length+')</b>\n'+esc(earned.join(', ')));
+    else b.push('<b>Books</b>\nNobody logged a credit or a skill tonight — worth a look before you close.');
+    const nx=nextWeekItem();
+    if(nx){const nL=roleNames(nx,'L'),nA=roleNames(nx,'A');
+      b.push('<b>Next week</b>\n'+esc(nx.activity||nx.type||'—')+'\n'+
+        (nL||nA?((nL?'Lead: '+esc(nL):'no lead')+'   ·   '+(nA?'Assist: '+esc(nA):'no assist'))
+               :'Lead and assist not claimed yet — get them named tonight.'));}
+    if(p&&p.permNeeded==='yes')b.push('<b>Going home</b>\nPermission forms.');
+    b.push('Duty patrol stays for pack-up.');
+    return b.join('\n\n');
+  }
+  b.push('<b>Flag down.</b>');
+  b.push('<b>Name someone who did well tonight.</b>\nOne person, one thing, out loud.');
+  const ndp=nextDutyPatrol();
+  if(ndp)b.push('<b>Next week</b>\n'+esc(ndp)+' patrol is on the flag.');
+  return b.join('\n\n');}
 const ROW_GUIDE=[
- [/opening parade|flag break/i,"Horseshoe by patrol. Duty patrol breaks the flag. Salute, Promise if you're doing it, then straight into notices.\n\nTalk about: what tonight is, who's leading it, one thing you want them to walk away with. Books out on the table before you start."],
- [/\bgame\b/i,"Duty patrol owns this. They pick it, they run it, they pack it up.\n\nIf they freeze: something running, everyone in, no elimination. Two teams or patrol against patrol."],
- [/clos(e|ing) parade|closing/i,"Horseshoe again. Flag down. Then:\n\n• One line on what they did well tonight\n• Next week in a sentence, and who's on flag\n• Anything going home — notes, gear lists, permission forms\n• Dismiss by patrol, duty patrol stays for pack-up"],
- [/books|patrol corner/i,"Books out, sign off what they earned tonight while it's fresh. PLs run their own corner: OAS gaps off the grid, who's doing what next week."],
- [/unit council/i,"PLs, APLs and you. Ten minutes standing up. What's working, what's not, what's next."]];
-function rowGuide(w){for(const [re,txt] of ROW_GUIDE)if(re.test(w||''))return txt;return'';}
-function timelineRows(it){
+ [/\bgame\b/i,"<b>Duty patrol owns this.</b> They pick it, run it, pack it up.\n\nIf they freeze: something running, everyone in, no elimination."],
+ [/books|patrol corner/i,"<b>Books out.</b> Sign off what they earned tonight while it's fresh.\n\nPLs run their own corner: OAS gaps off the grid, who's doing what next week."],
+ [/unit council/i,"<b>PLs, APLs and you.</b> Ten minutes standing up. What's working, what's not, what's next."]];
+function rowGuide(w,it,leader){
+  const s=w||'';
+  if(/opening parade|flag break/i.test(s))return openingBrief(it,leader);
+  if(/clos(e|ing)/i.test(s))return closingBrief(it,leader);
+  for(const [re,txt] of ROW_GUIDE)if(re.test(s))return txt;
+  return'';}
+function timelineRows(it,leader){
   const defs=runDefs();
   const L=k=>{const d=defs[k]||[k,''];const r=runRow(k);
     return {kind:'leader',k,label:d[0],sub:d[1]||'',done:!!r.done};};
@@ -499,7 +582,7 @@ function timelineRows(it){
   const S_=(i)=>{const r=sched[i];
     const dp=dutyPatrol();
     return {kind:'shared',i,t:r.t||'',w:r.w||'',o:r.o||'',done:!!r.done,sub:'',
-            note:(r.n||'').trim(),guide:rowGuide(r.w),
+            note:(r.n||'').trim(),guide:rowGuide(r.w,it,leader),
             duty:(dp&&DUTY_RE.test(r.w||''))?dp:'',
             label:[r.d,r.t].filter(Boolean).join(' '),owner:schedRowOwner(it,r)};};
   const rows=[];
@@ -511,7 +594,7 @@ function timelineRows(it){
   return rows;}
 function timelineHTML(it,leaderMode){
   const tickSVG='<svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5l3 3 6-6.5" stroke="#F6F1E2" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const rows=timelineRows(it).filter(r=>leaderMode||r.kind==='shared');
+  const rows=timelineRows(it,leaderMode).filter(r=>leaderMode||r.kind==='shared');
   if(!rows.length)return '';
   const p=it?ensurePlan(it):null;
   return rows.map(r=>{
@@ -530,7 +613,7 @@ function timelineHTML(it,leaderMode){
     if(r.kind==='shared'){
       const parts=[];
       if(r.note)parts.push(esc(r.note));
-      else if(r.guide)parts.push(esc(r.guide));
+      else if(r.guide)parts.push(r.guide);
       if(r.o==='L'&&p&&(p.how||'').trim())parts.push('<b>The plan</b>\n'+esc(p.how));
       if(r.o==='L'&&p&&(p.leadAction||'').trim())parts.push('<b>Lead</b>\n'+esc(p.leadAction));
       if(r.o==='A'&&p&&(p.assistAction||'').trim())parts.push('<b>Assist</b>\n'+esc(p.assistAction));
@@ -1830,7 +1913,8 @@ function vR1(it){
       <button class="btn primary" data-act="r1dl" style="width:100%;margin-top:10px">Download R1 (.xlsx)</button>
       <p class="hint" style="margin-top:7px">Chevron locked — send it up the chain: Group Leader → District → risk team.</p></div></div>`;
 }
-function ensurePlan(it){if(!it.plan)it.plan={how:'',where:'',equipment:'',game:'',permissions:'',contingency:'',status:''};
+function ensurePlan(it){
+  if(it&&it.plan){if(!it.plan.permNeeded)it.plan.permNeeded='no';if(!it.plan.aaTeam)it.plan.aaTeam='no';}if(!it.plan)it.plan={how:'',where:'',equipment:'',game:'',permissions:'',contingency:'',status:''};
   const p=it.plan;
   if(!p.sched)p.sched=[];if(p.meals==null)p.meals='';
   if(p.leadAction==null)p.leadAction='';if(p.assistAction==null)p.assistAction='';
@@ -1847,7 +1931,7 @@ function planStepsDone(it){
     2:!!((it.activity||'').trim()&&(p.where||'').trim()&&(p.how||'').trim()),
     3:p.sched.length>0&&p.sched.every(r=>(r.t||'').trim()&&(r.w||'').trim()),
     4:!!((p.leadAction||'').trim()&&(p.assistAction||'').trim()),
-    5:!!((p.equipment||'').trim()&&(p.contingency||'').trim()&&p.aaTeam&&p.permNeeded)};}
+    5:!!((p.equipment||'').trim()&&(p.contingency||'').trim())};}
 function nightPlanUI(it){
   const p=ensurePlan(it);
   const done=planStepsDone(it);
@@ -1889,13 +1973,8 @@ function nightPlanUI(it){
         ${(p.sched||[]).map((r,i)=>`<div class="namerow">
           ${it.kind==='event'?`<input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="d" value="${esc(r.d||'')}" placeholder="Day" style="flex:.5">`:''}
           <input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="t" value="${esc(r.t||'')}" placeholder="e.g. 6:45" style="flex:.5">
-          <input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="w" value="${esc(r.w||'')}" placeholder="What's happening" style="flex:1.7">
-          <select data-act="schedo" data-id="${it.id}" data-i="${i}" style="flex:.6;width:auto">
-            <option value="P" ${(r.o||'P')==='P'?'selected':''}>Patrol</option>
-            <option value="L" ${r.o==='L'?'selected':''}>Lead</option>
-            <option value="A" ${r.o==='A'?'selected':''}>Assist</option></select>
-          <button class="btn ghost sm" data-act="scheddel" data-id="${it.id}" data-i="${i}" style="flex:none">✕</button></div>
-          <input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="n" value="${esc(r.n||'')}" placeholder="What to say or do in this slot — shows on the night (optional)" style="margin:-4px 0 8px">`).join('')}
+          <input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="w" value="${esc(r.w||'')}" placeholder="What's happening" style="flex:2.3">
+          <button class="btn ghost sm" data-act="scheddel" data-id="${it.id}" data-i="${i}" style="flex:none">✕</button></div>`).join('')}
         <button class="addevent" data-act="schedadd" data-id="${it.id}">+ add a time slot</button>
         <p class="hint" style="margin:4px 0 0">The game slot belongs to the flag patrol — they sort it on the night while lead & assist set up.</p>`:''}
       ${cur===4?`
@@ -1909,17 +1988,21 @@ function nightPlanUI(it){
         <div class="mini-cap">Materials or equipment required</div>
         ${F('equipment','e.g. 8 poles, 12 ropes, first-aid kit, buckets x2',true)}
         ${it.kind==='event'?F('meals','Meals — day by day, what\'s cooking and who\'s on it',true):''}
-        <div class="mini-cap" style="margin-top:8px">Permissions needed?</div>
-        <div class="btn-row" style="margin:2px 0 4px">
-          <button class="btn ${p.permNeeded==='no'?'primary':'ghost'} sm" data-act="permneed" data-id="${it.id}" data-v="no">No</button>
-          <button class="btn ${p.permNeeded==='yes'?'primary':'ghost'} sm" data-act="permneed" data-id="${it.id}" data-v="yes">Yes</button></div>
-        ${p.permNeeded==='yes'?F('permissions','What permissions? (parents, hall, land owner…)'):''}
-        <div class="mini-cap" style="margin-top:8px">Adventurous Activity team required?</div>
-        <div class="btn-row" style="margin:2px 0 4px">
-          <button class="btn ${p.aaTeam==='no'?'primary':'ghost'} sm" data-act="aateam" data-id="${it.id}" data-v="no">No</button>
-          <button class="btn ${p.aaTeam==='yes'?'primary':'ghost'} sm" data-act="aateam" data-id="${it.id}" data-v="yes">Yes</button></div>
-        ${p.aaTeam==='yes'?F('aaTeamWhich','Which team is required?'):''}
-        ${F('contingency','Contingency — e.g. wet weather: roll to next week, preload knots night')}`:''}
+        ${F('contingency','Contingency — e.g. wet weather: roll to next week, preload knots night')}
+        ${S.mode==='leader'?`
+          <div class="mini-cap" style="margin-top:12px">Leader only — paperwork</div>
+          <p class="hint" style="margin:0 0 6px">Not a youth decision. Scouts don't see this and aren't held up by it.</p>
+          <div class="mini-cap">Permissions needed?</div>
+          <div class="btn-row" style="margin:2px 0 4px">
+            <button class="btn ${p.permNeeded==='no'?'primary':'ghost'} sm" data-act="permneed" data-id="${it.id}" data-v="no">No</button>
+            <button class="btn ${p.permNeeded==='yes'?'primary':'ghost'} sm" data-act="permneed" data-id="${it.id}" data-v="yes">Yes</button></div>
+          ${p.permNeeded==='yes'?F('permissions','What permissions? (parents, hall, land owner…)'):''}
+          <div class="mini-cap" style="margin-top:8px">Adventurous Activity team required?</div>
+          <div class="btn-row" style="margin:2px 0 4px">
+            <button class="btn ${p.aaTeam==='no'?'primary':'ghost'} sm" data-act="aateam" data-id="${it.id}" data-v="no">No</button>
+            <button class="btn ${p.aaTeam==='yes'?'primary':'ghost'} sm" data-act="aateam" data-id="${it.id}" data-v="yes">Yes</button></div>
+          ${p.aaTeam==='yes'?F('aaTeamWhich','Which team is required?'):''}`
+        :(p.permNeeded==='yes'||p.aaTeam==='yes')?`<p class="hint" style="margin:8px 0 0">A leader has paperwork to sort for this one — it won't hold up your plan.</p>`:''}`:''}
       <div class="btn-row" style="margin-top:8px">
         ${cur>1?`<button class="btn ghost sm" data-act="npstep" data-id="${it.id}" data-s="${cur-1}">← Back</button>`:''}
         ${cur<5?`<button class="btn ghost sm" data-act="npstep" data-id="${it.id}" data-s="${cur+1}">Next →</button>`:''}</div>
@@ -2192,9 +2275,26 @@ function planTermView(){
     return `<div class="bal-row"><span class="bn">${a}</span>
       <div class="bal-track"><div class="bal-fill" style="width:${pct}%;background:${cssv(AREA_VAR[a])}"></div></div>
       <span class="bc">${c}/2</span></div>`;}).join('');
+  // While one week's plan is open, show that week alone — otherwise the cards grow
+  // as you fill them in and you lose track of where a week starts and ends.
+  const merged=termMerged(t,ti);
+  const focus=merged.find(x=>x._planOpen)||null;
+  let focusBar='';
+  if(focus){
+    const weeks=merged.filter(x=>x.kind==='week');
+    const wIx=weeks.indexOf(focus);
+    const prev=wIx>0?weeks[wIx-1]:null,next=(wIx>=0&&wIx<weeks.length-1)?weeks[wIx+1]:null;
+    const lbl=wIx>=0?('Week '+(wIx+1)+' of '+weeks.length):(focus.activity||focus.type||'Event');
+    focusBar=`<div class="focusbar">
+      <button class="btn ghost sm" data-act="planclose" data-id="${focus.id}" style="flex:none">← ${esc(t.label)}</button>
+      <span class="fb-lbl">${esc(lbl)}</span>
+      <button class="btn ghost sm" data-act="planjump" data-id="${prev?prev.id:''}" style="flex:none;${prev?'':'opacity:.3'}">‹</button>
+      <button class="btn ghost sm" data-act="planjump" data-id="${next?next.id:''}" style="flex:none;${next?'':'opacity:.3'}">›</button></div>`;
+  }
   let wn=0;
-  const rows=termMerged(t,ti).map(it=>{
+  const rows=merged.map(it=>{
     const cur=S._curId===it.id;
+    if(focus&&it!==focus){if(it.kind==='week')wn++;return '';}
     if(it.kind!=='week')return (it._yr?`<div class="hint" style="margin:6px 0 -4px">📌 From the year planner — edits sync both ways</div>`:'')+eventCard(it)+(it._yr?'':`<button class="addevent" data-act="addevent" data-id="${it.id}">+ insert event below</button>`);
     wn++;
     const curBtn=`<button class="cur-btn ${cur?'on':''}" data-act="setcurrent" data-id="${it.id}">${cur?'● This week':'Pin night'}</button>`;
@@ -2223,6 +2323,7 @@ function planTermView(){
     return `<div class="wk ${it.type!=='Activity'?'special':''} ${cur?'current':''}">${inner}</div>
       <button class="addevent" data-act="addevent" data-id="${it.id}">+ insert event below</button>`;
   }).join('');
+  if(focus)return focusBar+rows;
   return `<div class="card">
       <div style="display:flex;align-items:center;gap:9px">
         <label class="fld" style="margin:0">${esc(t.label)} — weeks</label>
@@ -2653,6 +2754,14 @@ document.addEventListener('click',e=>{
   if(a==='delnight'){const id=t.dataset.id;uiConfirm('Delete this night record?',()=>{
     S.nights=S.nights.filter(x=>x.id!==id);save('nights');render();});return;}
   /* plan */
+  if(a==='planclose'){const it=planFind(t.dataset.id).it;if(it){it._planOpen=false;save('year');window.scrollTo(0,0);render();}return;}
+  if(a==='planjump'){const id=t.dataset.id;if(!id)return;
+    S.year.terms.forEach(tm=>tm.items.forEach(x=>{x._planOpen=false;}));
+    (S.year.events||[]).forEach(x=>{x._planOpen=false;});
+    const it=planFind(id).it;
+    if(it){const p=ensurePlan(it);it._planOpen=true;
+      it._planStep=[1,2,3,4,5].find(s=>!planStepsDone(it)[s])||5;}
+    save('year');window.scrollTo(0,0);render();return;}
   if(a==='planview'){S.year.viewT=+t.dataset.t;save('year');render();return;}
   if(a==='r1open'){const it=planFind(t.dataset.id).it;if(!it)return;
     if(!it.r1)it.r1=r1New(it);save('year');S._r1Id=t.dataset.id;render();return;}
