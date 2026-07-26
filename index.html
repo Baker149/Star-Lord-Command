@@ -475,6 +475,27 @@ function schedRowOwner(it,r){
   return r.o==='L'?(roleNames(it,'L')||'Lead')
        :r.o==='A'?(roleNames(it,'A')||'Assist')
        :r.o==='P'?'Patrol':'';}
+// Week view shows one night at a time; Term view is the whole list.
+function planFocusFor(merged){
+  const weeks=merged.filter(x=>x.kind==='week');
+  if(!merged.length)return null;
+  return merged.find(x=>x._planOpen)
+      || merged.find(x=>x.id===S.planFocusId)
+      || merged.find(x=>x.id===(curItemR().it||{}).id)
+      || weeks[0] || merged[0];}
+function planViewToggle(){
+  return `<div class="btn-row" style="margin:0 0 8px">
+    <button class="btn ${S.planView==='week'?'primary':'ghost'} sm" data-act="planmode" data-v="week">One week</button>
+    <button class="btn ${S.planView==='term'?'primary':'ghost'} sm" data-act="planmode" data-v="term">Whole term</button></div>`;}
+function planFocusBar(merged,focus,label){
+  const weeks=merged.filter(x=>x.kind==='week');
+  const wIx=weeks.indexOf(focus);
+  const prev=wIx>0?weeks[wIx-1]:null,next=(wIx>=0&&wIx<weeks.length-1)?weeks[wIx+1]:null;
+  const lbl=wIx>=0?('Week '+(wIx+1)+' of '+weeks.length):(focus.activity||focus.type||'Event');
+  return `<div class="focusbar">
+    <button class="btn ghost sm" data-act="planjump" data-id="${prev?prev.id:''}" style="flex:none;${prev?'':'opacity:.3'}">‹</button>
+    <span class="fb-lbl">${esc(lbl)}</span>
+    <button class="btn ghost sm" data-act="planjump" data-id="${next?next.id:''}" style="flex:none;${next?'':'opacity:.3'}">›</button></div>`;}
 function itemDateISO(){
   const f=curItemR();if(!f.it)return'';
   if(f.it.kind==='event')return f.it.startDate||f.it.date||'';
@@ -538,8 +559,6 @@ function openingBrief(it,leader){
     const one=firstLine(p&&p.how,150);
     b.push('<b>Tonight</b>\n'+esc(it.activity)+(one?' — '+esc(one):''));}
   if(L||A)b.push('<b>Running it</b>\n'+(L?'Lead: '+esc(L):'')+(L&&A?'   ·   ':'')+(A?'Assist: '+esc(A):''));
-  const ev=upcomingEvents();
-  if(ev)b.push('<b>Coming up</b>\n'+esc(ev));
   return b.join('\n\n');}
 function closingBrief(it,leader){
   const p=it?ensurePlan(it):null;
@@ -561,6 +580,8 @@ function closingBrief(it,leader){
   b.push('<b>Name someone who did well tonight.</b>\nOne person, one thing, out loud.');
   const ndp=nextDutyPatrol();
   if(ndp)b.push('<b>Next week</b>\n'+esc(ndp)+' patrol is on the flag.');
+  const ev=upcomingEvents();
+  if(ev)b.push('<b>Coming up</b>\n'+esc(ev));
   return b.join('\n\n');}
 const ROW_GUIDE=[
  [/\bgame\b/i,"<b>Duty patrol owns this.</b> They pick it, run it, pack it up.\n\nIf they freeze: something running, everyone in, no elimination."],
@@ -616,6 +637,11 @@ function timelineHTML(it,leaderMode){
       if(r.note)parts.push(esc(r.note));
       else if(r.guide)parts.push(r.guide);
       if(r.o==='L'&&p&&(p.how||'').trim())parts.push('<b>The plan</b>\n'+esc(p.how));
+      if(r.o==='L'&&it&&(it.targetSkills||[]).length){
+        const sk=it.targetSkills.map(ts=>{
+          const hw=((p.skillHow||{})[ts.id]||'').trim();
+          return '• '+esc(ts.name||ts.id)+(hw?'\n   '+esc(hw):'');}).join('\n');
+        if(sk)parts.push('<b>Skills we\'re chasing</b>\n'+sk);}
       if(r.o==='L'&&p&&(p.leadAction||'').trim())parts.push('<b>Lead</b>\n'+esc(p.leadAction));
       if(r.o==='A'&&p&&(p.assistAction||'').trim())parts.push('<b>Assist</b>\n'+esc(p.assistAction));
       if(parts.length)det=parts.join('\n\n');
@@ -846,7 +872,7 @@ const Store=(()=>{
   };
 })();
 
-let S={view:'tonight',roster:[],year:null,welcome:null,contacts:[],msgText:'',msgSel:{},nights:[],night:null,lastNight:null,_focus:null};
+let S={view:'tonight',planView:'week',planFocusId:'',roster:[],year:null,welcome:null,contacts:[],msgText:'',msgSel:{},nights:[],night:null,lastNight:null,_focus:null};
 const uid=()=>Math.random().toString(36).slice(2,9);
 const todayISO=()=>new Date().toISOString().slice(0,10);
 function fmtD(iso){return new Date(iso+'T00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'});}
@@ -1957,18 +1983,17 @@ function nightPlanUI(it){
         ${[1,2,3,4,5].map(s=>`<button class="btn ${cur===s?'primary':'ghost'} sm" data-act="npstep" data-id="${it.id}" data-s="${s}" style="min-width:38px">${done[s]?'✓':s}</button>`).join('')}</div>
       ${cur===1?`
         <div class="mini-cap">Step 1 — What are we doing?</div>
-        <p class="hint" style="margin:0 0 4px">Name it, say where, then describe what actually happens. This is the one that matters most — write it like you're telling someone who wasn't there.</p>
-        <input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity||'')}" placeholder="Activity name — e.g. Pioneering: build a trestle">
-        ${F('where','Location — e.g. hall, Whiteman Park, river reserve')}
+        <input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity||'')}" placeholder="Activity name">
+        ${F('where','Location')}
         <div class="mini-cap" style="margin-top:8px">What happens on the night</div>
-        ${F('how','Walk through it. What do they actually do, in what order, and what does it look like when it works? e.g. Split into patrols. Each patrol gets 3 spars and 4 lengths of rope. Demo one flat lashing on the floor, then they build a trestle. First patrol to stand on theirs without it racking wins.',true,150)}`:''}
+        ${F('how','A brief explanation of what you will be doing on the night',true,150)}`:''}
       ${cur===2?`
         <div class="mini-cap">Step 2 — What skills does it knock off?</div>
         <p class="hint" style="margin:0 0 4px">Now you know what you're doing, pick the OAS stream and tick what it covers. These become the tick-boxes next to each scout's name on the night.</p>
         ${planSkillsUI(it)}
         ${(it.targetSkills&&it.targetSkills.length)?`<div class="mini-cap" style="margin-top:8px">How will we cover each one?</div>`+it.targetSkills.map(ts=>`
           <p class="hint" style="margin:4px 0 2px">${esc(ts.id.split('|')[0])} S${ts.stage||''} · ${esc(ts.name||ts.id)}</p>
-          <input type="text" data-act="npskillhow" data-id="${it.id}" data-k="${esc(ts.id)}" value="${esc((p.skillHow||{})[ts.id]||'')}" placeholder="e.g. each patrol does it twice, PL checks it off">`).join(''):''}`:''}
+          <input type="text" data-act="npskillhow" data-id="${it.id}" data-k="${esc(ts.id)}" value="${esc((p.skillHow||{})[ts.id]||'')}" placeholder="How are you going to cover this skill?">`).join(''):''}`:''}
       ${cur===3?`
         <div class="mini-cap">Night run sheet — the lead keeps time</div>
         <p class="hint" style="margin:0 0 4px">Put a time on every line — e.g. 6:45. Add, reword or bin lines to fit your night. Pick who owns each one.</p>
@@ -2057,8 +2082,11 @@ function vScoutPlan(){
   const chips=S.year.terms.map((tm,i)=>
     `<button class="tchip ${vi===i?'on':''}" data-act="planview" data-t="${i}">${tm.label}</button>`).join('');
   const t=S.year.terms[vi];let wn=0;
-  const cards=termMerged(t,vi).map(it=>{
+  const merged=termMerged(t,vi);
+  const focus=S.planView==='week'?planFocusFor(merged):null;
+  const cards=merged.map(it=>{
     if(it.kind==='week')wn++;
+    if(focus&&it!==focus)return'';
     if(!(it.kind==='week'&&it.type==='Activity')&&it.kind!=='event')return'';
     const L=roleNames(it,'L'),A=roleNames(it,'A');
     const head=it.kind==='event'?('★ '+(it.activity||it.type)):('Week '+wn+(weekDate(t,wn)?' · '+weekDate(t,wn):''));
@@ -2072,7 +2100,9 @@ function vScoutPlan(){
     <div class="view-title">Patrol Planning</div>
     <div class="view-sub">Leads: open your night, set the skills you're targeting, fill the plan, hit submit. Star-Lord checks it before the night.</div>
     <div class="tchips">${chips}</div>
-    ${cards||'<div class="card"><div class="empty">No activities this term yet.</div></div>'}</div>`;
+    ${planViewToggle()}
+    ${focus?planFocusBar(merged,focus,t.label):''}
+    ${cards||`<div class="card"><div class="empty">${focus?'Nothing to plan on this night — use ‹ › to move.':'No activities this term yet.'}</div></div>`}</div>`;
 }
 function printTermPlan(){
   const t=viewTerm();if(!t)return;
@@ -2281,19 +2311,8 @@ function planTermView(){
   // While one week's plan is open, show that week alone — otherwise the cards grow
   // as you fill them in and you lose track of where a week starts and ends.
   const merged=termMerged(t,ti);
-  const focus=merged.find(x=>x._planOpen)||null;
-  let focusBar='';
-  if(focus){
-    const weeks=merged.filter(x=>x.kind==='week');
-    const wIx=weeks.indexOf(focus);
-    const prev=wIx>0?weeks[wIx-1]:null,next=(wIx>=0&&wIx<weeks.length-1)?weeks[wIx+1]:null;
-    const lbl=wIx>=0?('Week '+(wIx+1)+' of '+weeks.length):(focus.activity||focus.type||'Event');
-    focusBar=`<div class="focusbar">
-      <button class="btn ghost sm" data-act="planclose" data-id="${focus.id}" style="flex:none">← ${esc(t.label)}</button>
-      <span class="fb-lbl">${esc(lbl)}</span>
-      <button class="btn ghost sm" data-act="planjump" data-id="${prev?prev.id:''}" style="flex:none;${prev?'':'opacity:.3'}">‹</button>
-      <button class="btn ghost sm" data-act="planjump" data-id="${next?next.id:''}" style="flex:none;${next?'':'opacity:.3'}">›</button></div>`;
-  }
+  const focus=S.planView==='week'?planFocusFor(merged):null;
+  const focusBar=focus?planFocusBar(merged,focus,t.label):'';
   let wn=0;
   const rows=merged.map(it=>{
     const cur=S._curId===it.id;
@@ -2314,8 +2333,8 @@ function planTermView(){
     if(it.type==='Activity'){
       inner=`${wncol}<div class="toprow">${tsel}${curBtn}${calBtn}</div>
         ${it._planOpen?'':`<div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity)}" placeholder="Activity name"></div>`}
-        <div class="namerow"><input type="text" data-act="wktime" data-id="${it.id}" value="${esc(it.time||'')}" placeholder="Time — e.g. 6:30–8:30 pm" style="flex:.8">
-          <input type="text" data-act="npf" data-f="where" data-id="${it.id}" value="${esc((it.plan&&it.plan.where)||'')}" placeholder="Location — hall, park, off-site" style="flex:1.2"></div>${areaChips}${rolesUI(it)}${nightPlanUI(it)}
+        <div class="namerow"><input type="text" data-act="wktime" data-id="${it.id}" value="${esc(it.time||'')}" placeholder="Time — e.g. 6:30–8:30 pm" style="${it._planOpen?'flex:1':'flex:.8'}">
+          ${it._planOpen?'':`<input type="text" data-act="npf" data-f="where" data-id="${it.id}" value="${esc((it.plan&&it.plan.where)||'')}" placeholder="Location — hall, park, off-site" style="flex:1.2">`}</div>${areaChips}${rolesUI(it)}${nightPlanUI(it)}
         <button class="addevent" style="margin-top:6px" data-act="r1open" data-id="${it.id}">🛡 R1 risk assessment${it.r1?' ✓':''}</button>`;
     }else{
       const lbl=it.type==='Planning'?'Plan next term — Personal Growth, can be a lead/assist'
@@ -2326,8 +2345,8 @@ function planTermView(){
     return `<div class="wk ${it.type!=='Activity'?'special':''} ${cur?'current':''}">${inner}</div>
       <button class="addevent" data-act="addevent" data-id="${it.id}">+ insert event below</button>`;
   }).join('');
-  if(focus)return focusBar+rows;
-  return `<div class="card">
+  if(focus)return planViewToggle()+focusBar+rows;
+  return planViewToggle()+`<div class="card">
       <div style="display:flex;align-items:center;gap:9px">
         <label class="fld" style="margin:0">${esc(t.label)} — weeks</label>
         <button class="btn ghost sm" data-act="weeks" data-d="-1">–</button>
@@ -2757,12 +2776,18 @@ document.addEventListener('click',e=>{
   if(a==='delnight'){const id=t.dataset.id;uiConfirm('Delete this night record?',()=>{
     S.nights=S.nights.filter(x=>x.id!==id);save('nights');render();});return;}
   /* plan */
+  if(a==='planmode'){S.planView=t.dataset.v;
+    if(S.planView==='term'){S.year.terms.forEach(tm=>tm.items.forEach(x=>{x._planOpen=false;}));
+      (S.year.events||[]).forEach(x=>{x._planOpen=false;});save('year');}
+    window.scrollTo(0,0);render();return;}
   if(a==='planclose'){const it=planFind(t.dataset.id).it;if(it){it._planOpen=false;save('year');window.scrollTo(0,0);render();}return;}
   if(a==='planjump'){const id=t.dataset.id;if(!id)return;
+    const wasOpen=S.year.terms.some(tm=>tm.items.some(x=>x._planOpen))||(S.year.events||[]).some(x=>x._planOpen);
     S.year.terms.forEach(tm=>tm.items.forEach(x=>{x._planOpen=false;}));
     (S.year.events||[]).forEach(x=>{x._planOpen=false;});
+    S.planFocusId=id;
     const it=planFind(id).it;
-    if(it){const p=ensurePlan(it);it._planOpen=true;
+    if(it&&wasOpen){ensurePlan(it);it._planOpen=true;
       it._planStep=[1,2,3,4,5].find(s=>!planStepsDone(it)[s])||5;}
     save('year');window.scrollTo(0,0);render();return;}
   if(a==='planview'){S.year.viewT=+t.dataset.t;save('year');render();return;}
@@ -2932,6 +2957,7 @@ document.addEventListener('click',e=>{
     return;}
   if(a==='nptoggle'){const it=planFind(t.dataset.id).it;if(it){
     it._planOpen=!it._planOpen;
+    if(it._planOpen){S.planFocusId=it.id;S.planView='week';}
     if(it._planOpen){const p=ensurePlan(it);
       if(!p.sched.length){p.sched=[
         {t:'6:00',w:'Flag break & opening',o:'P'},
