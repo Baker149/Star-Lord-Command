@@ -596,12 +596,21 @@ function closingBrief(it,leader){
   return b.join('\n\n');}
 const ROW_GUIDE=[
  [/\bgame\b/i,"<b>Duty patrol owns this.</b> They pick it, run it, pack it up.\n\nIf they freeze: something running, everyone in, no elimination."],
- [/books|patrol corner/i,"<b>Books out.</b> Sign off what they earned tonight while it's fresh.\n\nPLs run their own corner: OAS gaps off the grid, who's doing what next week."],
+
  [/unit council/i,"<b>PLs, APLs and you.</b> Ten minutes standing up. What's working, what's not, what's next."]];
+function cornerBrief(it){
+  const L=roleNames(it,'L'),A=roleNames(it,'A');
+  const b=["<b>Books out.</b> Sign off what they earned tonight while it's fresh."];
+  b.push('<b>Review — '+(L?esc(L):'the lead')+' reads it out, '+(A?esc(A):'the assist')+' writes it down</b>\n'
+    +'• What worked?\n• What would we change?\n• Ideas for next time?\n\n'
+    +'Into their books now, while everyone is still here.');
+  b.push("PLs run their own corner: OAS gaps off the grid, who's doing what next week.");
+  return b.join('\n\n');}
 function rowGuide(w,it,leader){
   const s=w||'';
   if(/opening parade|flag break/i.test(s))return openingBrief(it,leader);
   if(/clos(e|ing)/i.test(s))return closingBrief(it,leader);
+  if(/books|patrol corner/i.test(s))return cornerBrief(it);
   for(const [re,txt] of ROW_GUIDE)if(re.test(s))return txt;
   return'';}
 function timelineRows(it,leader){
@@ -650,12 +659,6 @@ function timelineHTML(it,leaderMode){
       if(r.note)parts.push(esc(r.note));
       else if(r.guide)parts.push(r.guide);
       if(r.o==='L'&&p&&(p.how||'').trim())parts.push('<b>The plan</b>\n'+esc(p.how));
-      // scouts get the skill brief here; leaders get it on the OAS card instead
-      if(!leaderMode&&r.o==='L'&&it&&(it.targetSkills||[]).length){
-        const sk=it.targetSkills.map(ts=>{
-          const hw=((p.skillHow||{})[ts.id]||'').trim();
-          return '• '+esc(ts.name||ts.id)+(hw?'\n   '+esc(hw):'');}).join('\n');
-        if(sk)parts.push('<b>Skills we\'re chasing</b>\n'+sk);}
       if(r.o==='L'&&p&&(p.leadAction||'').trim())parts.push('<b>Lead</b>\n'+esc(p.leadAction));
       if(r.o==='A'&&p&&(p.assistAction||'').trim())parts.push('<b>Assist</b>\n'+esc(p.assistAction));
       if(parts.length)det=parts.join('\n\n');
@@ -2084,20 +2087,23 @@ function vScoutTonight(){
       ${p.assistAction?`<p class="hint" style="margin:0;padding-left:10px;white-space:pre-wrap">→ ${esc(p.assistAction)}</p>`:''}
       ${(()=>{const dp=dutyPatrol();return dp?`<p class="hint" style="margin:8px 0 0">Duty patrol ${patrolChip(dp)} — flag, game and pack-up.</p>`:'';})()}</div>
     ${(it.targetSkills&&it.targetSkills.length)?`<div class="card"><h3>Skills we're covering</h3>
-      ${it.targetSkills.map(ts=>`<p class="hint" style="margin:2px 0"><b>${esc(ts.id.split('|')[0])} S${ts.stage||''} — ${esc(ts.name||ts.id)}</b>${(p.skillHow||{})[ts.id]?' · '+esc(p.skillHow[ts.id]):''}</p>`).join('')}</div>`:''}
+      ${it.targetSkills.map(ts=>{const hw=((p.skillHow||{})[ts.id]||'').trim();
+        return `<div class="skpick">
+          <div class="skpick-hd">${esc(ts.id.split('|')[0])} S${ts.stage||''} · ${esc(ts.name||ts.id)}</div>
+          <div class="skpick-how${hw?'':' none'}">${hw?esc(hw):'Ask your leader how this one gets covered.'}</div>
+        </div>`;}).join('')}</div>`:''}
     <div class="card"><h3>Schedule — tick as you go</h3>
       ${sched||'<p class="hint" style="margin:0">No time slots yet — the lead builds these in the Plan tab.</p>'}</div>
     ${p.equipment?`<div class="card"><h3>Equipment</h3><p class="hint" style="margin:0;white-space:pre-wrap">${esc(p.equipment)}</p></div>`:''}
     <div class="card"><h3>Review — assist records it</h3>
-      <p class="hint" style="margin:0 0 4px">Lead reads these out at ${'7:40'} — assist writes the answers here.</p>
+      <p class="hint" style="margin:0 0 4px">${roleNames(it,'L')?esc(roleNames(it,'L')):'Lead'} reads these out at patrol corner — ${roleNames(it,'A')?esc(roleNames(it,'A')):'assist'} types them in, then they go in your books.</p>
       <label class="fld">What worked?</label>
       <textarea data-act="nprev" data-id="${it.id}" data-f="worked" style="min-height:40px">${esc(p.review.worked||'')}</textarea>
       <label class="fld">What would we change?</label>
       <textarea data-act="nprev" data-id="${it.id}" data-f="change" style="min-height:40px">${esc(p.review.change||'')}</textarea>
       <label class="fld">Ideas for next time?</label>
       <textarea data-act="nprev" data-id="${it.id}" data-f="next" style="min-height:40px">${esc(p.review.next||'')}</textarea></div>
-    <div class="card"><h3>After the night</h3>
-      <p class="hint" style="margin:0">Lead reads the review out. Assist records it. Everyone: reflection goes in your book before you head off.</p></div></div>`;
+</div>`;
 }
 function vScoutPlan(){
   const vi=S.year.viewT>=0?S.year.viewT:termForDate(todayISO());
