@@ -116,10 +116,11 @@ header:before{content:"";position:absolute;inset:0;pointer-events:none;
   color:var(--ink-soft);background:var(--card-2);border:1px solid var(--line);border-radius:20px;
   padding:2px 8px 2px 5px;margin-left:6px;vertical-align:1px}
 .focusbar{display:flex;align-items:center;gap:6px;margin:0 0 10px;padding:7px 9px;
-  background:var(--ink);border-radius:11px;position:sticky;top:0;z-index:20}
-.focusbar .fb-lbl{flex:1;text-align:center;font-size:11.5px;font-weight:800;
-  letter-spacing:.05em;color:#F6F1E2;text-transform:uppercase}
-.focusbar .btn{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.22);color:#F6F1E2}
+  background:var(--card);border:1px solid var(--line);border-radius:11px;
+  box-shadow:var(--shadow);position:sticky;top:0;z-index:20}
+.focusbar .fb-lbl{flex:1;text-align:center;font-size:12px;font-weight:800;
+  letter-spacing:.05em;color:var(--ink);text-transform:uppercase}
+.focusbar .btn{background:var(--card-2);border-color:var(--line);color:var(--ink)}
 .patchip{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;
   padding:2px 7px 2px 5px;border-radius:20px;background:rgba(0,0,0,.05);
   border:1px solid var(--line-soft);white-space:nowrap;margin-left:5px;vertical-align:middle}
@@ -1927,8 +1928,8 @@ function ensurePlan(it){
 function planStepsDone(it){
   const p=ensurePlan(it);
   return {
-    1:!!(it.targetSkills&&it.targetSkills.length&&it.targetSkills.every(ts=>((p.skillHow||{})[ts.id]||'').trim())),
-    2:!!((it.activity||'').trim()&&(p.where||'').trim()&&(p.how||'').trim()),
+    1:!!((it.activity||'').trim()&&(p.where||'').trim()&&(p.how||'').trim()),
+    2:!!(it.targetSkills&&it.targetSkills.length&&it.targetSkills.every(ts=>((p.skillHow||{})[ts.id]||'').trim())),
     3:p.sched.length>0&&p.sched.every(r=>(r.t||'').trim()&&(r.w||'').trim()),
     4:!!((p.leadAction||'').trim()&&(p.assistAction||'').trim()),
     5:!!((p.equipment||'').trim()&&(p.contingency||'').trim())};}
@@ -1940,8 +1941,8 @@ function nightPlanUI(it){
   const st=p.status==='submitted'?'🟡 submitted — awaiting approval':p.status==='checked'?'✓ approved':allDone?'ready to submit':'step '+cur+' of 5';
   let body='';
   if(it._planOpen){
-    const F=(f,ph,ta)=>ta
-      ?`<textarea data-act="npf" data-id="${it.id}" data-f="${f}" placeholder="${ph}" style="min-height:44px">${esc(p[f]||'')}</textarea>`
+    const F=(f,ph,ta,h)=>ta
+      ?`<textarea data-act="npf" data-id="${it.id}" data-f="${f}" placeholder="${ph}" style="min-height:${h||44}px">${esc(p[f]||'')}</textarea>`
       :`<input type="text" data-act="npf" data-id="${it.id}" data-f="${f}" value="${esc(p[f]||'')}" placeholder="${ph}">`;
     const left=[1,2,3,4,5].filter(s=>!done[s]);
     const btns=S.mode==='scout'
@@ -1955,18 +1956,19 @@ function nightPlanUI(it){
       <div class="btn-row" style="margin:2px 0 8px">
         ${[1,2,3,4,5].map(s=>`<button class="btn ${cur===s?'primary':'ghost'} sm" data-act="npstep" data-id="${it.id}" data-s="${s}" style="min-width:38px">${done[s]?'✓':s}</button>`).join('')}</div>
       ${cur===1?`
-        <div class="mini-cap">Step 1 — What skills are we chasing?</div>
-        <p class="hint" style="margin:0 0 4px">Pick the OAS stream and tick the skills this night will knock off. That's the whole point of the night.</p>
+        <div class="mini-cap">Step 1 — What are we doing?</div>
+        <p class="hint" style="margin:0 0 4px">Name it, say where, then describe what actually happens. This is the one that matters most — write it like you're telling someone who wasn't there.</p>
+        <input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity||'')}" placeholder="Activity name — e.g. Pioneering: build a trestle">
+        ${F('where','Location — e.g. hall, Whiteman Park, river reserve')}
+        <div class="mini-cap" style="margin-top:8px">What happens on the night</div>
+        ${F('how','Walk through it. What do they actually do, in what order, and what does it look like when it works? e.g. Split into patrols. Each patrol gets 3 spars and 4 lengths of rope. Demo one flat lashing on the floor, then they build a trestle. First patrol to stand on theirs without it racking wins.',true,150)}`:''}
+      ${cur===2?`
+        <div class="mini-cap">Step 2 — What skills does it knock off?</div>
+        <p class="hint" style="margin:0 0 4px">Now you know what you're doing, pick the OAS stream and tick what it covers. These become the tick-boxes next to each scout's name on the night.</p>
         ${planSkillsUI(it)}
         ${(it.targetSkills&&it.targetSkills.length)?`<div class="mini-cap" style="margin-top:8px">How will we cover each one?</div>`+it.targetSkills.map(ts=>`
           <p class="hint" style="margin:4px 0 2px">${esc(ts.id.split('|')[0])} S${ts.stage||''} · ${esc(ts.name||ts.id)}</p>
           <input type="text" data-act="npskillhow" data-id="${it.id}" data-k="${esc(ts.id)}" value="${esc((p.skillHow||{})[ts.id]||'')}" placeholder="e.g. each patrol does it twice, PL checks it off">`).join(''):''}`:''}
-      ${cur===2?`
-        <div class="mini-cap">Activity information</div>
-        <p class="hint" style="margin:0 0 4px">Name the activity in the card title above, then nail down where and what's actually happening.</p>
-        ${S.mode==='scout'?F('where','Location — e.g. hall, Whiteman Park, river reserve')
-          :`<p class="hint" style="margin:2px 0 4px">Location: <b>${esc(p.where||'—')}</b> — edit it in the card row above.</p>`}
-        ${F('how','Activity description — e.g. patrol relay building 3 flat lashings into a trestle',true)}`:''}
       ${cur===3?`
         <div class="mini-cap">Night run sheet — the lead keeps time</div>
         <p class="hint" style="margin:0 0 4px">Put a time on every line — e.g. 6:45. Add, reword or bin lines to fit your night. Pick who owns each one.</p>
@@ -1986,7 +1988,7 @@ function nightPlanUI(it){
         ${F('assistAction','e.g. Set up stations before flag, run the sign-in sheet',true)}`:''}
       ${cur===5?`
         <div class="mini-cap">Materials or equipment required</div>
-        ${F('equipment','e.g. 8 poles, 12 ropes, first-aid kit, buckets x2',true)}
+        ${F('equipment','e.g. 8 poles, 12 ropes, first-aid kit, buckets x2',true,90)}
         ${it.kind==='event'?F('meals','Meals — day by day, what\'s cooking and who\'s on it',true):''}
         ${F('contingency','Contingency — e.g. wet weather: roll to next week, preload knots night')}
         ${S.mode==='leader'?`
@@ -2062,7 +2064,8 @@ function vScoutPlan(){
     const head=it.kind==='event'?('★ '+(it.activity||it.type)):('Week '+wn+(weekDate(t,wn)?' · '+weekDate(t,wn):''));
     return `<div class="wk ${it.kind==='event'?'event':''}">
       <div class="fullrow"><b>${esc(head)}</b></div>
-      <div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity||'')}" placeholder="Activity name"></div>
+      ${it._planOpen?`<div class="fullrow"><b style="font-size:15px">${esc(it.activity||'Untitled night')}</b></div>`
+        :`<div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity||'')}" placeholder="Activity name"></div>`}
       <p class="hint" style="margin:2px 0 4px;width:100%">${L?'Lead: '+esc(L):'No lead yet'}${A?' · Assist: '+esc(A):''}</p>
       ${nightPlanUI(it)}</div>`;}).join('');
   return `<div class="view">
@@ -2310,7 +2313,7 @@ function planTermView(){
     let inner;
     if(it.type==='Activity'){
       inner=`${wncol}<div class="toprow">${tsel}${curBtn}${calBtn}</div>
-        <div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity)}" placeholder="Activity name"></div>
+        ${it._planOpen?'':`<div class="fullrow"><input type="text" data-act="wkact" data-id="${it.id}" value="${esc(it.activity)}" placeholder="Activity name"></div>`}
         <div class="namerow"><input type="text" data-act="wktime" data-id="${it.id}" value="${esc(it.time||'')}" placeholder="Time — e.g. 6:30–8:30 pm" style="flex:.8">
           <input type="text" data-act="npf" data-f="where" data-id="${it.id}" value="${esc((it.plan&&it.plan.where)||'')}" placeholder="Location — hall, park, off-site" style="flex:1.2"></div>${areaChips}${rolesUI(it)}${nightPlanUI(it)}
         <button class="addevent" style="margin-top:6px" data-act="r1open" data-id="${it.id}">🛡 R1 risk assessment${it.r1?' ✓':''}</button>`;
