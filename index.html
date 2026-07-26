@@ -2092,9 +2092,9 @@ function vScoutTonight(){
           <div class="skpick-hd">${esc(ts.id.split('|')[0])} S${ts.stage||''} · ${esc(ts.name||ts.id)}</div>
           <div class="skpick-how${hw?'':' none'}">${hw?esc(hw):'Ask your leader how this one gets covered.'}</div>
         </div>`;}).join('')}</div>`:''}
+    ${p.equipment?`<div class="card"><h3>Equipment</h3><p class="hint" style="margin:0;white-space:pre-wrap">${esc(p.equipment)}</p></div>`:''}
     <div class="card"><h3>Schedule — tick as you go</h3>
       ${sched||'<p class="hint" style="margin:0">No time slots yet — the lead builds these in the Plan tab.</p>'}</div>
-    ${p.equipment?`<div class="card"><h3>Equipment</h3><p class="hint" style="margin:0;white-space:pre-wrap">${esc(p.equipment)}</p></div>`:''}
     <div class="card"><h3>Review — assist records it</h3>
       <p class="hint" style="margin:0 0 4px">${roleNames(it,'L')?esc(roleNames(it,'L')):'Lead'} reads these out at patrol corner — ${roleNames(it,'A')?esc(roleNames(it,'A')):'assist'} types them in, then they go in your books.</p>
       <label class="fld">What worked?</label>
