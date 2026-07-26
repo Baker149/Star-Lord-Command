@@ -115,6 +115,20 @@ header:before{content:"";position:absolute;inset:0;pointer-events:none;
 .ppill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;
   color:var(--ink-soft);background:var(--card-2);border:1px solid var(--line);border-radius:20px;
   padding:2px 8px 2px 5px;margin-left:6px;vertical-align:1px}
+.patchip{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;
+  padding:2px 7px 2px 5px;border-radius:20px;background:rgba(0,0,0,.05);
+  border:1px solid var(--line-soft);white-space:nowrap;margin-left:5px;vertical-align:middle}
+.rowmore{flex:none;width:26px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--ink-faint);cursor:pointer;align-self:stretch}
+.rowdet{margin:0 0 6px 34px;padding:8px 10px;background:rgba(0,0,0,.035);
+  border-left:2px solid var(--amber);border-radius:0 7px 7px 0;font-size:12px;
+  color:var(--ink-soft);white-space:pre-wrap;line-height:1.45}
+.rowdet b{color:var(--ink)}
+.msmini{display:flex;gap:4px;flex-wrap:wrap;margin:3px 0 0}
+.msmini span{font-size:10px;font-weight:800;padding:2px 6px;border-radius:5px;
+  background:rgba(0,0,0,.05);color:var(--ink-soft)}
+.msmini span.thin{background:var(--amber);color:#2A2000}
+.msmini span.full{background:var(--moss);color:#fff}
 .pdot{width:9px;height:9px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.15)}
 .pat-hd{display:flex;align-items:center;gap:8px;font-size:14px;padding-bottom:6px;border-bottom:1.5px solid var(--line)}
 .pat-hd .pdot{width:12px;height:12px}
@@ -455,6 +469,25 @@ function schedRowOwner(it,r){
   return r.o==='L'?(roleNames(it,'L')||'Lead')
        :r.o==='A'?(roleNames(it,'A')||'Assist')
        :r.o==='P'?'Patrol':'';}
+function itemDateISO(){
+  const f=curItemR();if(!f.it)return'';
+  if(f.it.kind==='event')return f.it.startDate||f.it.date||'';
+  if(f.t<0)return'';
+  let wn=0;for(const x of S.year.terms[f.t].items){if(x.kind==='week')wn++;if(x.id===f.it.id)break;}
+  return weekDateISO(S.year.terms[f.t],wn)||'';}
+function patrolChip(name,role){
+  if(!name)return'';
+  return `<span class="patchip"><span class="pdot" style="background:${patrolColor(name)}"></span>${esc(name)}${role?' · '+esc(role):''}</span>`;}
+const DUTY_RE=/flag|opening parade|\bgame\b|clos(e|ing)|pack.?up/i;
+/* Built-in guidance so nobody has to go back to the Plan tab mid-night.
+   A note written on the row in the plan wins over these. */
+const ROW_GUIDE=[
+ [/opening parade|flag break/i,"Horseshoe by patrol. Duty patrol breaks the flag. Salute, Promise if you're doing it, then straight into notices.\n\nTalk about: what tonight is, who's leading it, one thing you want them to walk away with. Books out on the table before you start."],
+ [/\bgame\b/i,"Duty patrol owns this. They pick it, they run it, they pack it up.\n\nIf they freeze: something running, everyone in, no elimination. Two teams or patrol against patrol."],
+ [/clos(e|ing) parade|closing/i,"Horseshoe again. Flag down. Then:\n\n• One line on what they did well tonight\n• Next week in a sentence, and who's on flag\n• Anything going home — notes, gear lists, permission forms\n• Dismiss by patrol, duty patrol stays for pack-up"],
+ [/books|patrol corner/i,"Books out, sign off what they earned tonight while it's fresh. PLs run their own corner: OAS gaps off the grid, who's doing what next week."],
+ [/unit council/i,"PLs, APLs and you. Ten minutes standing up. What's working, what's not, what's next."]];
+function rowGuide(w){for(const [re,txt] of ROW_GUIDE)if(re.test(w||''))return txt;return'';}
 function timelineRows(it){
   const defs=runDefs();
   const L=k=>{const d=defs[k]||[k,''];const r=runRow(k);
@@ -464,13 +497,13 @@ function timelineRows(it){
   // no schedule on the plan — fall back to the standalone run sheet
   if(!sched.length)return freshRun().map(x=>L(x.k));
   const S_=(i)=>{const r=sched[i];
+    const dp=dutyPatrol();
     return {kind:'shared',i,t:r.t||'',w:r.w||'',o:r.o||'',done:!!r.done,sub:'',
+            note:(r.n||'').trim(),guide:rowGuide(r.w),
+            duty:(dp&&DUTY_RE.test(r.w||''))?dp:'',
             label:[r.d,r.t].filter(Boolean).join(' '),owner:schedRowOwner(it,r)};};
-  const dp=dutyPatrol();
   const rows=[];
-  const first=S_(0);
-  if(dp)first.sub=dp+' patrol on flag & pack-up';
-  rows.push(first);
+  rows.push(S_(0));
   rows.push(L('uniform'));rows.push(L('events'));
   for(let i=1;i<sched.length-1;i++)rows.push(S_(i));
   rows.push(L('books'));rows.push(L('next'));
@@ -480,18 +513,35 @@ function timelineHTML(it,leaderMode){
   const tickSVG='<svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5l3 3 6-6.5" stroke="#F6F1E2" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const rows=timelineRows(it).filter(r=>leaderMode||r.kind==='shared');
   if(!rows.length)return '';
+  const p=it?ensurePlan(it):null;
   return rows.map(r=>{
+    const key=r.kind==='shared'?('s'+r.i):('l'+r.k);
     const tick=r.kind==='shared'
       ? `data-act="schedtick" data-id="${it.id}" data-i="${r.i}"`
       : `data-act="runtick" data-k="${r.k}"`;
+    const chip=r.kind==='shared'?patrolChip(r.duty):'';
     const main=r.kind==='shared'
-      ? `<b>${esc(r.label)}</b>${r.owner?' <b style="color:var(--pine)">'+esc(r.owner)+':</b>':''} ${esc(r.w)}`
+      ? `<b>${esc(r.label)}</b>${r.owner?' <b style="color:var(--pine)">'+esc(r.owner)+':</b>':''} ${esc(r.w)}${chip}`
       : `<b>${esc(r.label)}</b>`;
     const sub=r.sub?`<br><span style="font-size:11px;color:var(--ink-soft)">${esc(r.sub)}</span>`:'';
     const only=(leaderMode&&r.kind==='leader')?' <span style="font-size:10px;color:var(--ink-soft)">· leader</span>':'';
+    // what to say / what to do for this slot
+    let det='';
+    if(r.kind==='shared'){
+      const parts=[];
+      if(r.note)parts.push(esc(r.note));
+      else if(r.guide)parts.push(esc(r.guide));
+      if(r.o==='L'&&p&&(p.how||'').trim())parts.push('<b>The plan</b>\n'+esc(p.how));
+      if(r.o==='L'&&p&&(p.leadAction||'').trim())parts.push('<b>Lead</b>\n'+esc(p.leadAction));
+      if(r.o==='A'&&p&&(p.assistAction||'').trim())parts.push('<b>Assist</b>\n'+esc(p.assistAction));
+      if(parts.length)det=parts.join('\n\n');
+    }
+    const open=S._rowOpen===key;
+    const more=det?`<div class="rowmore" data-act="rowmore" data-k="${key}">${open?'▲':'▼'}</div>`:'';
     return `<div class="skrow ${r.done?'on':''}" ${tick}>
       <div class="skbox">${r.done?tickSVG:''}</div>
-      <div class="sktext">${main}${only}${sub}</div></div>`;}).join('');}
+      <div class="sktext">${main}${only}${sub}</div>${more}</div>
+      ${open&&det?`<div class="rowdet">${det}</div>`:''}`;}).join('');}
 let R1_TMPL_BYTES=null;
 async function getR1Template(){
   if(R1_TMPL_BYTES)return R1_TMPL_BYTES;
@@ -802,6 +852,7 @@ function applyCurrent(n){
   const it=curItemR().it;
   if(!it){n.weekId='';return;}
   n.weekId=it.id;
+  const _d=itemDateISO();if(_d)n.date=_d;
   if((it.targetSkills&&it.targetSkills.length)||it.stream){
     n.targetSkills=(it.targetSkills||[]).map(s=>({id:s.id,name:s.name,stage:s.stage}));
     n.stream=it.stream||(n.targetSkills[0]?n.targetSkills[0].id.split('|')[0]:'');}
@@ -1495,10 +1546,22 @@ function stepRecord(){
     const seg=[['-','Attended'],['P','Participate'],['A','Assist'],['L','Lead']]
       .map(([k,l])=>`<button data-act="credit" data-id="${id}" data-c="${k}" class="${ct===k?'on':''}">${l}</button>`).join('');
     let areaPick='';
-    if((ct==='P'||ct==='A'||ct==='L')&&n.areas.length>1)
-      areaPick=`<div class="mini-cap">This credit counts toward</div>
-      <div class="areapick">${n.areas.map(a=>`<span class="ap ${ca===a?'on':''}" data-act="creditarea" data-id="${id}" data-area="${a}"
-        style="${ca===a?'background:'+cssv(AREA_VAR[a]):''}">${a}</span>`).join('')}</div>`;
+    if(ct==='P'||ct==='A'||ct==='L'){
+      // where this scout sits in the milestone they're on, so the thinnest area is obvious
+      const rl=msRollup(id),tg=MS[rl.cur],f=rl.progress;
+      const lo=Math.min(...AREAS.map(a=>f[a]||0));
+      const cells=AREAS.map(a=>{const v=f[a]||0;
+        const cls=v>=tg.P?'full':(v===lo?'thin':'');
+        return `<span class="${cls}">${a==='Personal Growth'?'Growth':a} ${v}/${tg.P}</span>`;}).join('')
+        +`<span class="${f.A>=tg.A?'full':''}">Assist ${f.A}/${tg.A}</span>`
+        +`<span class="${f.L>=tg.L?'full':''}">Lead ${f.L}/${tg.L}</span>`;
+      areaPick=`<div class="mini-cap">On Milestone ${rl.cur} — amber is thinnest, green is full</div>
+      <div class="msmini">${cells}</div>`;
+      if(n.areas.length>1)
+        areaPick+=`<div class="mini-cap">This credit counts toward</div>
+        <div class="areapick">${n.areas.map(a=>`<span class="ap ${ca===a?'on':''}" data-act="creditarea" data-id="${id}" data-area="${a}"
+          style="${ca===a?'background:'+cssv(AREA_VAR[a]):''}">${a}</span>`).join('')}</div>`;
+    }
     let skT='';
     if(n.targetSkills.length){
       const done=n.skillsDone[id]||{};
@@ -1532,19 +1595,27 @@ function stepSignoff(){
   const _pi=curItemR().it;const _pr=(_pi&&_pi.plan&&_pi.plan.review)||{};let _merged=false;
   ['worked','change','next'].forEach(f=>{if(!(n.review[f]||'').trim()&&(_pr[f]||'').trim()){n.review[f]=_pr[f];_merged=true;}});
   if(_merged)save('night');
+  // Only count youth who are BOTH marked present and still on the roster — stale ids
+  // from removed scouts used to inflate these totals past the size of the section.
+  const live=n.present.filter(id=>S.roster.some(s=>s.id===id));
   const cnt={P:0,A:0,L:0,'-':0};
-  n.present.forEach(id=>{const c=n.credits[id];cnt[c?(typeof c==='string'?c:c.t):'-']++;});
-  let skT=0;Object.values(n.skillsDone).forEach(o=>skT+=Object.values(o).filter(Boolean).length);
+  live.forEach(id=>{const c=n.credits[id];cnt[c?(typeof c==='string'?c:c.t):'-']++;});
+  let skT=0;live.forEach(id=>{const o=n.skillsDone[id]||{};skT+=Object.values(o).filter(Boolean).length;});
+  const credited=cnt.P+cnt.A+cnt.L;
   const ready=n.activity.trim()&&n.areas.length&&n.signedBy.trim()&&(n.plBy||'').trim();
+  const finishBtn=(pos)=>`<button class="btn clay" data-act="signoff" style="flex:2;${ready?'':'opacity:.45'}" ${ready?'':'disabled'}>${pos==='top'?'✓ Finish & lock the night':'Confirm &amp; save night'}</button>`;
   return `<div class="step-tag"><span class="n">Step 4 — Leader sign-off</span></div>
-  <div class="card"><h3>Confirm & save</h3>
+  <div class="btn-row" style="margin-bottom:10px">${finishBtn('top')}</div>
+  ${!ready?`<p class="warn" style="margin:-4px 0 10px">Need: activity name, at least one challenge area, the PL's approval name, and your name.</p>`:''}
+  <div class="card"><h3>Confirm &amp; save</h3>
     <p class="hint">Two approvals lock the night in: the patrol leader (unit council) confirms the skills they ticked with each scout, then you countersign as leader. Nothing reaches the workbooks until both names are on it.</p>
-    <div style="display:flex;gap:8px;margin:8px 0 4px;flex-wrap:wrap">
+    <div class="mini-cap" style="margin:6px 0 4px">${live.length} here tonight · ${credited} earned a credit</div>
+    <div style="display:flex;gap:8px;margin:0 0 4px;flex-wrap:wrap">
       <span class="chip on" style="background:var(--moss)">${cnt.P} participate</span>
       <span class="chip on" style="background:var(--amber)">${cnt.A} assist</span>
       <span class="chip on" style="background:var(--clay)">${cnt.L} lead</span>
-      <span class="chip on" style="background:var(--ink-faint)">${cnt['-']} attended</span>
-      <span class="chip on" style="background:var(--pine)">${skT} OAS skill ticks</span>
+      <span class="chip on" style="background:var(--ink-faint)">${cnt['-']} attended, no credit</span>
+      <span class="chip on" style="background:var(--pine)">${skT} OAS skill tick${skT===1?'':'s'}</span>
     </div>
     <div class="mini-cap" style="margin-top:10px">Unit council approval (patrol leader)</div>
     <input type="text" data-act="ntext" data-f="plBy" value="${esc(n.plBy||'')}" placeholder="PL's name — they ticked it, they approve it">
@@ -1564,7 +1635,7 @@ function stepSignoff(){
     ${!ready?`<p class="warn">Need: activity name, at least one challenge area, the PL's approval name, and your name.</p>`:''}
   </div>
   <div class="btn-row"><button class="btn ghost" data-act="back">← Back</button>
-    <button class="btn clay" data-act="signoff" style="flex:2;${ready?'':'opacity:.45'}" ${ready?'':'disabled'}>Confirm & save night</button></div>`;
+    ${finishBtn('bottom')}</div>`;
 }
 function doneScreen(){
   const n=S.lastNight;
@@ -1823,7 +1894,8 @@ function nightPlanUI(it){
             <option value="P" ${(r.o||'P')==='P'?'selected':''}>Patrol</option>
             <option value="L" ${r.o==='L'?'selected':''}>Lead</option>
             <option value="A" ${r.o==='A'?'selected':''}>Assist</option></select>
-          <button class="btn ghost sm" data-act="scheddel" data-id="${it.id}" data-i="${i}" style="flex:none">✕</button></div>`).join('')}
+          <button class="btn ghost sm" data-act="scheddel" data-id="${it.id}" data-i="${i}" style="flex:none">✕</button></div>
+          <input type="text" data-act="schedf" data-id="${it.id}" data-i="${i}" data-f="n" value="${esc(r.n||'')}" placeholder="What to say or do in this slot — shows on the night (optional)" style="margin:-4px 0 8px">`).join('')}
         <button class="addevent" data-act="schedadd" data-id="${it.id}">+ add a time slot</button>
         <p class="hint" style="margin:4px 0 0">The game slot belongs to the flag patrol — they sort it on the night while lead & assist set up.</p>`:''}
       ${cur===4?`
@@ -1870,10 +1942,15 @@ function vScoutTonight(){
     <div class="view-title">Tonight</div>
     <div class="view-sub">${esc(it.activity)}${it.time?' · '+esc(it.time):''}${p.where?' · '+esc(p.where):''}</div>
     <div class="card"><h3>Who's on</h3>
-      <p class="hint" style="margin:0 0 4px"><b>Lead${L?': '+esc(L):' — not set'}</b> · keeps time, runs the plan, reads out the review at the end.</p>
-      ${p.leadAction?`<p class="hint" style="margin:0 0 6px;padding-left:10px;white-space:pre-wrap">→ ${esc(p.leadAction)}</p>`:''}
-      <p class="hint" style="margin:0"><b>Assist${A?': '+esc(A):' — not set'}</b> · sets up, explains the rules, manages the gear, records the review.</p>
-      ${p.assistAction?`<p class="hint" style="margin:0;padding-left:10px;white-space:pre-wrap">→ ${esc(p.assistAction)}</p>`:''}</div>
+      <p style="margin:0 0 2px;font-size:13.5px"><span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--ink-faint)">LEAD</span>
+        ${L?`<b style="font-size:16px;color:var(--pine)">${esc(L)}</b>`:'<b style="color:var(--clay)">not set</b>'}</p>
+      <p class="hint" style="margin:0 0 4px">Keeps time, runs the plan, reads out the review at the end.</p>
+      ${p.leadAction?`<p class="hint" style="margin:0 0 8px;padding-left:10px;white-space:pre-wrap">→ ${esc(p.leadAction)}</p>`:''}
+      <p style="margin:0 0 2px;font-size:13.5px"><span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--ink-faint)">ASSIST</span>
+        ${A?`<b style="font-size:16px;color:var(--pine)">${esc(A)}</b>`:'<b style="color:var(--clay)">not set</b>'}</p>
+      <p class="hint" style="margin:0">Sets up, explains the rules, manages the gear, records the review.</p>
+      ${p.assistAction?`<p class="hint" style="margin:0;padding-left:10px;white-space:pre-wrap">→ ${esc(p.assistAction)}</p>`:''}
+      ${(()=>{const dp=dutyPatrol();return dp?`<p class="hint" style="margin:8px 0 0">Duty patrol ${patrolChip(dp)} — flag, game and pack-up.</p>`:'';})()}</div>
     ${(it.targetSkills&&it.targetSkills.length)?`<div class="card"><h3>Skills we're covering</h3>
       ${it.targetSkills.map(ts=>`<p class="hint" style="margin:2px 0"><b>${esc(ts.id.split('|')[0])} S${ts.stage||''} — ${esc(ts.name||ts.id)}</b>${(p.skillHow||{})[ts.id]?' · '+esc(p.skillHow[ts.id]):''}</p>`).join('')}</div>`:''}
     <div class="card"><h3>Schedule — tick as you go</h3>
@@ -2557,6 +2634,7 @@ document.addEventListener('click',e=>{
     save('night');render();return;}
   if(a==='signoff'){
     if(!n.activity.trim()||!n.areas.length||!n.signedBy.trim()||!(n.plBy||'').trim())return;
+    n.present=n.present.filter(id=>S.roster.some(s=>s.id===id));
     const it=planFind(n.weekId).it;
     const pick=o=>{const r={};n.present.forEach(id=>{if(o[id]!==undefined)r[id]=o[id];});return r;};
     const rec={id:uid(),date:n.date,weekLabel:it?itemLabel(it):'',desig:desigFor(n),activity:n.activity,review:{...(n.review||{})},
@@ -2581,6 +2659,7 @@ document.addEventListener('click',e=>{
   if(a==='r1back'){S._r1Id=null;render();return;}
   if(a==='r1help'){S._r1Help=!S._r1Help;render();return;}
   if(a==='nchal'){S.night.review.challenge=+t.dataset.v;save('night');render();return;}
+  if(a==='rowmore'){S._rowOpen=(S._rowOpen===t.dataset.k)?'':t.dataset.k;render();return;}
   if(a==='runtick'){const r=t.dataset.k?runRow(t.dataset.k):S.night.run[+t.dataset.i];if(r){r.done=!r.done;save('night');render();}return;}
   if(a==='nspice'){const sp=t.dataset.s,arr=S.night.review.spices;
     const i=arr.indexOf(sp);i>=0?arr.splice(i,1):arr.push(sp);save('night');render();return;}
@@ -2757,7 +2836,11 @@ document.addEventListener('click',e=>{
   if(a==='aateam'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).aaTeam=t.dataset.v;it._planOpen=true;save('year');render();}return;}
   if(a==='permneed'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).permNeeded=t.dataset.v;it._planOpen=true;save('year');render();}return;}
   if(a==='schedadd'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).sched.push({d:'',t:'',w:''});it._planOpen=true;save('year');render();}return;}
-  if(a==='scheddel'){const it=planFind(t.dataset.id).it;if(it){ensurePlan(it).sched.splice(+t.dataset.i,1);save('year');render();}return;}
+  if(a==='scheddel'){const it=planFind(t.dataset.id).it;if(!it)return;
+    const i=+t.dataset.i,r=(ensurePlan(it).sched||[])[i];if(!r)return;
+    const what=[r.t,r.w].filter(x=>(x||'').trim()).join(' ').trim();
+    uiConfirm(`Delete this time slot?\n\n${what||'(empty row)'}`,()=>{
+      ensurePlan(it).sched.splice(i,1);save('year');render();});return;}
   if(a==='bgive'||a==='bundo'){const s=S.roster.find(x=>x.id===t.dataset.id);if(!s)return;
     s.badges=s.badges||{};
     if(a==='bgive')s.badges[t.dataset.k]=todayISO();else delete s.badges[t.dataset.k];
