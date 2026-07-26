@@ -124,8 +124,14 @@ header:before{content:"";position:absolute;inset:0;pointer-events:none;
 .patchip{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;
   padding:2px 7px 2px 5px;border-radius:20px;background:rgba(0,0,0,.05);
   border:1px solid var(--line-soft);white-space:nowrap;margin-left:5px;vertical-align:middle}
-.skpick{padding:7px 0;border-bottom:1px solid var(--line-soft)}
-.skpick:last-of-type{border-bottom:0}
+.skpick{border:1.5px solid var(--pine);border-radius:9px;overflow:hidden;margin-bottom:6px}
+.skpick-hd{background:var(--pine);color:#F6F1E2;padding:7px 10px;font-size:12.5px;line-height:1.4;font-weight:700}
+.skpick-how{background:#fff;padding:8px 10px;font-size:12px;line-height:1.45;color:var(--ink);white-space:pre-wrap}
+.skpick-how.none{color:var(--clay)}
+.skhow{background:#fff;border:1.5px solid var(--line);border-top:0;
+  border-radius:0 0 9px 9px;margin:-3px 0 8px;padding:8px 11px;
+  font-size:12px;line-height:1.45;color:var(--ink-soft);white-space:pre-wrap}
+.skhow.none{color:var(--clay)}
 .skrow.ro{cursor:default;opacity:.95}
 .skbox.ro{border-style:dashed;background:transparent;color:var(--moss);
   display:flex;align-items:center;justify-content:center}
@@ -1574,6 +1580,7 @@ function vTonight(){
       const shared=it&&(ensurePlan(it).sched||[]).length;
       return `<div class="card" style="padding:12px">
         <div class="mini-cap" style="margin:0">Run sheet${tm?' · '+tm:''}</div>
+        ${(n.activity||'').trim()?`<p style="margin:2px 0 7px;font-size:14.5px"><b>${esc(n.activity)}</b>${n.areas.length?`<span class="hint"> · ${esc(n.areas.join(' · '))}</span>`:''}</p>`:''}
         ${rows}
         ${shared?'<p class="hint" style="margin:7px 0 0">The timed rows are the scouts\' to tick — you see them fill in as they go.</p>':''}</div>`;})()}
     <div class="steps">${chev}</div>${body}
@@ -1607,39 +1614,29 @@ function stepSetup(){
   const it0=curItemR().it;
   const p0=it0?ensurePlan(it0):null;
   const fromPlan=!!(it0&&(n.activity||'').trim()&&n.areas.length);
-  const rollBtn='<div class="btn-row"><button class="btn primary full" data-act="next">Take the roll →</button></div>';
   return `<div class="step-tag"><span class="n">Step 1 — Set up</span></div>
-  ${cur?`<div class="curbanner"><div><div class="cl">Pulled from your term plan</div>
-    <div class="ct">${esc(itemLabel(cur))}</div></div></div>`:''}
-  ${rollBtn}
+  <div class="btn-row"><button class="btn primary full" data-act="next">Take the roll →</button></div>
   ${!n.activity.trim()?'<p class="warn" style="margin:-4px 0 10px">Give tonight an activity name before you take the roll.</p>':''}
-  ${fromPlan&&!n._editAct?`<div class="card" style="padding:12px">
-      <div class="mini-cap" style="margin:0 0 3px">Tonight</div>
-      <p style="margin:0;font-size:15px"><b>${esc(n.activity)}</b></p>
-      <p class="hint" style="margin:3px 0 0">${esc(n.areas.join(' · '))}</p>
-      <div class="btn-row" style="margin-top:8px"><button class="btn ghost sm" data-act="editact">Change the activity or areas</button></div>
-    </div>`
+  ${fromPlan?''
   :`<div class="card">
     <h3>The night's activity</h3>
-    <p class="hint">A credit can only attach to a specific, named activity.</p>
+    <p class="hint">Nothing pulled from the term plan for tonight. Name it here, or set it up properly in the Plan tab.</p>
     <label class="fld">Tonight is</label>
     <select data-act="pickweek">${wkOpts}</select>
     <label class="fld">Activity name <span style="color:var(--clay)">*required</span></label>
     <input type="text" data-act="ntext" data-f="activity" value="${esc(n.activity)}" placeholder="e.g. Indoor rock climbing">
     <label class="fld">Challenge areas — pick all that apply</label>
     <div class="chips">${AREAS.map(a=>`<span class="chip ${n.areas.includes(a)?'on':''}" data-act="narea" data-area="${a}">${a}</span>`).join('')}</div>
-    ${fromPlan?`<div class="btn-row" style="margin-top:8px"><button class="btn ghost sm" data-act="editact">Done</button></div>`:''}
   </div>`}
   <div class="card">
     <h3>OAS skills targeted tonight</h3>
     ${n.targetSkills.length?n.targetSkills.map(ts=>{
         const hw=p0?((p0.skillHow||{})[ts.id]||'').trim():'';
         return `<div class="skpick">
-          <p style="margin:0;font-size:13px"><b>${esc(ts.id.split('|')[0])} S${ts.stage||''}</b> · ${esc(ts.name||ts.id)}</p>
-          ${hw?`<p class="hint" style="margin:3px 0 0;white-space:pre-wrap">${esc(hw)}</p>`
-              :`<p class="hint" style="margin:3px 0 0;color:var(--clay)">No plan for how you'll cover this one.</p>`}
+          <div class="skpick-hd">${esc(ts.id.split('|')[0])} S${ts.stage||''} · ${esc(ts.name||ts.id)}</div>
+          <div class="skpick-how${hw?'':' none'}">${hw?esc(hw):"No plan for how you'll cover this one — add it in the Plan tab."}</div>
         </div>`;}).join('')
-      :'<p class="hint" style="margin:0">Nothing picked yet — these normally come across from the term plan.</p>'}
+      :'<p class="hint" style="margin:0">Nothing picked yet — these come across from the term plan.</p>'}
     <div class="btn-row" style="margin-top:9px"><button class="btn ghost sm" data-act="editskills">${n._editSkills?'Done':(n.targetSkills.length?'Change skills':'Pick skills')}</button></div>
     ${n._editSkills?`
       <label class="fld">OAS stream</label>
@@ -1653,8 +1650,7 @@ function stepSetup(){
     <p class="hint">Switch on to log per-scout km or nights under canvas in Step 3.</p>
     <div class="tgl ${n.logKm?'on':''}" data-act="toggle" data-f="logKm"><div class="sw"></div><span class="tl">Log hike kilometres</span></div>
     <div class="tgl ${n.logNights?'on':''}" data-act="toggle" data-f="logNights"><div class="sw"></div><span class="tl">Log nights under canvas</span></div>
-  </div>
-  ${rollBtn}`;
+  </div>`;
 }
 function stepRoll(){
   const n=S.night;
@@ -2822,7 +2818,6 @@ document.addEventListener('click',e=>{
   if(a==='r1back'){S._r1Id=null;render();return;}
   if(a==='r1help'){S._r1Help=!S._r1Help;render();return;}
   if(a==='nchal'){S.night.review.challenge=+t.dataset.v;save('night');render();return;}
-  if(a==='editact'){S.night._editAct=!S.night._editAct;save('night');render();return;}
   if(a==='editskills'){S.night._editSkills=!S.night._editSkills;save('night');render();return;}
   if(a==='rowmore'){S._rowOpen=(S._rowOpen===t.dataset.k)?'':t.dataset.k;render();return;}
   if(a==='runtick'){const r=t.dataset.k?runRow(t.dataset.k):S.night.run[+t.dataset.i];if(r){r.done=!r.done;save('night');render();}return;}
