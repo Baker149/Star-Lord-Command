@@ -1575,8 +1575,11 @@ function vTonight(){
   if(n.step===3)body=stepRecord();
   if(n.step===4)body=stepSignoff();
   return `<div class="view">
-    <div class="view-title">Tonight at Scouts</div>
-    <div class="view-sub">${fmtD(n.date)} · four steps, then sign off.</div>
+    <div class="view-title">${n.editingId?'Looking back':'Tonight at Scouts'}</div>
+    <div class="view-sub">${fmtD(n.date)}${n.editingId?' · '+esc(n.activity||'')+' — already signed off':' · four steps, then sign off.'}</div>
+    ${n.editingId?`<div class="btn-row" style="margin-bottom:10px">
+      <button class="btn ghost" data-act="closenight">← Back to tonight</button></div>`:''}
+    <div class="steps">${chev}</div>${body}
     ${(()=>{const tm=viewTerm?termTimeLabel(S.year.terms[curItemR().t>=0?curItemR().t:S.year.viewT]||{}):'';
       const it=curItemR().it;
       const rows=timelineHTML(it,true);
@@ -1586,7 +1589,7 @@ function vTonight(){
         ${(n.activity||'').trim()?`<p style="margin:2px 0 7px;font-size:14.5px"><b>${esc(n.activity)}</b>${n.areas.length?`<span class="hint"> · ${esc(n.areas.join(' · '))}</span>`:''}</p>`:''}
         ${rows}
         ${shared?'<p class="hint" style="margin:7px 0 0">The timed rows are the scouts\' to tick — you see them fill in as they go.</p>':''}</div>`;})()}
-    <div class="steps">${chev}</div>${body}
+
     ${n.step===1?recentNights():''}</div>`;
 }
 function stepSetup(){
@@ -1738,7 +1741,7 @@ function stepSignoff(){
   let skT=0;live.forEach(id=>{const o=n.skillsDone[id]||{};skT+=Object.values(o).filter(Boolean).length;});
   const credited=cnt.P+cnt.A+cnt.L;
   const ready=n.activity.trim()&&n.areas.length&&n.signedBy.trim()&&(n.plBy||'').trim();
-  const finishBtn=(pos)=>`<button class="btn clay" data-act="signoff" style="flex:2;${ready?'':'opacity:.45'}" ${ready?'':'disabled'}>${pos==='top'?'✓ Finish & lock the night':'Confirm &amp; save night'}</button>`;
+  const finishBtn=(pos)=>`<button class="btn clay" data-act="signoff" style="flex:2;${ready?'':'opacity:.45'}" ${ready?'':'disabled'}>${n.editingId?'✓ Save changes':(pos==='top'?'✓ Finish & lock the night':'Confirm &amp; save night')}</button>`;
   return `<div class="step-tag"><span class="n">Step 4 — Leader sign-off</span></div>
   <div class="btn-row" style="margin-bottom:10px">${finishBtn('top')}</div>
   ${!ready?`<p class="warn" style="margin:-4px 0 10px">Need: activity name, at least one challenge area, the PL's approval name, and your name.</p>`:''}
@@ -1764,7 +1767,7 @@ function stepSignoff(){
       ${[1,2,3,4,5].map(v=>`<button class="tchip ${n.review.challenge===v?'on':''}" data-act="nchal" data-v="${v}" style="flex:1;padding:7px 0">${v}</button>`).join('')}</div>
     <div class="namerow" style="flex-wrap:wrap;margin-top:6px">
       <span class="hint" style="margin:0;width:100%">Which SPICES did tonight grow?</span>
-      ${SPICES.map(sp=>`<span class="chip ${n.review.spices.includes(sp)?'on':''}" data-act="nspice" data-s="${sp}">${sp}</span>`).join('')}</div>
+      ${SPICES.map(sp=>`<span class="chip ${(n.review.spices||[]).includes(sp)?'on':''}" data-act="nspice" data-s="${sp}">${sp}</span>`).join('')}</div>
     <div class="mini-cap" style="margin-top:10px">Signed off by (leader name)</div>
     <input type="text" data-act="ntext" data-f="signedBy" value="${esc(n.signedBy)}" placeholder="Your name">
     ${!ready?`<p class="warn">Need: activity name, at least one challenge area, the PL's approval name, and your name.</p>`:''}
@@ -1845,13 +1848,14 @@ function recentNights(){
   const items=S.nights.slice(-6).reverse().map(n=>{
     const c=Object.values(n.credits).map(x=>typeof x==='string'?x:x.t);
     const a=(n.areas&&n.areas[0])||n.area;
-    return `<div class="nlog"><div class="nd">${fmtD(n.date)}</div>
+    return `<div class="nlog" data-act="opennight" data-id="${n.id}" style="cursor:pointer"><div class="nd">${fmtD(n.date)}</div>
       <div class="ni"><div class="t">${esc(n.activity)}</div>
         <div class="s">${c.filter(x=>x==='P').length}P · ${c.filter(x=>x==='A').length}A · ${c.filter(x=>x==='L').length}L</div></div>
       <div class="areadot" style="background:${a?cssv(AREA_VAR[a]):'#ccc'}"></div>
       <button class="del-x" data-act="delnight" data-id="${n.id}">×</button></div>`;}).join('');
   return `<div class="card flat" style="background:transparent;border:none;padding-left:2px;padding-right:2px">
-    <h3 style="margin-bottom:8px">Recent nights</h3>${items}</div>`;
+    <h3 style="margin-bottom:8px">Recent nights</h3>
+    <p class="hint" style="margin:-4px 0 7px">Tap one to look back at it or fix something.</p>${items}</div>`;
 }
 
 /* ---- PLAN ---- */
@@ -2748,7 +2752,10 @@ function vRules(){
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-act]');if(!t)return;
   const a=t.dataset.act,n=S.night;
-  if(a==='nav'){S.view=t.dataset.v;render();return;}
+  if(a==='nav'){S.view=t.dataset.v;
+    // coming back to Tonight after signing off starts the next night, not the receipt
+    if(S.view==='tonight'&&S.night.saved){S.night=nightFromCurrent();save('night');}
+    render();return;}
   /* tonight */
   if(a==='narea'){const ar=t.dataset.area;
     n.areas.includes(ar)?n.areas=n.areas.filter(x=>x!==ar):n.areas.push(ar);
@@ -2794,8 +2801,35 @@ document.addEventListener('click',e=>{
       skillsDone:JSON.parse(JSON.stringify(pick(n.skillsDone))),
       logKm:n.logKm,logNights:n.logNights,kmLog:pick(n.kmLog),nightsLog:pick(n.nightsLog),
       signedBy:n.signedBy,plBy:n.plBy||''};
-    S.nights.push(rec);save('nights');
+    if(n.editingId){const ix=S.nights.findIndex(x=>x.id===n.editingId);
+      if(ix>=0){rec.id=n.editingId;S.nights[ix]=rec;}else S.nights.push(rec);}
+    else S.nights.push(rec);
+    save('nights');
+    // Tonight is done — let go of it so the tab isn't still showing Thursday.
+    // Roll the pin on to the next week if there is one.
+    if(!n.editingId){
+      const f=planFind(n.weekId);
+      let nx=null;
+      if(f.t>=0){const items=S.year.terms[f.t].items,k=items.findIndex(x=>x.id===n.weekId);
+        for(let q=k+1;q<items.length;q++)if(items[q].kind==='week'){nx=items[q];break;}}
+      S.year.cur=nx?{t:f.t,id:nx.id}:null;
+      S._curId=nx?nx.id:'';
+      save('year');}
     S.lastNight=rec;S.night=freshNight();S.night.saved=true;save('night');render();return;}
+  if(a==='opennight'){
+    const rec=S.nights.find(x=>x.id===t.dataset.id);if(!rec)return;
+    const n2=freshNight();
+    Object.assign(n2,{date:rec.date,activity:rec.activity,areas:[...(rec.areas||[])],stream:rec.stream||'',
+      targetSkills:(rec.targetSkills||[]).map(s=>({...s})),present:[...(rec.present||[])],
+      credits:JSON.parse(JSON.stringify(rec.credits||{})),
+      skillsDone:JSON.parse(JSON.stringify(rec.skillsDone||{})),
+      logKm:!!rec.logKm,logNights:!!rec.logNights,
+      kmLog:JSON.parse(JSON.stringify(rec.kmLog||{})),nightsLog:JSON.parse(JSON.stringify(rec.nightsLog||{})),
+      review:Object.assign({worked:'',change:'',next:'',rating:0,spices:[]},rec.review||{}),
+      signedBy:rec.signedBy||'',plBy:rec.plBy||'',
+      editingId:rec.id,saved:false,step:4});
+    S.night=n2;save('night');S.view='tonight';window.scrollTo(0,0);render();return;}
+  if(a==='closenight'){S.night=freshNight();S.night.saved=false;save('night');window.scrollTo(0,0);render();return;}
   if(a==='newnight'){S.night=nightFromCurrent();save('night');render();return;}
   if(a==='copy'){const txt=summaryText(S.lastNight);
     if(navigator.clipboard)navigator.clipboard.writeText(txt).then(
@@ -2827,7 +2861,7 @@ document.addEventListener('click',e=>{
   if(a==='editskills'){S.night._editSkills=!S.night._editSkills;save('night');render();return;}
   if(a==='rowmore'){S._rowOpen=(S._rowOpen===t.dataset.k)?'':t.dataset.k;render();return;}
   if(a==='runtick'){const r=t.dataset.k?runRow(t.dataset.k):S.night.run[+t.dataset.i];if(r){r.done=!r.done;save('night');render();}return;}
-  if(a==='nspice'){const sp=t.dataset.s,arr=S.night.review.spices;
+  if(a==='nspice'){S.night.review.spices=S.night.review.spices||[];const sp=t.dataset.s,arr=S.night.review.spices;
     const i=arr.indexOf(sp);i>=0?arr.splice(i,1):arr.push(sp);save('night');render();return;}
   if(a==='ideaused'){const rec=S.nights.find(x=>x.id===t.dataset.id);
     if(rec&&rec.review){rec.review.nextUsed=!rec.review.nextUsed;save('nights');render();}return;}
