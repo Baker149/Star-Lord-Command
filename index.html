@@ -433,10 +433,18 @@ nav button .nl{font-size:9.5px;font-weight:700}
 .climb2 .c2h{flex:none;font-size:10.5px;color:var(--ink-faint)}
 .oasrow{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--line-soft)}
 .oasrow:last-of-type{border-bottom:none}
-.oasrow .on1{flex:1.2;font-size:13px;font-weight:600}
-.oasrow select{flex:none;width:92px}
-.oasrow .on2{flex:none;font-size:12.5px;color:var(--ink-soft);width:52px}
-.oasrow .ostars{flex:1;color:var(--amber);font-size:13px;letter-spacing:2px;text-align:right;text-shadow:0 0 4px rgba(242,168,29,.5)}
+.oasrow .on1{font-size:13px;font-weight:600}
+.oassel{flex:1.4;position:relative;display:block;cursor:pointer}
+.oassel .ofrom{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;
+  border:1.5px solid var(--line);border-radius:7px;background:var(--card);font-size:12.5px;margin-left:3px}
+.oassel select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.oasrow .on2{flex:none;font-size:12.5px;color:var(--ink-soft);width:66px}
+.oasrow .ostars{flex:1;color:var(--amber);font-size:18px;letter-spacing:2.5px;text-align:right;text-shadow:0 0 5px rgba(242,168,29,.55)}
+.aw2{display:flex;gap:9px;margin:10px 0 0;padding-top:9px;border-top:1px solid var(--line-soft)}
+.awchip{flex:1;display:flex;align-items:baseline;gap:5px;background:var(--card-2);border:1.5px solid var(--line);
+  border-radius:10px;padding:8px 11px;font-size:13px;font-weight:600}
+.awchip b{font-family:'Fraunces',serif;font-size:17px}
+.awchip span{margin-left:auto;font-size:10.5px;color:var(--ink-faint);font-weight:700}
 .siab{width:24px;height:24px;border-radius:50%;background:var(--card-2);border:1.5px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;color:var(--ink-faint)}
 .siab.on{background:var(--amber);border-color:var(--amber);color:#1B1B47}
 .sia2{border:1.5px solid var(--line);border-radius:10px;margin-bottom:7px;overflow:hidden}
@@ -2682,8 +2690,13 @@ function scoutCard(s){
       <span class="pc">${c}/${tg.P}</span></div>`;}).join('');
   const ms=`<div class="subhd">Milestones — on M${cur}</div>
     <p class="hint" style="margin:0 0 4px">Participates per challenge area (Milestone ${cur})</p>
-    <div class="prog-grid">${grid}</div>
-    <div class="al-big"><b>Leads ${p.L}/${tg.L}</b> · <b>Assists ${p.A}/${tg.A}</b></div>
+    <div class="prog-grid">${grid}
+    <div class="prog-row"><span class="pn" style="font-weight:800">Leads</span>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.min(100,p.L/tg.L*100)}%;background:var(--clay)"></div></div>
+      <span class="pc"><b>${p.L}/${tg.L}</b></span></div>
+    <div class="prog-row"><span class="pn" style="font-weight:800">Assists</span>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.min(100,p.A/tg.A*100)}%;background:var(--amber)"></div></div>
+      <span class="pc"><b>${p.A}/${tg.A}</b></span></div></div>
     ${needs.length?`<p class="hint" style="margin:2px 0 0">Still needs: ${needs.join(' · ')}</p>`:''}`;
   /* 3 — OAS */
   const o=oasFor(s.id);
@@ -2693,13 +2706,16 @@ function scoutCard(s){
   const orows=STREAMS.filter(st=>{const v=o.streams[st]||{};return v.cur>0||v.from>0||CORES.includes(st);}).map(st=>{
     const v=o.streams[st]||{from:0,cur:0};const pr=Math.max(0,v.cur-v.from);
     return `<div class="oasrow">
-      <span class="on1">${st}</span>
-      <select data-act="oasstart" data-id="${s.id}" data-st="${st}">${[0,1,2,3,4,5,6,7,8,9].map(x=>`<option value="${x}" ${v.from===x?'selected':''}>from ${x}</option>`).join('')}</select>
-      <span class="on2">now <b>${v.cur}</b></span>
+      <label class="oassel"><span class="on1">${st} <b class="ofrom">${v.from}</b></span>
+        <select data-act="oasstart" data-id="${s.id}" data-st="${st}">${[0,1,2,3,4,5,6,7,8,9].map(x=>`<option value="${x}" ${v.from===x?'selected':''}>${x}</option>`).join('')}</select></label>
+      <span class="on2">→ now <b>${v.cur}</b></span>
       <span class="ostars" title="${pr} progression${pr===1?'':'s'} earned in section">${'✦'.repeat(Math.min(pr,9))}</span></div>`;}).join('');
   const nx=oasNextUp(s).slice(0,2);
-  const oas=`<div class="subhd">Outdoor Adventure Skills — ${o.prog}/${q.oasProg} progressions${o.done?' ✦':''}</div>
-    <p class="hint" style="margin:0 0 5px">✦ = a progression earned in this section. Set "from" to the stage held on their section start date.</p>
+  const oas=`<div class="subhd">Outdoor Adventure Skills${o.done?' ✦':''}</div>
+    <div class="prog-row" style="margin:2px 0 4px"><span class="pn" style="font-weight:800">Progressions</span>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.min(100,o.prog/q.oasProg*100)}%;background:var(--amber)"></div></div>
+      <span class="pc"><b>${o.prog}/${q.oasProg}</b></span></div>
+    <p class="hint" style="margin:0 0 5px">✦ = a progression earned in this section. Tap a stream name to change the stage they started from.</p>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 7px">${coreChips}<span class="chip on" style="background:var(--pine)">✦ ${o.prog} of ${q.oasProg}</span></div>
     ${orows}
     ${nx.length?`<p class="hint" style="margin:6px 0 0">Closest: ${nx.map(g=>esc(g.st)+' S'+g.stage+' — '+g.left.length+' skill'+(g.left.length===1?'':'s')+' left').join(' · ')}</p>`:''}`;
@@ -2718,7 +2734,13 @@ function scoutCard(s){
         <div class="btn-row" style="margin-top:7px">
           ${done?'':`<button class="btn primary sm" data-act="siadone" data-id="${s.id}" data-sia="${x.id}">Reviewed ✓ — finish it</button>`}
           <button class="btn ghost sm" data-act="delsia" data-id="${s.id}" data-sia="${x.id}" style="flex:none;color:var(--clay)">Remove</button></div></div>`:''}</div>`;}).join('');
-  const sia=`<div class="subhd">Special Interest Areas — ${fin.length}/6 · ${areaN}/${q.siaAreas} areas</div>
+  const sia=`<div class="subhd">Special Interest Areas</div>
+    <div class="prog-row" style="margin:2px 0 2px"><span class="pn" style="font-weight:800">SIAs</span>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.min(100,fin.length/6*100)}%;background:var(--c-creative)"></div></div>
+      <span class="pc"><b>${fin.length}/6</b></span></div>
+    <div class="prog-row" style="margin:0 0 4px"><span class="pn" style="font-weight:800">Areas</span>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.min(100,areaN/q.siaAreas*100)}%;background:var(--c-growth)"></div></div>
+      <span class="pc"><b>${areaN}/${q.siaAreas}</b></span></div>
     <div style="display:flex;gap:5px;margin:2px 0 7px">${bar}</div>
     <p class="hint" style="margin:0 0 6px">${q.siaHrs}+ hrs each, agreed with the leader before it starts. Planning one starts it — several can run at once. Reviewed locks in the finish date and it counts toward the 6.</p>
     ${siaRows}
@@ -2735,7 +2757,9 @@ function scoutCard(s){
   /* 6 — the tally awards, small */
   const km=kmTotal(s.id),nt=nightsTotal(s.id);
   const kmN=nextBadge(km,KM_BADGES),ntN=nextBadge(nt,NIGHT_BADGES);
-  const aw=`<p class="aw-line">🥾 Walkabout ${km} km${kmN?' · next badge '+kmN+' km':' · all earned'} &nbsp;·&nbsp; 🏕️ Camper ${nt} nights${ntN?' · next badge '+ntN:' · all earned'}</p>`;
+  const aw=`<div class="aw2">
+    <span class="awchip">🥾 <b>${km}</b> km<span>${kmN?'next badge '+kmN:'all earned'}</span></span>
+    <span class="awchip">🏕️ <b>${nt}</b> nights<span>${ntN?'next badge '+ntN:'all earned'}</span></span></div>`;
   return `<div class="scout open">${head}<div class="body">${contact}${climb}${ms}${oas}${sia}${jny}${aw}</div></div>`;
 }
 /* Everything admin about a scout, behind the Edit button. */
