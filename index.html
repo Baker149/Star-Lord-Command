@@ -124,6 +124,9 @@ header:before{content:"";position:absolute;inset:0;pointer-events:none;
 .patchip{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;
   padding:2px 7px 2px 5px;border-radius:20px;background:rgba(0,0,0,.05);
   border:1px solid var(--line-soft);white-space:nowrap;margin-left:5px;vertical-align:middle}
+.syncwarn{background:#FBE9E7;border:1.5px solid var(--clay);border-radius:11px;
+  padding:10px 12px;margin:0 0 11px;font-size:12.5px;line-height:1.45;color:#7A2E12;cursor:pointer}
+.syncwarn b{color:#5E220C}
 .skpick{border:1.5px solid var(--pine);border-radius:9px;overflow:hidden;margin-bottom:6px}
 .skpick-hd{background:var(--pine);color:#F6F1E2;padding:7px 10px;font-size:12.5px;line-height:1.4;font-weight:700}
 .skpick-how{background:#fff;padding:8px 10px;font-size:12px;line-height:1.45;color:var(--ink);white-space:pre-wrap}
@@ -406,6 +409,19 @@ nav button .nl{font-size:9.5px;font-weight:700}
 .stg{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:50%;color:#fff;font-weight:700;font-size:11px;line-height:1}
 .stg.mv{box-shadow:0 0 0 2px var(--amber)}
 .stg.z{background:var(--line);color:var(--ink-faint);font-weight:600}
+/* earned-skill highlighting + peak view */
+.skchip.got{background:transparent;border:1.5px dashed var(--moss);color:var(--moss)}
+.skrow.got{opacity:.85}
+.skrow.got .skbox{border-style:dashed;border-color:var(--moss);color:var(--moss);text-align:center;font-size:13px;line-height:15px;font-weight:800}
+.skhave{flex:none;font-size:10px;font-weight:800;color:var(--ink-faint);background:var(--card-2);border:1px solid var(--line);border-radius:9px;padding:1px 6px;margin-left:auto;align-self:center;white-space:nowrap}
+.skhave.all{color:var(--moss);border-color:var(--moss)}
+.pk-row{display:flex;gap:8px;padding:7px 4px;border-bottom:1px solid var(--line-soft);font-size:12.5px;align-items:baseline}
+.pk-row:last-child{border-bottom:none}
+.pk-tick{flex:none;width:18px;height:18px;border-radius:50%;background:var(--card-2);border:1.5px solid var(--line);color:var(--ink-faint);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;align-self:center}
+.pk-row.done .pk-tick{background:var(--amber);border-color:var(--amber);color:#1B1B47}
+.pk-lbl{flex:none;max-width:46%;font-weight:700}
+.pk-det{flex:1;color:var(--ink-soft);font-size:12px}
+.pk-row.done .pk-det{color:var(--moss);font-weight:600}
 #printArea{display:none}
 @media print{
   body>*{display:none!important}
@@ -1110,6 +1126,39 @@ function oasFor(sid){
   const q=reqs(s.section);
   out.done=out.prog>=q.oasProg&&out.cores>=q.oasCores&&(!q.oasHigh||out.high>=q.oasHigh);
   return out;}
+/* --- earned-skill helpers: what a scout already has, from ticked nights + arrival stage --- */
+function earnedSkillIds(sid){
+  const out=new Set();
+  S.nights.forEach(n=>{const v=(n.skillsDone||{})[sid];
+    (Array.isArray(v)?v:Object.keys(v||{})).forEach(id=>out.add(id));});
+  return out;}
+function hasSkillAlready(s,skid,earned){
+  if(earned&&earned.has(skid))return true;
+  const p=skid.split('|');const grp=OAS_SKILLS[p[0]]&&OAS_SKILLS[p[0]][+p[1]];
+  const st=+((s&&s.oasStart&&s.oasStart[p[0]])||0);
+  return !!grp&&grp[0]<=st;}
+/* Nearest next stage per stream — which group has the fewest skills left */
+function oasNextUp(s){
+  const earned=earnedSkillIds(s.id);
+  const o=oasFor(s.id);const out=[];
+  STREAMS.forEach(st=>{
+    const v=o.streams[st];const next=((v&&v.cur)||0)+1;if(next>9)return;
+    // skip the stage 6-9 placeholders — those are assessor sign-offs, not skills to plan a night around
+    const groups=OAS_SKILLS[st].filter(g=>g[0]===next&&!(g[2].length===1&&/^Stage \d+ requirements met/.test(g[2][0])));
+    if(!groups.length)return;
+    let best=null;
+    groups.forEach(g=>{const gi=OAS_SKILLS[st].indexOf(g);
+      const left=g[2].map((sk,i)=>({i,sk})).filter(x=>!hasSkillAlready(s,st+'|'+gi+'|'+x.i,earned));
+      if(!best||left.length<best.left.length)best={st,stage:next,label:g[1],left};});
+    if(best&&best.left.length)out.push(best);});
+  return out.sort((a,b)=>a.left.length-b.left.length);}
+/* What the current milestone still needs, in words */
+function msNeeds(id){
+  const r=msRollup(id);const tg=MS[r.cur],f=r.progress;const parts=[];
+  AREAS.forEach(a=>{const d=tg.P-(f[a]||0);if(d>0)parts.push((a==='Personal Growth'?'Growth':a)+' '+d);});
+  const dA=tg.A-(f.A||0);if(dA>0)parts.push(dA+' assist'+(dA>1?'s':''));
+  const dL=tg.L-(f.L||0);if(dL>0)parts.push(dL+' lead'+(dL>1?'s':''));
+  return parts;}
 function msDoneCalc(s){
   // M1..M3 done flags come straight from the roll-up: a milestone is done when
   // the pooled counts fill its full target. Overflow rolls into the next.
@@ -1364,6 +1413,7 @@ function mergeRemote(env){
 let _syncBusy=false;
 async function driveSync(mode){
   if(!S.drive.enabled||_syncBusy)return;_syncBusy=true;try{await _driveSyncInner(mode);}finally{_syncBusy=false;}}
+let _lastSyncWork={pulled:[],pushed:false};
 async function _driveSyncInner(mode){
   if(!S.drive.enabled)return;
   if(!tokenValid()){
@@ -1377,20 +1427,27 @@ async function _driveSyncInner(mode){
       return;}}
   S.drive.status='Syncing…';renderDriveStatus();
   try{
+    _lastSyncWork={pulled:[],pushed:false};
     const id=await driveFindFile();
-    if(!id){await drivePush();}
+    if(!id){await drivePush();_lastSyncWork.pushed=true;}
     else{
       const r=await dFetch('https://www.googleapis.com/drive/v3/files/'+id+'?alt=media');
       let env=null;try{env=JSON.parse(await r.text());}catch(e){}
-      if(!env||!env.data){await drivePush();}
+      if(!env||!env.data){await drivePush();_lastSyncWork.pushed=true;}
       else{
         const {pulled,pushNeeded}=mergeRemote(env);
-        // push if anything of ours is newer, or if we pulled (so the file holds the union)
-        if(pushNeeded||pulled.length)await drivePush();
+        _lastSyncWork.pulled=pulled.slice();
+        if(pushNeeded||pulled.length){await drivePush();_lastSyncWork.pushed=true;}
         if(pulled.length)render();
       }
     }
     S.drive.lastSync=Date.now();S.drive.status='';saveDrive();renderDriveStatus();
+    if(mode==='manual'){
+      const w=_lastSyncWork;
+      uiAlert(w.pulled.length
+        ? `Synced. Brought across: ${w.pulled.join(', ')}.${w.pushed?' Sent your changes up too.':''}`
+        : w.pushed ? 'Synced. Sent your changes up — nothing newer to bring down.'
+                   : 'Synced. Both copies already match.');}
   }catch(e){
     S.drive.status=(e.message==='auth')?'Link down — tap Sync to reconnect':'Sync hit a snag — try again';
     saveDrive();renderDriveStatus();
@@ -1410,12 +1467,22 @@ function renderDriveStatus(){
   const el=document.getElementById('dstatus');
   if(el)el.textContent=driveStatusText();
 }
+function fmtAgo(ts){
+  if(!ts)return'never';
+  const s=Math.max(0,Math.round((Date.now()-ts)/1000));
+  if(s<60)return'just now';
+  const m=Math.round(s/60);if(m<60)return m+' min ago';
+  const h=Math.round(m/60);if(h<24)return h+' hr ago';
+  const d=Math.round(h/24);return d+(d===1?' day ago':' days ago');}
 function driveStatusText(){
-  if(S.drive.status)return S.drive.status;
-  if(!S.drive.clientId)return'Not set up yet';
-  if(!S.drive.enabled)return'Ready to connect';
-  if(!tokenValid())return'Link idle — will reconnect on Sync'+(S.drive.lastSync?' · last sync '+driveAgo():'');
-  return'Link established'+(S.drive.lastSync?' · last sync '+driveAgo():'');
+  // always say when it last synced — that is the number that tells you whether
+  // this device is actually up to date, whatever the link is doing right now
+  const ago=S.drive.lastSync?' · last sync '+driveAgo():' · never synced';
+  if(S.drive.status)return S.drive.status+(S.drive.enabled?ago:'');
+  if(!S.drive.clientId)return'Not set up yet on this device';
+  if(!S.drive.enabled)return'Ready to connect'+ago;
+  if(!tokenValid())return'Link idle — will reconnect on Sync'+ago;
+  return'Link established'+ago;
 }
 function driveBoot(){
   if(_authPending){S.drive.tok=_authPending;S.drive.enabled=true;_authPending=null;saveDrive();render();}
@@ -1527,9 +1594,11 @@ function nextBadge(total,arr){for(const v of arr)if(v>total)return v;return null
 
 /* ===== render ===== */
 function render(){
-  document.getElementById('main').innerHTML=
+  const _syncWarn=(S.mode==='leader'&&!S.drive.enabled)?`<div class="syncwarn" data-act="syncsetup">
+    <b>This device isn't syncing.</b> It's keeping its own separate copy — that's why your phone and laptop disagree. Tap to connect Google Drive on this device.</div>`:'';
+  document.getElementById('main').innerHTML=_syncWarn+(
     S.mode==='scout'?vScout():
-    (({tonight:vTonight,plan:vPlan,troop:vTroop,welcome:vWelcome,rules:vRules})[S.view]||vTonight)();
+    (({tonight:vTonight,plan:vPlan,troop:vTroop,welcome:vWelcome,rules:vRules})[S.view]||vTonight)());
   renderNav();
   if(S._focus){const el=document.getElementById(S._focus);if(el)el.focus();S._focus=null;}
 }
@@ -1564,6 +1633,13 @@ function renderNav(){
 function vTonight(){
   const n=S.night;
   if(n.saved)return doneScreen();
+  // Skills added to the plan AFTER the night was created used to never show up
+  // on the night (the Bibbulmun problem). Merge them in on every render.
+  if(!n.editingId&&n.weekId){const _pit=planFind(n.weekId).it;
+    if(_pit&&_pit.targetSkills&&_pit.targetSkills.length){let _added=false;
+      _pit.targetSkills.forEach(ts=>{if(!n.targetSkills.some(x=>x.id===ts.id)){
+        n.targetSkills.push({id:ts.id,name:ts.name,stage:ts.stage});_added=true;}});
+      if(_added)save('night');}}
   const chev=[1,2,3,4].map(i=>{
     const st=n.step>i?'done':(n.step===i?'on':'pending');
     return chevSVG(st,n._lockAnim===i?'just-locked':'');
@@ -1701,10 +1777,19 @@ function stepRecord(){
           style="${ca===a?'background:'+cssv(AREA_VAR[a]):''}">${a}</span>`).join('')}</div>`;
     }
     let skT='';
-    if(n.targetSkills.length){
+    {
       const done=n.skillsDone[id]||{};
-      skT=`<div class="mini-cap">OAS skills demonstrated</div><div>${n.targetSkills.map(sk=>
-        `<span class="skchip ${done[sk.id]?'on':''}" data-act="skilldone" data-id="${id}" data-skill="${sk.id}">${esc(sk.name)}</span>`).join('')}</div>`;
+      const _es=earnedSkillIds(id);
+      // skills ticked ad hoc for this scout that aren't in tonight's target list
+      const extras=Object.keys(done).filter(k=>done[k]&&!n.targetSkills.some(x=>x.id===k)&&skillName(k));
+      const chipFor=(kid,nm)=>{const cls=done[kid]?'on':(hasSkillAlready(s,kid,_es)?'got':'');
+        return `<span class="skchip ${cls}" data-act="skilldone" data-id="${id}" data-skill="${kid}">${cls==='got'?'✓ ':''}${esc(nm)}</span>`;};
+      if(n.targetSkills.length||extras.length)
+        skT=`<div class="mini-cap">OAS skills demonstrated</div><div>${
+          n.targetSkills.map(sk=>chipFor(sk.id,sk.name)).join('')+
+          extras.map(k=>chipFor(k,skillName(k))).join('')}</div>`;
+      skT+=`<button class="btn ghost sm" data-act="adhocopen" data-id="${id}" style="margin-top:6px">${S._adhocSid===id?'Done adding skills':'+ tick other skills — any stream, any stage'}</button>`;
+      if(S._adhocSid===id)skT+=adhocBrowser(id);
     }
     let nums='';
     if(n.logKm||n.logNights){
@@ -1723,9 +1808,38 @@ function stepRecord(){
   <div class="note"><span class="lbl">⚠ The integrity rule</span>
     <p>Attending is <b>not</b> a credit. Give Participate / Assist / Lead only for <b>active</b> involvement — and tick only the OAS skills each scout <b>genuinely demonstrated</b>.</p></div>
   <div class="card"><h3>${esc(n.activity||'Tonight')}</h3>
-    <p class="hint">For each scout: milestone credit, OAS skills shown${n.logKm?', km':''}${n.logNights?', nights':''}.</p>${rows}</div>
+    <p class="hint">For each scout: milestone credit, OAS skills shown${n.logKm?', km':''}${n.logNights?', nights':''}. <span style="color:var(--moss)">✓ dashed green = already earned</span> — concentrate on the ones without it.</p>${rows}</div>
   <div class="btn-row"><button class="btn ghost" data-act="back">← Back</button>
     <button class="btn primary" data-act="next" style="flex:2">Sign off →</button></div>`;
+}
+/* Per-scout skill browser on the night — tick anything, any stream, any stage.
+   Writes straight into n.skillsDone for that scout; no need to touch the plan. */
+function adhocBrowser(sid){
+  const n=S.night;const s=S.roster.find(x=>x.id===sid);
+  const st=S._adhocStream;
+  const sel=`<select data-act="adhocstream" style="width:100%;margin-top:6px">
+    <option value="">— pick a stream —</option>
+    ${STREAMS.map(x=>`<option ${st===x?'selected':''}>${x}</option>`).join('')}</select>`;
+  let body='';
+  if(st&&OAS_SKILLS[st]){
+    const es=earnedSkillIds(sid);
+    const done=n.skillsDone[sid]||{};
+    body=OAS_SKILLS[st].map((grp,gi)=>{
+      const open=S._adhocG===gi;
+      const nTick=grp[2].filter((x,i)=>done[st+'|'+gi+'|'+i]).length;
+      const nHave=grp[2].filter((x,i)=>hasSkillAlready(s,st+'|'+gi+'|'+i,es)).length;
+      const rows=open?grp[2].map((sk,i)=>{
+        const kid=st+'|'+gi+'|'+i;
+        const on=!!done[kid],got=!on&&hasSkillAlready(s,kid,es);
+        return `<div class="skrow ${on?'on':''}${got?' got':''}" data-act="skilldone" data-id="${sid}" data-skill="${kid}">
+          <div class="skbox">${on?'<svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5l3 3 6-6.5" stroke="#F6F1E2" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':(got?'✓':'')}</div>
+          <div class="sktext">${esc(sk)}</div></div>`;}).join(''):'';
+      return `<div class="stage-hd" data-act="adhocgrp" data-g="${gi}">${esc(grp[1])}
+        <span class="cnt">${nHave>=grp[2].length?'✓ has the lot':(nHave?nHave+' earned':'')+(nTick?(nHave?' · ':'')+nTick+' tonight':'')}</span>
+        <span class="ar" style="transform:rotate(${open?90:0}deg)">▸</span></div>${rows}`;
+    }).join('');
+  }
+  return `<div style="width:100%">${sel}${body}</div>`;
 }
 function stepSignoff(){
   const n=S.night;
@@ -2198,20 +2312,24 @@ function planSkillsUI(it){
   let body='';
   if(it.stream&&OAS_SKILLS[it.stream]){
     const picked=(it.targetSkills||[]).length;
+    // who already has each skill — so the plan can chase the ones people still need
+    const _sets=S.roster.map(s=>[s,earnedSkillIds(s.id)]);
     body=OAS_SKILLS[it.stream].map((grp,gi)=>{
       const open=it._openG===gi;
       const selN=grp[2].filter((x,i)=>(it.targetSkills||[]).some(s=>s.id===it.stream+'|'+gi+'|'+i)).length;
       const rows=open?grp[2].map((sk,i)=>{
         const id=it.stream+'|'+gi+'|'+i;
         const on=(it.targetSkills||[]).some(s=>s.id===id);
+        const nh=_sets.filter(([s2,es])=>hasSkillAlready(s2,id,es)).length;
         return `<div class="skrow ${on?'on':''}" data-act="planskill" data-id="${it.id}" data-sk="${id}">
           <div class="skbox">${on?'<svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5l3 3 6-6.5" stroke="#F6F1E2" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
-          <div class="sktext">${esc(sk)}</div></div>`;}).join(''):'';
+          <div class="sktext">${esc(sk)}</div>
+          <span class="skhave${nh>=_sets.length&&nh?' all':''}" title="${nh} of ${_sets.length} already have this">${nh}/${_sets.length}</span></div>`;}).join(''):'';
       return `<div class="stage-hd" data-act="plangrp" data-id="${it.id}" data-g="${gi}">
         ${esc(grp[1])}<span class="cnt">${selN?selN+' picked':''}</span>
         <span class="ar" style="transform:rotate(${open?90:0}deg)">▸</span></div>${rows}`;
     }).join('');
-    body=`<p class="hint" style="margin:4px 0 2px">${picked} skill${picked===1?'':'s'} targeted across all streams — camps can mix Camping, Bushwalking, Bushcraft and more. They flow into Tonight when this night runs.</p>`+body;
+    body=`<p class="hint" style="margin:4px 0 2px">${picked} skill${picked===1?'':'s'} targeted across all streams — camps can mix Camping, Bushwalking, Bushcraft and more. They flow into Tonight when this night runs. The little counter shows how many of the section already have each skill — chase the low numbers.</p>`+body;
   }
   return `<div style="width:100%;margin-top:6px">${sel}${body}</div>`;
 }
@@ -2345,10 +2463,18 @@ function planTermView(){
   const merged=termMerged(t,ti);
   const focus=S.planView==='week'?planFocusFor(merged):null;
   const focusBar=focus?planFocusBar(merged,focus,t.label):'';
+  // One-week mode shows the focused week PLUS any events that sit with it —
+  // year-planner camps and in-term events now come up as you flick through the weeks.
+  let blockIds=null;
+  if(focus){blockIds=new Set([focus.id]);
+    const fi=merged.indexOf(focus);
+    for(let j=fi+1;j<merged.length&&merged[j].kind!=='week';j++)blockIds.add(merged[j].id);
+    const fw=merged.find(x=>x.kind==='week');
+    if(focus===fw)for(let j=0;j<merged.indexOf(fw);j++)blockIds.add(merged[j].id);}
   let wn=0;
   const rows=merged.map(it=>{
     const cur=S._curId===it.id;
-    if(focus&&it!==focus){if(it.kind==='week')wn++;return '';}
+    if(focus&&!blockIds.has(it.id)){if(it.kind==='week')wn++;return '';}
     if(it.kind!=='week')return (it._yr?`<div class="hint" style="margin:6px 0 -4px">📌 From the year planner — edits sync both ways</div>`:'')+eventCard(it)+(it._yr?'':`<button class="addevent" data-act="addevent" data-id="${it.id}">+ insert event below</button>`);
     wn++;
     const curBtn=`<button class="cur-btn ${cur?'on':''}" data-act="setcurrent" data-id="${it.id}">${cur?'● This week':'Pin night'}</button>`;
@@ -2491,12 +2617,63 @@ function troopChart(){
     ${secChips}${head}${rows||'<div class="empty">No scouts yet.</div>'}
     <p class="hint" style="margin:8px 4px 0">OAS = Outdoor Adventure Skills · SIA = Special Interest Areas · Jny = Adventurous Journey · Crs = Leadership/PD course · Rfl = Personal Reflection</p></div>`;
 }
+/* ---- PEAK AWARDS — one plain-language screen: where each scout is up to,
+        and exactly what's left. Auto steps computed from the ledger; the four
+        manual steps tick straight from here. ---- */
+function troopPeak(){
+  const list=[...S.roster].filter(s=>['Scout','Venturer'].includes(s.section))
+    .sort((a,b)=>(b.peak-a.peak)||a.name.localeCompare(b.name));
+  // stages within two skills of done — gold for planning nights
+  const near=[];
+  list.forEach(s=>{const nx=oasNextUp(s);if(nx.length&&nx[0].left.length<=2)near.push({s,g:nx[0]});});
+  near.sort((a,b)=>a.g.left.length-b.g.left.length);
+  const nearRows=near.slice(0,10).map(({s,g})=>{
+    const lbl=g.label&&g.label.indexOf('—')>=0?g.label.split('—')[1].trim():'';
+    return `<div class="rule-li"><b>${esc(s.name.split(' ')[0])}</b> — ${esc(g.st)} Stage ${g.stage}${lbl?' '+esc(lbl):''}: <b>${g.left.length} skill${g.left.length===1?'':'s'} left</b>${g.left.length===1?'<br><span style="font-size:12px;color:var(--ink-faint)">“'+esc(g.left[0].sk)+'”</span>':''}</div>`;}).join('');
+  const cards=list.map(s=>{
+    const q=reqs(s.section);
+    const ps=peakStepState(s),doneN=ps.filter(Boolean).length;
+    const o=oasFor(s.id);const rl=msRollup(s.id);
+    const sias=s.sias||[];const areaN=new Set(sias.map(x=>x.area).filter(Boolean)).size;
+    const needs=msNeeds(s.id);
+    const nx=oasNextUp(s).slice(0,3);
+    const row=(i,label,det,manual)=>{
+      const done=ps[i];
+      return `<div class="pk-row ${done?'done':''}"${(!done&&manual)?` data-act="peakstep" data-id="${s.id}" data-i="${i}" style="cursor:pointer"`:''}>
+        <span class="pk-tick">${done?'✓':(manual?'+':'·')}</span>
+        <span class="pk-lbl">${label}</span>
+        <span class="pk-det">${done?'done':det}</span></div>`;};
+    const msDet=m=>rl.cur===m?(needs.length?'needs '+needs.join(' · '):'almost — recheck next night'):(rl.cur<m?'after Milestone '+(m-1):'');
+    return `<div class="card">
+      <h3>${esc(s.name.split(' ')[0])} ${s.peak?'<span class="peak-star">★</span>':''} <span class="mno" style="font-weight:600">· ${esc(s.section)} · ${doneN}/10</span></h3>
+      <p class="hint" style="margin:0 0 6px">${esc(q.award)} — ${10-doneN?10-doneN+' step'+(10-doneN===1?'':'s')+' to go':'summit!'} · tap a + row to mark it done</p>
+      ${row(0,'Intro to Scouting','not yet — tap when done',true)}
+      ${row(1,esc(q.intro.replace('Introduction to','Intro to')),'not yet — tap when done',true)}
+      ${row(2,'Milestone 1',msDet(1))}
+      ${row(3,'Milestone 2',msDet(2))}
+      ${row(4,'Milestone 3',msDet(3))}
+      ${row(5,'OAS — '+o.prog+'/'+q.oasProg+' progressions · cores '+o.cores+'/3',
+        nx.length?('closest: '+nx.map(g=>esc(g.st)+' S'+g.stage+' — '+g.left.length+' left').join(' · ')):'')}
+      ${row(6,'SIAs — '+sias.length+'/6 · '+areaN+'/'+q.siaAreas+' areas',
+        ((6-sias.length>0)?('needs '+(6-sias.length)+' more'):'')+((areaN<q.siaAreas)?((6-sias.length>0?' · ':'')+(q.siaAreas-areaN)+' new area'+(q.siaAreas-areaN>1?'s':'')):'')+' · min '+q.siaHrs+' hrs each')}
+      ${row(7,'Adventurous Journey',esc(q.journey),true)}
+      ${row(8,'Leadership / PD course',esc(q.course),true)}
+      ${row(9,'Personal Reflection','then the '+esc(q.award),true)}
+    </div>`;}).join('');
+  return `<div class="card"><h3>⚡ Almost there</h3>
+    <p class="hint">Next stages within two skills of done — build these into the plan and they tick over.</p>
+    ${nearRows||'<div class="empty">Nothing within two skills of a stage right now.</div>'}</div>
+    <div class="note"><span class="lbl">SIA ground rules</span>
+    <p>Six projects, minimum hours each (8 for Scouts, 12 for Venturers), across 3+ areas — agreed with the leader <b>before</b> the event. Attending a first-aid course is not an SIA.</p></div>
+    ${cards||'<div class="empty">No scouts yet.</div>'}`;
+}
 function vTroop(){
   const mode=S._troopView||'cards';
   const toggle=`<div class="tchips" style="margin-bottom:10px">
     <button class="tchip ${mode==='cards'?'on':''}" data-act="troopview" data-v="cards">Scouts</button>
     <button class="tchip ${mode==='chart'?'on':''}" data-act="troopview" data-v="chart">Section view</button>
     <button class="tchip ${mode==='oas'?'on':''}" data-act="troopview" data-v="oas">OAS grid</button>
+    <button class="tchip ${mode==='peak'?'on':''}" data-act="troopview" data-v="peak">Peak</button>
     <button class="tchip ${mode==='patrols'?'on':''}" data-act="troopview" data-v="patrols">Patrols</button></div>`;
   const sorted=[...S.roster].sort((a,b)=>(b.peak-a.peak)||a.name.localeCompare(b.name));
   const cards=mode!=='cards'?'':sorted.map(s=>{
@@ -2650,7 +2827,7 @@ function vTroop(){
       ${(()=>{const miss=Object.keys(OAS_DOC_IMPORT).filter(k=>!S.roster.some(s=>(s.memberNo||'').trim()===k||norm2(s.name)===norm2(OAS_DOC_IMPORT[k].name)));
         return miss.length?`<p class="hint" style="margin:9px 0 5px">${miss.length} scout${miss.length===1?'':'s'} from Tracey's summary ${miss.length===1?'is':'are'} not in the app: ${miss.map(k=>OAS_DOC_IMPORT[k].name).join(', ')}.</p>
         <div class="btn-row"><button class="btn ghost" data-act="oasaddmissing">Add missing scouts & venturers</button></div>`:'';})()}</div>
-    ${toggle}${mode==='chart'?troopChart():mode==='patrols'?troopPatrols():mode==='oas'?troopOAS():(cards||'<div class="card"><div class="empty">No scouts yet.</div></div>')}</div>`;
+    ${toggle}${mode==='chart'?troopChart():mode==='patrols'?troopPatrols():mode==='oas'?troopOAS():mode==='peak'?troopPeak():(cards||'<div class="card"><div class="empty">No scouts yet.</div></div>')}</div>`;
 }
 
 /* ---- COMMS ---- */
@@ -2719,6 +2896,12 @@ function vRules(){
     <div class="card"><h3>Data — sync, backup, import</h3>
       <p class="hint">One copy of your data, living in your Google Drive. It syncs itself: changes push a couple of seconds after you make them and whenever you switch away or close the app, and it pulls the newest copy every time you open or come back to it. The Google link renews itself quietly in the background — you'll only ever see a sign-in if you've logged out of Google on that device.</p>
       <div class="rule-li" id="dstatus">${driveStatusText()}</div>
+      ${!S.drive.enabled?`<p class="hint" style="margin:7px 0 0;color:var(--clay)"><b>Not connected on this device.</b> The Client ID and Google sign-in are stored per device on purpose, so you have to do this once on your phone and once on your laptop. Until you do, this device keeps its own separate copy.</p>`:''}
+      ${(()=>{const ka=(S.meta&&S.meta.keyAt)||{};
+        const lbl={roster:'Scouts',year:'Plans & terms',nights:'Night records',welcome:'Welcome pack',contacts:'Contacts'};
+        const rows=SYNC_KEYS.map(k=>`<div style="display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:2px 0">
+          <span style="color:var(--ink-soft)">${lbl[k]||k}</span><span>${ka[k]?fmtAgo(ka[k]):'never changed'}</span></div>`).join('');
+        return `<div class="mini-cap" style="margin-top:10px">Last change on this device</div>${rows}`;})()}
       ${S.drive.clientId?'':`<label class="fld" style="margin-top:8px">Google Client ID (one-time setup)</label>
       <input type="text" data-act="dclientid" value="" placeholder="Paste the Client ID here">`}
       <div class="btn-row" style="margin-top:9px">
@@ -2752,6 +2935,8 @@ function vRules(){
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-act]');if(!t)return;
   const a=t.dataset.act,n=S.night;
+  if(a==='syncsetup'){S.view='rules';window.scrollTo(0,0);render();
+    setTimeout(()=>{const el=document.getElementById('dstatus');if(el&&el.scrollIntoView)el.scrollIntoView({block:'center'});},60);return;}
   if(a==='nav'){S.view=t.dataset.v;
     // coming back to Tonight after signing off starts the next night, not the receipt
     if(S.view==='tonight'&&S.night.saved){S.night=nightFromCurrent();save('night');}
@@ -2790,6 +2975,9 @@ document.addEventListener('click',e=>{
     n.skillsDone[id]=n.skillsDone[id]||{};
     n.skillsDone[id][sk]?delete n.skillsDone[id][sk]:n.skillsDone[id][sk]=true;
     save('night');render();return;}
+  if(a==='adhocopen'){S._adhocSid=S._adhocSid===t.dataset.id?null:t.dataset.id;
+    S._adhocStream=S._adhocStream||'';S._adhocG=null;render();return;}
+  if(a==='adhocgrp'){const gi=+t.dataset.g;S._adhocG=S._adhocG===gi?null:gi;render();return;}
   if(a==='signoff'){
     if(!n.activity.trim()||!n.areas.length||!n.signedBy.trim()||!(n.plBy||'').trim())return;
     n.present=n.present.filter(id=>S.roster.some(s=>s.id===id));
@@ -3338,6 +3526,7 @@ document.addEventListener('change',e=>{
   if(a==='ttimee'){viewTerm().timeEnd=t.value;save('year');render();return;}
   if(a==='evtype'){const it=planFind(t.dataset.id).it;if(it){it.type=t.value;save('year');}render();return;}
   if(a==='planstream'){const it=planFind(t.dataset.id).it;if(it){it.stream=t.value;it._openG=null;save('year');}render();return;}
+  if(a==='adhocstream'){S._adhocStream=t.value;S._adhocG=null;render();return;}
   if(a==='ctag'){const c=S.contacts.find(x=>x.id===t.dataset.id);if(c){c.tag=t.value;save('contacts');render();}return;}
   if(a==='setms'){const s=S.roster.find(x=>x.id===t.dataset.id);
     // "Started at" = arrival milestone anchor for the opening balance.
