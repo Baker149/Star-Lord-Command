@@ -465,8 +465,7 @@ nav button .nl{font-size:9.5px;font-weight:700}
 .brchline>div{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
 .brow{display:flex;align-items:center;gap:7px;margin-top:5px;flex-wrap:nowrap}
 .brow.solo{padding-left:2px}
-.ppill.pat{color:#fff;font-weight:800;letter-spacing:.02em;text-shadow:0 1px 2px rgba(0,0,0,.25);padding:3px 9px}
-.ppill.pat .pdot{display:none}
+.ppill .pdot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
 .secb{font-family:'Fraunces',serif;font-size:13.5px;font-weight:700;color:var(--pine);text-transform:uppercase;letter-spacing:.03em}
 .brow .blbl{flex:none;width:82px;font-size:11px;font-weight:800;color:var(--ink-soft);
   text-transform:uppercase;letter-spacing:.02em;line-height:1.15}
@@ -1278,6 +1277,8 @@ function peakStepState(s){
   out[5]=o.done;out[6]=fin.length>=6&&areaN>=q.siaAreas;
   const j=s.journey||{};
   out[7]=stored[7]||!!(j.planDate&&j.doDate&&j.reviewDate);
+  const c=s.course||{};
+  out[8]=stored[8]||!!c.date;
   return out;}
 /* Members who've left stay archived, never deleted — records intact, ready to come back. */
 function aliveRoster(){return S.roster.filter(x=>!x.archived);}
@@ -3008,15 +3009,16 @@ function scoutCard(s){
   const q=reqs(s.section);
   const head=`<div class="hd" data-act="scopen" data-id="${s.id}">
       <span class="nm"><span class="nmtxt">${esc(s.name)}${s.memberNo?' <span class="mno">#'+esc(s.memberNo)+'</span>':''}${s.peak?' <span class="peak-star">★</span>':''}</span>
-        ${s.patrol?`<span class="ppill pat" style="background:${patrolColor(s.patrol)};border-color:${patrolColor(s.patrol)}">${esc(s.patrol)}${s.prole?' · '+s.prole:''}</span>`:s.prole?`<span class="ppill">${s.prole}</span>`:''}</span>
+        ${s.patrol?`<span class="ppill"><span class="pdot" style="background:${patrolColor(s.patrol)}"></span>${esc(s.patrol)}${s.prole?' · <b>'+s.prole+'</b>':''}</span>`:s.prole?`<span class="ppill"><b>${s.prole}</b></span>`:''}</span>
       <span class="sec"><b class="secb">${esc(s.section)}</b> · M${cur}</span>
       <svg width="16" height="16" viewBox="0 0 16 16" style="transform:rotate(${s._open?180:0}deg);transition:.2s"><path d="M3 6l5 5 5-5" stroke="#5D5440" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>`;
-  if(!s._open)return `<div class="scout">${head}</div>`;
+  const stripe=s.patrol?` style="border-left:5px solid ${patrolColor(s.patrol)}"`:'';
+  if(!s._open)return `<div class="scout"${stripe}>${head}</div>`;
   const contact=`<div class="btn-row" style="margin:8px 0 6px">
     ${s.g1phone?`<a class="btn ghost sm callbtn" href="tel:${esc(s.g1phone)}">📞 ${esc((s.g1name||'Guardian 1').split(' ')[0])}</a>`:''}
     ${s.g2phone?`<a class="btn ghost sm callbtn" href="tel:${esc(s.g2phone)}">📞 ${esc((s.g2name||'Guardian 2').split(' ')[0])}</a>`:''}
     <button class="btn sm" data-act="scedit" data-id="${s.id}" style="margin-left:auto;background:var(--pine);color:#fff;border-color:var(--pine)">${s._edit?'✕ Close edit':'✎ Edit'}</button></div>`;
-  if(s._edit)return `<div class="scout open">${head}<div class="body">${contact}${scoutEdit(s,cur)}</div></div>`;
+  if(s._edit)return `<div class="scout open"${stripe}>${head}<div class="body">${contact}${scoutEdit(s,cur)}</div></div>`;
   const ps=peakStepState(s),doneN=ps.filter(Boolean).length;
   /* 1 — the climb */
   const steps=peakStepsFor(s.section);
@@ -3094,18 +3096,29 @@ function scoutCard(s){
     <p class="hint" style="margin:0 0 5px">${esc(q.journey)}. Three dates lock it in: plan it, do it, review it.</p>
     <div class="datepair">${jf('planDate','Plan')}${jf('doDate','Do')}${jf('reviewDate','Review')}</div>
     <textarea data-act="jnyf" data-id="${s.id}" data-f="desc" placeholder="Describe the adventurous journey" style="min-height:52px">${esc(j.desc||'')}</textarea>`;
+  /* 5b — leadership / personal development course */
+  const c=s.course||{};
+  const crs=`<h4 class="sec-h">Leadership / PD course${ps[8]?' <span style="margin-left:0">✦ done</span>':''}</h4>
+    <p class="hint" style="margin:0 0 5px">${esc(q.course)}. The date is what marks it done.</p>
+    <input type="text" data-act="crsf" data-id="${s.id}" data-f="name" value="${esc(c.name||'')}" placeholder="Which course?">
+    <div class="datepair" style="margin-top:6px">
+      <span class="dp"><label>Where</label><input type="text" data-act="crsf" data-id="${s.id}" data-f="place" value="${esc(c.place||'')}" placeholder="Location"></span>
+      <span class="dp"><label>Completed${c.date?` <button class="jclr" data-act="crsclear" data-id="${s.id}">✕ clear</button>`:''}</label>
+        <input type="date" data-act="crsd" data-id="${s.id}" value="${c.date||''}"></span>
+    </div>`;
   /* 6 — the tally awards, small */
   const km=kmTotal(s.id),nt=nightsTotal(s.id);
   const kmN=nextBadge(km,KM_BADGES),ntN=nextBadge(nt,NIGHT_BADGES);
   const aw=`<div class="aw2">
     <span class="awchip">🥾 <b>${km}</b> km<span>${kmN?'next badge '+kmN:'all earned'}</span></span>
     <span class="awchip">🏕️ <b>${nt}</b> nights<span>${ntN?'next badge '+ntN:'all earned'}</span></span></div>`;
-  return `<div class="scout open">${head}<div class="body">${contact}
+  return `<div class="scout open"${stripe}>${head}<div class="body">${contact}
     <div class="pksec">${climb}</div>
     <div class="pksec">${ms}</div>
     <div class="pksec">${oas}</div>
     <div class="pksec">${sia}</div>
-    <div class="pksec">${jny}${aw}</div></div></div>`;
+    <div class="pksec">${jny}</div>
+    <div class="pksec">${crs}${aw}</div></div></div>`;
 }
 /* Everything admin about a scout, behind the Edit button. */
 function scoutEdit(s,cur){
@@ -3614,6 +3627,8 @@ document.addEventListener('click',e=>{
   if(a==='scedit'){const s=S.roster.find(x=>x.id===t.dataset.id);s._edit=!s._edit;render();return;}
   if(a==='jnyclear'){const s=S.roster.find(x=>x.id===t.dataset.id);
     if(s&&s.journey){s.journey[t.dataset.f]='';save('roster');render();}return;}
+  if(a==='crsclear'){const s=S.roster.find(x=>x.id===t.dataset.id);
+    if(s&&s.course){s.course.date='';save('roster');render();}return;}
   if(a==='siaplan'){const id=t.dataset.id,s=S.roster.find(x=>x.id===id);
     const ar=document.getElementById('siaArea-'+id).value;
     const de=(document.getElementById('siaDesc-'+id).value||'').trim();
@@ -4007,6 +4022,7 @@ document.addEventListener('input',e=>{
   if(a==='scpatrol'){const s=S.roster.find(x=>x.id===t.dataset.id);if(s){s.patrol=t.value;save('roster');}}
   if(a==='scdate'){const s=S.roster.find(x=>x.id===t.dataset.id);if(s){s[t.dataset.f]=t.value;save('roster');}}
   if(a==='jnyf'){const s=S.roster.find(x=>x.id===t.dataset.id);if(s){s.journey=s.journey||{};s.journey[t.dataset.f]=t.value;save('roster');}}
+  if(a==='crsf'){const s=S.roster.find(x=>x.id===t.dataset.id);if(s){s.course=s.course||{};s.course[t.dataset.f]=t.value;save('roster');}}
   if(['g1n','g1p','g1e','g2n','g2p','g2e'].includes(a)){const s=S.roster.find(x=>x.id===t.dataset.id);if(s){
     s[{g1n:'g1name',g1p:'g1phone',g1e:'g1email',g2n:'g2name',g2p:'g2phone',g2e:'g2email'}[a]]=t.value;save('roster');}}
   if(a==='dclientid'){S.drive.clientId=t.value.trim();saveDrive();renderDriveStatus();}
@@ -4056,6 +4072,8 @@ document.addEventListener('change',e=>{
   if(a==='setsec'){const s=S.roster.find(x=>x.id===t.dataset.id);s.section=t.value;save('roster');render();return;}
   if(a==='jnyd'){const s=S.roster.find(x=>x.id===t.dataset.id);
     s.journey=s.journey||{};s.journey[t.dataset.f]=t.value;save('roster');render();return;}
+  if(a==='crsd'){const s=S.roster.find(x=>x.id===t.dataset.id);
+    s.course=s.course||{};s.course.date=t.value;save('roster');render();return;}
   if(a==='jnyclear'){const s=S.roster.find(x=>x.id===t.dataset.id);
     if(s&&s.journey){s.journey[t.dataset.f]='';save('roster');render();}return;}
 });
