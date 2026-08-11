@@ -1249,6 +1249,19 @@ function peakStepState(s){
   return out;}
 /* Members who've left stay archived, never deleted — records intact, ready to come back. */
 function aliveRoster(){return S.roster.filter(x=>!x.archived);}
+/* When did this scout last get ANYTHING — a credit or a skill tick? */
+function lastTickISO(id){let last='';
+  S.nights.forEach(n=>{
+    const c=n.credits&&n.credits[id];const ct=c&&(typeof c==='string'?c:c.t);
+    const sk=n.skillsDone&&n.skillsDone[id]&&Object.keys(n.skillsDone[id]).length>0;
+    if((ct==='P'||ct==='A'||ct==='L'||sk)&&n.date&&n.date>last)last=n.date;});
+  return last;}
+function waitingList(){
+  const today=todayISO();
+  return aliveRoster().map(s=>{
+    const l=lastTickISO(s.id);
+    const wks=l?Math.floor((new Date(today+'T00:00')-new Date(l+'T00:00'))/6048e5):null;
+    return {s,wks};}).sort((a,b)=>((b.wks==null?999:b.wks)-(a.wks==null?999:a.wks)));}
 function rosterDefaults(){
   S.roster.forEach(s=>{if(!s.sias)s.sias=[];if(s.priorKm==null)s.priorKm=0;if(s.priorNights==null)s.priorNights=0;if(s.memberNo==null)s.memberNo="";
     if(!s.peakSteps)s.peakSteps=TEN_F.slice();
@@ -1832,8 +1845,11 @@ function stepRecord(){
   const n=S.night;
   if(!n.present.length)return `<div class="card"><div class="empty">No-one marked present.</div></div>
     <div class="btn-row"><button class="btn ghost full" data-act="back">← Back to roll</button></div>`;
+  const _wl={};waitingList().forEach(x=>{_wl[x.s.id]=x.wks;});
   const rows=n.present.map(id=>{
     const s=S.roster.find(x=>x.id===id);if(!s)return'';
+    const _w=_wl[id];
+    const _wtag=(_w==null||_w>=3)?`<span class="mno" style="color:var(--clay);font-weight:700" title="time since their last credit or skill tick">${_w==null?'nothing yet':_w+' wks'}</span>`:'';
     const cr=n.credits[id];const ct=cr?(typeof cr==='string'?cr:cr.t):'-';
     const ca=(cr&&typeof cr==='object'&&cr.a)||'';
     const seg=[['-','Attended'],['P','Participate'],['A','Assist'],['L','Lead']]
@@ -1880,7 +1896,7 @@ function stepRecord(){
       nums+='</div>';
     }
     return `<div class="rec-row">
-      <div class="nm">${esc(s.name)} ${s.peak?'<span class="peak-star">★</span>':''}</div>
+      <div class="nm">${esc(s.name)} ${s.peak?'<span class="peak-star">★</span>':''} ${_wtag}</div>
       <div class="seg">${seg}</div>${areaPick}${skT}${nums}</div>`;
   }).join('');
   return `<div class="step-tag"><span class="n">Step 3 — Record the night</span></div>
@@ -2211,6 +2227,9 @@ function nightPlanUI(it){
         ${F('how','A brief explanation of what you will be doing on the night',true,150)}`:''}
       ${cur===2?`
         <div class="mini-cap">Step 2 — What skills does it knock off?</div>
+        ${(()=>{const w=waitingList().filter(x=>x.wks==null||x.wks>=2).slice(0,3);
+          if(!w.length)return'';
+          return `<p class="hint" style="margin:0 0 5px;color:var(--clay);font-weight:600">Waiting longest: ${w.map(x=>esc(x.s.name.split(' ')[0])+(x.wks==null?' — nothing yet':' · '+x.wks+' wks')).join('  ·  ')}</p>`;})()}
         <p class="hint" style="margin:0 0 4px">Now you know what you're doing, pick the OAS stream and tick what it covers. These become the tick-boxes next to each scout's name on the night.</p>
         ${planSkillsUI(it)}
         ${(it.targetSkills&&it.targetSkills.length)?`<div class="mini-cap" style="margin-top:8px">How will we cover each one?</div>`+it.targetSkills.map(ts=>`
@@ -2700,23 +2719,21 @@ function oasBranchMap(s,st,es){
   return {map:out,order};}
 function oasBranchDetail(s){
   const o=oasFor(s.id);const es=earnedSkillIds(s.id);
-  const lines=STREAMS.filter(st=>{const v=o.streams[st]||{};return v.cur>0||v.from>0;}).map(st=>{
+  const active=STREAMS.filter(st=>{const v=o.streams[st]||{};
+    if(v.cur>0||v.from>0)return true;
+    return S.nights.some(n=>{const sk=(n.skillsDone||{})[s.id];
+      return sk&&Object.keys(sk).some(k=>k.startsWith(st+'|'));});});
+  const lines=active.map(st=>{
     const v=o.streams[st];
-    const groups=OAS_SKILLS[st].map((g,gi)=>({g,gi}))
-      .filter(x=>x.g[0]>v.from&&x.g[0]<=v.cur+1);
-    if(!groups.length)return '';
-    const bm=oasBranchMap(s,st,es);
-    let chips;
-    if(bm.order.length){
-      chips=bm.order.map(k=>{const b=bm.map[k];
-        return `<span class="brch ${b.cur>=v.cur&&b.cur>0?'don':''}"><b>${esc(b.name)}</b> ${b.cur||'—'}${b.next?' · S'+b.next.stage+': '+b.next.left+' left':''}</span>`;}).join('');
-    }else{
-      chips=groups.map(({g,gi})=>{
-        const left=g[2].filter((_,i)=>!hasSkillAlready(s,st+'|'+gi+'|'+i,es)).length;
-        return `<span class="brch ${left===0?'don':''}">S${g[0]} ${left===0?'✓':'· '+left+' left'}</span>`;}).join('');
-    }
-    return `<div class="brchline"><b>${st}</b> <span class="hint" style="margin:0">from ${v.from} · now ${v.cur}</span><div>${chips}</div></div>`;
-  }).filter(Boolean).join('');
+    const circ=[1,2,3,4,5,6,7,8,9].map(n=>n<=v.cur?stgChip(n,false):`<span class="stg z">${n}</span>`).join('');
+    const open=OAS_SKILLS[st].map((g,gi)=>({g,gi}))
+      .filter(x=>x.g[0]>v.from&&x.g[0]<=v.cur+1)
+      .map(x=>({stage:x.g[0],name:discName(x.g[1]),left:x.g[2].filter((_,i2)=>!hasSkillAlready(s,st+'|'+x.gi+'|'+i2,es)).length}))
+      .filter(x=>x.left>0).slice(0,5);
+    const openTxt=open.length?`<div class="hint" style="margin:4px 0 0">Next: ${open.map(x=>'S'+x.stage+(x.name?' '+esc(x.name):'')+' — '+x.left+' left').join(' · ')}</div>`:'';
+    return `<div class="brchline"><b>${st}</b> <span class="hint" style="margin:0">from ${v.from}</span>
+      <div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap">${circ}</div>${openTxt}</div>`;
+  }).join('');
   return lines||'<p class="hint" style="margin:4px 0">Nothing recorded in any stream yet.</p>';
 }
 /* Upcoming weeks & events a night-planner can target */
@@ -2736,20 +2753,27 @@ function oasStreamPlanner(st){
     <select data-act="oastargetweek">${items.map(x=>`<option value="${x.it.id}" ${x.it.id===S._oasTargetId?'selected':''}>${esc(x.lbl)}</option>`).join('')}</select>`
     :'<p class="hint" style="margin-top:8px">No upcoming weeks with dates yet — set the term start date first.</p>';
   // each scout's next stage in this stream + the skills they're missing there
-  const need={};const scouts=[];
+  const scouts=[];
   aliveRoster().forEach(s=>{
     const o=oasFor(s.id);const v=o.streams[st]||{from:0,cur:0};
     const next=v.cur+1;if(next>9)return;
     const es=earnedSkillIds(s.id);
     const groups=OAS_SKILLS[st].map((g,gi)=>({g,gi})).filter(x=>x.g[0]===next);
     if(!groups.length)return;
-    let best=null,miss=[];
+    let best=null;const items=[];
     groups.forEach(({g,gi})=>{
-      const left=g[2].map((sk,i)=>({id:st+'|'+gi+'|'+i,sk,gi,stage:g[0]}))
+      const left=g[2].map((sk,i)=>({id:st+'|'+gi+'|'+i,sk,stage:g[0]}))
         .filter(x=>!hasSkillAlready(s,x.id,es));
-      left.forEach(x=>{(need[x.id]=need[x.id]||{sk:x.sk,stage:x.stage,gi:x.gi,who:[]}).who.push(s.name.split(' ')[0]);});
+      items.push(...left);
       if(!best||left.length<best.left)best={left:left.length,label:g[1]};});
-    scouts.push({s,next,left:best?best.left:0});});
+    scouts.push({s,next,left:best?best.left:0,items});});
+  // two rankings: widest coverage, or lift whoever's lowest
+  const rank=S._oasRank||'most';
+  const minNext=scouts.length?Math.min(...scouts.map(x=>x.next)):0;
+  const cohort=rank==='bottom'?scouts.filter(x=>x.next===minNext):scouts;
+  const need={};
+  cohort.forEach(x=>x.items.forEach(it=>{
+    (need[it.id]=need[it.id]||{sk:it.sk,stage:it.stage,who:[]}).who.push(x.s.name.split(' ')[0]);}));
   // scouts grouped by next stage
   const byStage={};scouts.forEach(x=>{(byStage[x.next]=byStage[x.next]||[]).push(x);});
   const stageLines=Object.keys(byStage).sort((a,b)=>a-b).map(stg=>{
@@ -2768,9 +2792,12 @@ function oasStreamPlanner(st){
   return `<div class="card">
     <div class="btn-row" style="margin-bottom:8px"><button class="btn ghost sm" data-act="oasstreamback">← Whole grid</button></div>
     <h3>${st} — night planner</h3>
-    <p class="hint">Where everyone's headed next in ${st}, and the skills that unlock the most scouts at once.</p>
+    <p class="hint">Where everyone's headed next in ${st}. Two lists: the biggest overlap for the night's activity, and the catch-up corner that lifts whoever's lowest — often just a conversation at scout age.</p>
     ${stageLines||'<div class="empty">No one has a next stage here.</div>'}
-    <div class="mini-cap" style="margin-top:10px">Skills that unlock the most scouts</div>
+    <div class="tchips" style="margin:10px 0 6px">
+      <button class="tchip ${rank==='most'?'on':''}" data-act="oasrank" data-v="most">Most scouts</button>
+      <button class="tchip ${rank==='bottom'?'on':''}" data-act="oasrank" data-v="bottom">Back of the pack</button></div>
+    ${rank==='bottom'?`<p class="hint" style="margin:0 0 5px">The catch-up corner: Stage ${minNext} crew — ${cohort.map(x=>esc(x.s.name.split(' ')[0])).join(', ')||'no one'}. Ten minutes and a chat clears most of these.</p>`:''}
     ${rows||'<div class="empty">Nothing missing — nice.</div>'}
     ${tsel}
     <p class="hint" style="margin:6px 0 0">Tick a skill and it lands in that night's plan as a target skill — it'll show up on the night with the earned-skill highlighting.</p>
@@ -2787,7 +2814,7 @@ function troopOAS(){
       if(v.cur>0){const bm=oasBranchMap(s,st,es);
         const curs=bm.order.map(k=>bm.map[k].cur).filter(c=>c>0);
         if(curs.length>1&&Math.max(...curs)!==Math.min(...curs))split='<span style="font-size:9px;color:var(--ink-faint);vertical-align:top">±</span>';}
-      return `<td style="text-align:center;padding:3px 2px">${stgChip(v.cur,v.cur>v.from)}${split}</td>`;}).join('');
+      return `<td style="text-align:center;padding:3px 2px">${stgChip(v.cur,false)}${split}</td>`;}).join('');
     const sel=S._oasSel===s.id;
     return `<tr data-act="oasgridsel" data-id="${s.id}" style="cursor:pointer${sel?';background:rgba(242,168,29,.10)':''}"><td style="white-space:nowrap;padding:3px 4px">${sel?'▾':'▸'} ${esc(s.name.split(' ')[0])} <span class="mno">${esc(s.section[0])}</span></td>${cells}</tr>`
       +(sel?`<tr><td colspan="${STREAMS.length+1}" style="padding:6px 6px 10px">${oasBranchDetail(s)}</td></tr>`:'');}).join('');
@@ -2795,7 +2822,7 @@ function troopOAS(){
   const key=STREAMS.map(st=>`<b>${abbr[st]}</b> ${st}`).join(' · ');
   return `<div class="card" style="overflow-x:auto"><h3>OAS — current stage per stream</h3>
     <p class="hint" style="margin:0 0 4px">${scale} &nbsp;cold → hot: stage 1 just starting, stage 9 peak of the scheme.</p>
-    <p class="hint" style="margin:0 0 4px"><span class="stg z">·</span> not started yet · <span class="stg mv" style="background:${stgColor(3)}">3</span> amber ring = moved up since arriving · ± = branches at different stages. <b>Tap a scout</b> for their branches, <b>tap a column heading</b> to plan a night around that stream.</p>
+    <p class="hint" style="margin:0 0 4px"><span class="stg z">·</span> not started yet · ± = branches at different stages. <b>Tap a scout</b> for their streams, <b>tap a column heading</b> to plan a night around that stream.</p>
     <table style="width:100%;border-collapse:collapse;font-size:12px" class="oasgrid"><tr><th style="text-align:left">Scout</th>${head}</tr>${rows}</table>
     <p class="hint" style="margin:8px 0 0">${key}</p></div>`;
 }
@@ -3027,6 +3054,48 @@ function vTroop(){
 /* ---- COMMS ---- */
 function normPhone(p){let d=(p||'').replace(/[^0-9]/g,'');
   if(d.startsWith('0'))d='61'+d.slice(1);return d;}
+/* Full add-a-scout form: everything lands on their Youth card populated.
+   New to Scouting = the basics. Transferring in = plus their history. */
+function addScoutCard(){
+  const F=(id,ph,type)=>`<input type="${type||'text'}" id="as_${id}" placeholder="${ph}">`;
+  const xf=!!S._addXfer;
+  const body=!S._addOpen?`<button class="btn primary full" data-act="addopen">+ Add a scout</button>`
+  :`<div class="tchips" style="margin:2px 0 9px">
+      <button class="tchip ${xf?'':'on'}" data-act="addxfer" data-v="">New to Scouting</button>
+      <button class="tchip ${xf?'on':''}" data-act="addxfer" data-v="1">Transferring in — has history</button></div>
+    <div class="mini-cap">Who are they</div>
+    <div class="namerow">${F('name','Full name *')}${F('mem','Member #')}</div>
+    <div class="namerow"><select id="as_sec">${['Joey','Cub','Scout','Venturer'].map(x=>`<option ${x==='Scout'?'selected':''}>${x}</option>`).join('')}</select>${F('patrol','Patrol — e.g. Red')}</div>
+    <div class="datepair">
+      <span class="dp"><label>Date of birth</label><input type="date" id="as_dob"></span>
+      <span class="dp"><label>Started in section</label><input type="date" id="as_joined"></span>
+    </div>
+    <div class="mini-cap">Guardian 1</div>
+    <div class="namerow">${F('g1n','Name')}${F('g1p','Mobile','tel')}</div>
+    <div class="namerow">${F('g1e','Email','email')}</div>
+    <div class="mini-cap">Guardian 2</div>
+    <div class="namerow">${F('g2n','Name')}${F('g2p','Mobile','tel')}</div>
+    <div class="namerow">${F('g2e','Email','email')}</div>
+    ${xf?`
+    <div class="mini-cap">Their history</div>
+    <div class="namerow" style="align-items:center">
+      <label class="fld" style="margin:0;flex:1">Milestone they were up to</label>
+      <select id="as_ms" style="width:auto;flex:none">${[1,2,3].map(m=>`<option value="${m}">M${m}</option>`).join('')}</select></div>
+    <div class="namerow">
+      <span class="numfield"><label>prior km</label><input type="number" min="0" id="as_km" value="0"></span>
+      <span class="numfield"><label>prior nights</label><input type="number" min="0" id="as_nights" value="0"></span>
+    </div>
+    <p class="hint" style="margin:4px 0 0">After adding: open their card → ✎ Edit → Opening balance to set OAS starting stages and any part-done milestone credits.</p>`:''}
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn ghost" data-act="addopen">Cancel</button>
+      <button class="btn primary" data-act="addscoutfull" style="flex:2">Add scout</button></div>`;
+  return `<div class="card"><h3>Add a scout</h3>
+    <p class="hint">They land on the Youth tab fully set up — guardians, dates, patrol, the lot.</p>
+    ${body}
+    ${(()=>{const miss=Object.keys(OAS_DOC_IMPORT).filter(k=>!S.roster.some(s=>(s.memberNo||'').trim()===k||norm2(s.name)===norm2(OAS_DOC_IMPORT[k].name)));
+      return miss.length?`<p class="hint" style="margin:9px 0 5px">${miss.length} scout${miss.length===1?'':'s'} from Tracey's summary ${miss.length===1?'is':'are'} not in the app: ${miss.map(k=>OAS_DOC_IMPORT[k].name).join(', ')}.</p>
+      <div class="btn-row"><button class="btn ghost" data-act="oasaddmissing">Add missing scouts & venturers</button></div>`:'';})()}</div>`;
+}
 function vWelcome(){
   const faqs=S.welcome.faqs.map(f=>`
     <div class="wk" style="flex-direction:column;align-items:stretch">
@@ -3050,12 +3119,7 @@ function vWelcome(){
   return `<div class="view">
     <div class="view-title">New to Scouting</div>
     <div class="view-sub">Every answer a new family needs — so you're never caught out at the door.</div>
-    <div class="card"><h3>Add a scout</h3>
-      <div class="addrow"><input type="text" id="newScout" placeholder="Scout's name">
-        <button class="btn primary" data-act="addscout" style="flex:none">Add</button></div>
-      ${(()=>{const miss=Object.keys(OAS_DOC_IMPORT).filter(k=>!S.roster.some(s=>(s.memberNo||'').trim()===k||norm2(s.name)===norm2(OAS_DOC_IMPORT[k].name)));
-        return miss.length?`<p class="hint" style="margin:9px 0 5px">${miss.length} scout${miss.length===1?'':'s'} from Tracey's summary ${miss.length===1?'is':'are'} not in the app: ${miss.map(k=>OAS_DOC_IMPORT[k].name).join(', ')}.</p>
-        <div class="btn-row"><button class="btn ghost" data-act="oasaddmissing">Add missing scouts & venturers</button></div>`:'';})()}</div>
+    ${addScoutCard()}
     <div class="card"><h3>Answers for new parents</h3>
       <p class="hint">The questions you get asked at pick-up. Fill the answers in as you gather them — then it's all in your pocket.</p>
       ${faqs}<button class="addevent" data-act="faqadd">+ add a question</button></div>
@@ -3325,9 +3389,22 @@ document.addEventListener('click',e=>{
     if(r==='-')delete it.roles[sid];else it.roles[sid]=r;
     save('year');render();return;}
   /* troop */
-  if(a==='addscout'){const inp=document.getElementById('newScout'),v=(inp?inp.value:'').trim();
-    if(!v)return;S.roster.push({id:uid(),name:v,section:'Scout',peak:false,milestone:1,memberNo:"",sias:[],priorKm:0,priorNights:0,peakSteps:TEN_F.slice()});
-    save('roster');S._focus='newScout';render();return;}
+  if(a==='addopen'){S._addOpen=!S._addOpen;render();return;}
+  if(a==='addxfer'){S._addXfer=!!t.dataset.v;render();return;}
+  if(a==='addscoutfull'){
+    const g=k=>{const el=document.getElementById('as_'+k);return el?el.value.trim():'';};
+    const name=g('name');
+    if(!name){uiAlert('A name is the one thing it needs.');return;}
+    const s={id:uid(),name,section:g('sec')||'Scout',memberNo:g('mem'),
+      dob:g('dob'),joined:g('joined'),patrol:g('patrol'),
+      g1name:g('g1n'),g1phone:g('g1p'),g1email:g('g1e'),
+      g2name:g('g2n'),g2phone:g('g2p'),g2email:g('g2e'),
+      peak:false,milestone:1,sias:[],priorKm:0,priorNights:0,peakSteps:TEN_F.slice()};
+    if(S._addXfer){s.milestone=+g('ms')||1;s.priorKm=+g('km')||0;s.priorNights=+g('nights')||0;}
+    S.roster.push(s);rosterDefaults();save('roster');
+    S._addOpen=false;
+    uiAlert(name+" is in — fully set up on the Youth tab."+(S._addXfer?" One more step for a transfer: their card → ✎ Edit → Opening balance, for OAS starting stages and part-done milestones.":""));
+    render();return;}
   if(a==='scopen'){const s=S.roster.find(x=>x.id===t.dataset.id);
     const was=s._open;
     S.roster.forEach(x=>{x._open=false;x._edit=false;});
@@ -3337,6 +3414,7 @@ document.addEventListener('click',e=>{
   if(a==='oasgridsel'){S._oasSel=S._oasSel===t.dataset.id?null:t.dataset.id;render();return;}
   if(a==='oasstream'){S._oasStream=t.dataset.st;S._oasSel=null;render();return;}
   if(a==='oasstreamback'){S._oasStream=null;render();return;}
+  if(a==='oasrank'){S._oasRank=t.dataset.v;render();return;}
   if(a==='oastargetskill'){const it=planFind(S._oasTargetId).it;if(!it)return;
     const id=t.dataset.sk;it.targetSkills=it.targetSkills||[];
     const ix=it.targetSkills.findIndex(x=>x.id===id);
