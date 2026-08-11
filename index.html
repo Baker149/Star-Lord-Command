@@ -441,7 +441,7 @@ nav button .nl{font-size:9.5px;font-weight:700}
 .pksec{margin:13px -12px 0;padding:13px 12px 14px;border-top:7px solid var(--paper);background:var(--card)}
 .pksec:nth-of-type(even){background:var(--card-2)}
 .circ-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin:2px 0 8px}
-.circ-row .circ-lbl{margin-left:auto;font-size:11.5px;font-weight:800;color:var(--ink-soft)}
+.circ-row .circ-lbl{margin-left:auto;font-size:14px;font-weight:800;color:var(--ink)}
 .siaareas{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 8px}
 .sarea{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--ink-faint);
   background:var(--card-2);border:1.5px solid var(--line);border-radius:9px;padding:5px 8px}
@@ -453,6 +453,11 @@ nav button .nl{font-size:9.5px;font-weight:700}
 .brchline>div{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
 .brch{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--card);color:var(--ink-soft)}
 .brch.don{border-color:var(--moss);color:var(--moss)}
+.wk.past{opacity:.68;position:relative}
+.pastchip{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--moss);background:rgba(95,163,54,.12);border:1px solid var(--moss);border-radius:8px;padding:2px 7px}
+.wkpast{position:absolute;top:8px;right:10px;z-index:2}
+.focusbar.past .fb-lbl{color:var(--ink-faint)}
 .modebtn{margin-left:auto;flex:none;background:var(--amber);color:#1B1B47;border:none;border-radius:20px;
   padding:8px 13px;font-size:12px;font-weight:800;cursor:pointer;position:relative;z-index:1;
   box-shadow:0 2px 8px rgba(0,0,0,.25);display:none}
@@ -505,7 +510,7 @@ const AREAS=['Community','Creative','Outdoors','Personal Growth'];
 const SPICES=['Social','Physical','Intellectual','Character','Emotional','Spiritual'];
 function dutyPatrol(){
   const f=curItemR();if(!f.it||f.it.kind!=='week'||f.t<0)return'';
-  const pats=[...new Set(S.roster.map(s=>(s.patrol||'').trim()).filter(Boolean))].sort();
+  const pats=[...new Set(aliveRoster().map(s=>(s.patrol||'').trim()).filter(Boolean))].sort();
   if(!pats.length)return'';
   let wn=0;for(const x of S.year.terms[f.t].items){if(x.kind==='week')wn++;if(x.id===f.it.id)break;}
   return pats[(wn-1)%pats.length];}
@@ -568,11 +573,19 @@ function planViewToggle(){
 function planFocusBar(merged,focus,label){
   const weeks=merged.filter(x=>x.kind==='week');
   const wIx=weeks.indexOf(focus);
-  const prev=wIx>0?weeks[wIx-1]:null,next=(wIx>=0&&wIx<weeks.length-1)?weeks[wIx+1]:null;
-  const lbl=wIx>=0?('Week '+(wIx+1)+' of '+weeks.length):(focus.activity||focus.type||'Event');
-  return `<div class="focusbar">
+  let prev,next;
+  if(wIx>=0){prev=wIx>0?weeks[wIx-1]:null;next=wIx<weeks.length-1?weeks[wIx+1]:null;}
+  else{const mi=merged.indexOf(focus);
+    prev=[...merged.slice(0,mi)].reverse().find(x=>x.kind==='week')||null;
+    next=merged.slice(mi+1).find(x=>x.kind==='week')||null;}
+  const t=viewTerm();
+  const dISO=wIx>=0?weekDateISO(t,wIx+1):(focus.startDate||focus.date||'');
+  const past=!!(dISO&&dISO<todayISO());
+  const lbl=(wIx>=0?('Week '+(wIx+1)+' of '+weeks.length):(focus.activity||focus.type||'Event'))
+    +(dISO?' · '+fmtD(dISO):'');
+  return `<div class="focusbar${past?' past':''}">
     <button class="btn ghost sm" data-act="planjump" data-id="${prev?prev.id:''}" style="flex:none;${prev?'':'opacity:.3'}">‹</button>
-    <span class="fb-lbl">${esc(lbl)}</span>
+    <span class="fb-lbl">${esc(lbl)}${past?' <span class="pastchip">✓ been &amp; gone</span>':''}</span>
     <button class="btn ghost sm" data-act="planjump" data-id="${next?next.id:''}" style="flex:none;${next?'':'opacity:.3'}">›</button></div>`;}
 function itemDateISO(){
   const f=curItemR();if(!f.it)return'';
@@ -588,11 +601,11 @@ const DUTY_RE=/flag|opening parade|\bgame\b|clos(e|ing)|pack.?up/i;
    the patrol rotation and the calendar, so they stay right as the term moves. */
 function pendingBadges(){
   const out=[];
-  S.roster.forEach(s=>{const given=s.badges||{};
+  aliveRoster().forEach(s=>{const given=s.badges||{};
     badgesFor(s).forEach(b=>{if(!given[b.key])out.push(s.name.split(' ')[0]+' — '+b.label);});});
   return out;}
 function needsIntro(){
-  return S.roster.filter(s=>!(s.peakSteps||[])[1]).map(s=>s.name.split(' ')[0]);}
+  return aliveRoster().filter(s=>!(s.peakSteps||[])[1]).map(s=>s.name.split(' ')[0]);}
 function firstLine(txt,max){
   const t=(txt||'').trim();if(!t)return'';
   const s=t.split(/(?<=[.!?])\s+/)[0]||t;
@@ -604,7 +617,7 @@ function nextWeekItem(){
   return null;}
 function nextDutyPatrol(){
   const f=curItemR();
-  const pats=[...new Set(S.roster.map(s=>(s.patrol||'').trim()).filter(Boolean))].sort();
+  const pats=[...new Set(aliveRoster().map(s=>(s.patrol||'').trim()).filter(Boolean))].sort();
   if(!pats.length||f.t<0||!f.it)return'';
   let wn=0;for(const x of S.year.terms[f.t].items){if(x.kind==='week')wn++;if(x.id===f.it.id)break;}
   return pats[wn%pats.length];}
@@ -1234,6 +1247,8 @@ function peakStepState(s){
   const j=s.journey||{};
   out[7]=stored[7]||!!(j.planDate&&j.doDate&&j.reviewDate);
   return out;}
+/* Members who've left stay archived, never deleted — records intact, ready to come back. */
+function aliveRoster(){return S.roster.filter(x=>!x.archived);}
 function rosterDefaults(){
   S.roster.forEach(s=>{if(!s.sias)s.sias=[];if(s.priorKm==null)s.priorKm=0;if(s.priorNights==null)s.priorNights=0;if(s.memberNo==null)s.memberNo="";
     if(!s.peakSteps)s.peakSteps=TEN_F.slice();
@@ -1799,8 +1814,9 @@ function stepSetup(){
 }
 function stepRoll(){
   const n=S.night;
-  if(!S.roster.length)return `<div class="card"><div class="empty">Add your youth members first (Youth tab).</div></div>`;
-  const rows=S.roster.map(s=>{
+  const live=aliveRoster();
+  if(!live.length)return `<div class="card"><div class="empty">Add your youth members first (New tab).</div></div>`;
+  const rows=live.map(s=>{
     const on=n.present.includes(s.id);
     return `<div class="roll-row ${on?'present':''}" data-act="roll" data-id="${s.id}">
       <div class="tick">${on?'<svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7l3.5 3.5L12 3" stroke="#F6F1E2" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
@@ -1808,7 +1824,7 @@ function stepRoll(){
       <div class="sec">${esc(s.section)}</div></div>`;}).join('');
   return `<div class="step-tag"><span class="n">Step 2 — Roll call</span></div>
   <div class="card"><h3>Who's here?</h3>
-    <p class="hint">${n.present.length} of ${S.roster.length} present.</p>${rows}</div>
+    <p class="hint">${n.present.length} of ${aliveRoster().length} present.</p>${rows}</div>
   <div class="btn-row"><button class="btn ghost" data-act="back">← Back</button>
     <button class="btn primary" data-act="next" style="flex:2">Record the night →</button></div>`;
 }
@@ -2344,7 +2360,7 @@ function vPlan(){
     ${(()=>{let sub=0;S.year.terms.forEach(tm=>tm.items.forEach(it=>{if(it.plan&&it.plan.status==='submitted')sub++;}));
       (S.year.events||[]).forEach(it=>{if(it.plan&&it.plan.status==='submitted')sub++;});
       return `<div class="btn-row" style="margin:4px 0 8px">
-        <button class="btn ghost sm" data-act="scoutmode">🖖 Back to scout mode</button>
+
         ${sub?`<span class="chip on" style="background:var(--amber);align-self:center">${sub} plan${sub>1?'s':''} ready to check</span>`:''}</div>`;})()}
     <div class="tchips">${chips}</div>
     ${body}</div>`;
@@ -2376,7 +2392,7 @@ function planSkillsUI(it){
   if(it.stream&&OAS_SKILLS[it.stream]){
     const picked=(it.targetSkills||[]).length;
     // who already has each skill — so the plan can chase the ones people still need
-    const _sets=S.roster.map(s=>[s,earnedSkillIds(s.id)]);
+    const _sets=aliveRoster().map(s=>[s,earnedSkillIds(s.id)]);
     body=OAS_SKILLS[it.stream].map((grp,gi)=>{
       const open=it._openG===gi;
       const selN=grp[2].filter((x,i)=>(it.targetSkills||[]).some(s=>s.id===it.stream+'|'+gi+'|'+i)).length;
@@ -2457,10 +2473,12 @@ function termICS(t){
   document.body.appendChild(a);a.click();a.remove();}
 function planYearEventsPre(){S._curId=(curItemR().it||{}).id;return planYearEvents();}
 function planYearEvents(){
-  const evs=[...S.year.events].sort((a,b)=>(a.startDate||'9999')<(b.startDate||'9999')?-1:1);
-  const rows=evs.map(eventCard).join('');
-  return `<div class="card"><h3>Events outside term time</h3>
-    <p class="hint">Camps, hikes and weekend activities in the holidays or later in the year. Give each a start date and it sorts itself. Set one current on the day and run it through Tonight like any other night.</p>
+  const evs=[...S.year.events.map(e=>[e,-1]),
+    ...S.year.terms.flatMap((tm,ti)=>tm.items.filter(x=>x.kind==='event').map(e=>[e,ti]))]
+    .sort((a,b)=>((a[0].startDate||'9999')<(b[0].startDate||'9999')?-1:1));
+  const rows=evs.map(([e,ti])=>(ti>=0?`<div class="hint" style="margin:6px 0 -4px">📌 Sits in Term ${ti+1} — edits sync both ways</div>`:'')+eventCard(e)).join('');
+  return `<div class="card"><h3>Events — the whole year</h3>
+    <p class="hint">Every camp, hike and weekend activity, wherever it lives — holiday events and in-term events together. Give each a start date and it sorts itself. Set one current on the day and run it through Tonight like any other night.</p>
     ${rows||'<div class="empty">Nothing on the horizon yet.</div>'}
     <button class="addevent" data-act="addyearevent">+ add an event</button></div>`;
 }
@@ -2538,8 +2556,12 @@ function planTermView(){
   const rows=merged.map(it=>{
     const cur=S._curId===it.id;
     if(focus&&!blockIds.has(it.id)){if(it.kind==='week')wn++;return '';}
-    if(it.kind!=='week')return (it._yr?`<div class="hint" style="margin:6px 0 -4px">📌 From the year planner — edits sync both ways</div>`:'')+eventCard(it)+(it._yr?'':`<button class="addevent" data-act="addevent" data-id="${it.id}">+ insert event below</button>`);
+    if(it.kind!=='week'){const _ep=!!((it.endDate||it.startDate)&&(it.endDate||it.startDate)<todayISO());
+      return (it._yr?`<div class="hint" style="margin:6px 0 -4px">📌 From the year planner — edits sync both ways</div>`:'')
+        +(_ep?'<div class="pastchip" style="margin:2px 0">✓ been &amp; gone</div>':'')+eventCard(it)
+        +(it._yr?'':`<button class="addevent" data-act="addevent" data-id="${it.id}">+ insert event below</button>`);}
     wn++;
+    const _wd=weekDateISO(t,wn);const _past=!!(_wd&&_wd<todayISO());
     const curBtn=`<button class="cur-btn ${cur?'on':''}" data-act="setcurrent" data-id="${it.id}">${cur?'● This week':'Pin night'}</button>`;
     const areaChips=`<div class="areachips">${AREAS.map(a=>
       `<span class="chip ${it.areas.includes(a)?'on':''}" data-area="${a}" data-act="wkarea" data-id="${it.id}">${a}</span>`).join('')}</div>`;
@@ -2563,7 +2585,7 @@ function planTermView(){
       inner=`${wncol}<div class="toprow">${tsel}${curBtn}${calBtn}</div>
         <div class="spec-label" style="width:100%">${lbl}</div>${it.type==='Planning'?rolesUI(it):''}`;
     }
-    return `<div class="wk ${it.type!=='Activity'?'special':''} ${cur?'current':''}">${inner}</div>
+    return `<div class="wk ${it.type!=='Activity'?'special':''} ${cur?'current':''}${_past?' past':''}">${_past?'<span class="pastchip wkpast">✓ been &amp; gone</span>':''}${inner}</div>
       <button class="addevent" data-act="addevent" data-id="${it.id}">+ insert event below</button>`;
   }).join('');
   if(focus)return planViewToggle()+focusBar+rows;
@@ -2621,7 +2643,7 @@ function patrolColor(p){
   return PATROL_COLS[k]||'#272763';}
 function troopPatrols(){
   const groups={};
-  S.roster.forEach(s=>{const k=(s.patrol||'').trim()||'No patrol yet';
+  aliveRoster().forEach(s=>{const k=(s.patrol||'').trim()||'No patrol yet';
     (groups[k]=groups[k]||[]).push(s);});
   const names=Object.keys(groups).sort((a,b)=>
     a==='No patrol yet'?1:b==='No patrol yet'?-1:a.localeCompare(b));
@@ -2641,6 +2663,41 @@ function stgColor(n){return 'hsl('+(210-(n-1)*21)+',62%,40%)';}
 function stgChip(n,moved){
   if(!n)return '<span class="stg z">·</span>';
   return '<span class="stg'+(moved?' mv':'')+'" style="background:'+stgColor(n)+'">'+n+'</span>';}
+/* Discipline key: strip Advanced/Intermediate/Introductory, squash punctuation,
+   and pin the Alpine snow-camping label variants onto one key. */
+function discKey(lbl){
+  let d=(String(lbl).split('—')[1]||'').trim();
+  if(!d)return null;
+  d=d.replace(/^(Advanced|Intermediate|Introductory)\s+/i,'');
+  let k=d.toLowerCase().replace(/[^a-z]/g,'');
+  if(/snowsho|snowcamp/.test(k))k='snowcampshoe';
+  return k||null;}
+function discName(lbl){
+  let d=(String(lbl).split('—')[1]||'').trim();
+  return d.replace(/^(Advanced|Intermediate|Introductory)\s+/i,'');}
+/* Per-branch picture for one scout & stream: highest completed stage per
+   discipline, plus the next group and how many skills it still needs. */
+function oasBranchMap(s,st,es){
+  const from=+((s.oasStart||{})[st]||0);
+  const has=(gi,i)=>hasSkillAlready(s,st+'|'+gi+'|'+i,es);
+  // only stages that genuinely split define branches; single-track stages are shared
+  const perStage={};OAS_SKILLS[st].forEach(g=>{perStage[g[0]]=(perStage[g[0]]||0)+1;});
+  let sharedCur=from;
+  OAS_SKILLS[st].forEach((g,gi)=>{
+    if(perStage[g[0]]===1&&g[2].every((_,i)=>has(gi,i))&&g[0]>sharedCur)sharedCur=g[0];});
+  const out={};let order=[];
+  OAS_SKILLS[st].forEach((g,gi)=>{
+    if(perStage[g[0]]===1)return;
+    const k=discKey(g[1]);if(!k)return;
+    if(!out[k]){out[k]={name:discName(g[1]),cur:0,next:null};order.push(k);}
+    const done=g[2].every((_,i)=>has(gi,i));
+    if(done&&g[0]>out[k].cur)out[k].cur=g[0];});
+  order.forEach(k=>{
+    const b=out[k];b.cur=Math.max(b.cur,sharedCur);
+    const nx=OAS_SKILLS[st].map((g,gi)=>({g,gi}))
+      .find(x=>perStage[x.g[0]]>1&&discKey(x.g[1])===k&&x.g[0]===b.cur+1);
+    if(nx)b.next={stage:nx.g[0],left:nx.g[2].filter((_,i)=>!has(nx.gi,i)).length};});
+  return {map:out,order};}
 function oasBranchDetail(s){
   const o=oasFor(s.id);const es=earnedSkillIds(s.id);
   const lines=STREAMS.filter(st=>{const v=o.streams[st]||{};return v.cur>0||v.from>0;}).map(st=>{
@@ -2648,21 +2705,89 @@ function oasBranchDetail(s){
     const groups=OAS_SKILLS[st].map((g,gi)=>({g,gi}))
       .filter(x=>x.g[0]>v.from&&x.g[0]<=v.cur+1);
     if(!groups.length)return '';
-    const chips=groups.map(({g,gi})=>{
-      const left=g[2].filter((_,i)=>!hasSkillAlready(s,st+'|'+gi+'|'+i,es)).length;
-      const disc=(g[1].split('—')[1]||'').trim();
-      const lbl='S'+g[0]+(disc?' '+disc:'');
-      return `<span class="brch ${left===0?'don':''}">${esc(lbl)} ${left===0?'✓':'· '+left+' left'}</span>`;}).join('');
+    const bm=oasBranchMap(s,st,es);
+    let chips;
+    if(bm.order.length){
+      chips=bm.order.map(k=>{const b=bm.map[k];
+        return `<span class="brch ${b.cur>=v.cur&&b.cur>0?'don':''}"><b>${esc(b.name)}</b> ${b.cur||'—'}${b.next?' · S'+b.next.stage+': '+b.next.left+' left':''}</span>`;}).join('');
+    }else{
+      chips=groups.map(({g,gi})=>{
+        const left=g[2].filter((_,i)=>!hasSkillAlready(s,st+'|'+gi+'|'+i,es)).length;
+        return `<span class="brch ${left===0?'don':''}">S${g[0]} ${left===0?'✓':'· '+left+' left'}</span>`;}).join('');
+    }
     return `<div class="brchline"><b>${st}</b> <span class="hint" style="margin:0">from ${v.from} · now ${v.cur}</span><div>${chips}</div></div>`;
   }).filter(Boolean).join('');
   return lines||'<p class="hint" style="margin:4px 0">Nothing recorded in any stream yet.</p>';
 }
+/* Upcoming weeks & events a night-planner can target */
+function upcomingPlanItems(){
+  const out=[];const today=todayISO();
+  S.year.terms.forEach((tm,ti)=>{let wn=0;tm.items.forEach(it=>{
+    if(it.kind==='week'){wn++;const d=weekDateISO(tm,wn);
+      if(d&&d>=today)out.push({it,d,lbl:'T'+(ti+1)+' Wk'+wn+' · '+fmtD(d)+(it.activity?' · '+it.activity:'')});}
+    else if(it.startDate&&it.startDate>=today)out.push({it,d:it.startDate,lbl:fmtD(it.startDate)+' · '+(it.activity||it.type)});});});
+  (S.year.events||[]).forEach(it=>{if(it.startDate&&it.startDate>=today)out.push({it,d:it.startDate,lbl:fmtD(it.startDate)+' · '+(it.activity||it.type)});});
+  return out.sort((a,b)=>a.d<b.d?-1:1).slice(0,14);}
+function oasStreamPlanner(st){
+  const items=upcomingPlanItems();
+  if(items.length&&!items.some(x=>x.it.id===S._oasTargetId))S._oasTargetId=items[0].it.id;
+  const target=planFind(S._oasTargetId).it;
+  const tsel=items.length?`<div class="mini-cap" style="margin-top:10px">Target skills onto</div>
+    <select data-act="oastargetweek">${items.map(x=>`<option value="${x.it.id}" ${x.it.id===S._oasTargetId?'selected':''}>${esc(x.lbl)}</option>`).join('')}</select>`
+    :'<p class="hint" style="margin-top:8px">No upcoming weeks with dates yet — set the term start date first.</p>';
+  // each scout's next stage in this stream + the skills they're missing there
+  const need={};const scouts=[];
+  aliveRoster().forEach(s=>{
+    const o=oasFor(s.id);const v=o.streams[st]||{from:0,cur:0};
+    const next=v.cur+1;if(next>9)return;
+    const es=earnedSkillIds(s.id);
+    const groups=OAS_SKILLS[st].map((g,gi)=>({g,gi})).filter(x=>x.g[0]===next);
+    if(!groups.length)return;
+    let best=null,miss=[];
+    groups.forEach(({g,gi})=>{
+      const left=g[2].map((sk,i)=>({id:st+'|'+gi+'|'+i,sk,gi,stage:g[0]}))
+        .filter(x=>!hasSkillAlready(s,x.id,es));
+      left.forEach(x=>{(need[x.id]=need[x.id]||{sk:x.sk,stage:x.stage,gi:x.gi,who:[]}).who.push(s.name.split(' ')[0]);});
+      if(!best||left.length<best.left)best={left:left.length,label:g[1]};});
+    scouts.push({s,next,left:best?best.left:0});});
+  // scouts grouped by next stage
+  const byStage={};scouts.forEach(x=>{(byStage[x.next]=byStage[x.next]||[]).push(x);});
+  const stageLines=Object.keys(byStage).sort((a,b)=>a-b).map(stg=>{
+    const kids=byStage[stg].sort((a,b)=>a.left-b.left)
+      .map(x=>`<span class="brch${x.left<=2?' don':''}">${esc(x.s.name.split(' ')[0])} · ${x.left} left</span>`).join('');
+    return `<div class="brchline"><b>Next: Stage ${stg}</b><div>${kids}</div></div>`;}).join('');
+  // most-needed skills, tappable to add to the target plan
+  const ranked=Object.entries(need).sort((a,b)=>b[1].who.length-a[1].who.length).slice(0,15);
+  const tsk=(target&&target.targetSkills)||[];
+  const rows=ranked.map(([id,x])=>{
+    const on=tsk.some(y=>y.id===id);
+    return `<div class="skrow ${on?'on':''}" data-act="oastargetskill" data-sk="${id}">
+      <div class="skbox">${on?'<svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5l3 3 6-6.5" stroke="#F6F1E2" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
+      <div class="sktext">S${x.stage} · ${esc(x.sk)}<br><span style="font-size:10.5px;color:var(--ink-faint)">${esc(x.who.join(', '))}</span></div>
+      <span class="skhave" style="align-self:center">${x.who.length} need it</span></div>`;}).join('');
+  return `<div class="card">
+    <div class="btn-row" style="margin-bottom:8px"><button class="btn ghost sm" data-act="oasstreamback">← Whole grid</button></div>
+    <h3>${st} — night planner</h3>
+    <p class="hint">Where everyone's headed next in ${st}, and the skills that unlock the most scouts at once.</p>
+    ${stageLines||'<div class="empty">No one has a next stage here.</div>'}
+    <div class="mini-cap" style="margin-top:10px">Skills that unlock the most scouts</div>
+    ${rows||'<div class="empty">Nothing missing — nice.</div>'}
+    ${tsel}
+    <p class="hint" style="margin:6px 0 0">Tick a skill and it lands in that night's plan as a target skill — it'll show up on the night with the earned-skill highlighting.</p>
+  </div>`;
+}
 function troopOAS(){
+  if(S._oasStream)return oasStreamPlanner(S._oasStream);
   const abbr={Bushcraft:'Bc',Bushwalking:'Bw',Camping:'Cp',Alpine:'Al',Cycling:'Cy',Vertical:'Vt',Aquatics:'Aq',Boating:'Bo',Paddling:'Pd'};
-  const head=STREAMS.map(st=>`<th title="${st}" style="padding:4px 2px">${abbr[st]}</th>`).join('');
-  const rows=S.roster.map(s=>{const o=oasFor(s.id);
+  const head=STREAMS.map(st=>`<th title="${st}" data-act="oasstream" data-st="${st}" style="padding:4px 2px;cursor:pointer;text-decoration:underline dotted">${abbr[st]}</th>`).join('');
+  const rows=aliveRoster().map(s=>{const o=oasFor(s.id);
+    const es=earnedSkillIds(s.id);
     const cells=STREAMS.map(st=>{const v=o.streams[st]||{from:0,cur:0};
-      return `<td style="text-align:center;padding:3px 2px">${stgChip(v.cur,v.cur>v.from)}</td>`;}).join('');
+      let split='';
+      if(v.cur>0){const bm=oasBranchMap(s,st,es);
+        const curs=bm.order.map(k=>bm.map[k].cur).filter(c=>c>0);
+        if(curs.length>1&&Math.max(...curs)!==Math.min(...curs))split='<span style="font-size:9px;color:var(--ink-faint);vertical-align:top">±</span>';}
+      return `<td style="text-align:center;padding:3px 2px">${stgChip(v.cur,v.cur>v.from)}${split}</td>`;}).join('');
     const sel=S._oasSel===s.id;
     return `<tr data-act="oasgridsel" data-id="${s.id}" style="cursor:pointer${sel?';background:rgba(242,168,29,.10)':''}"><td style="white-space:nowrap;padding:3px 4px">${sel?'▾':'▸'} ${esc(s.name.split(' ')[0])} <span class="mno">${esc(s.section[0])}</span></td>${cells}</tr>`
       +(sel?`<tr><td colspan="${STREAMS.length+1}" style="padding:6px 6px 10px">${oasBranchDetail(s)}</td></tr>`:'');}).join('');
@@ -2670,7 +2795,7 @@ function troopOAS(){
   const key=STREAMS.map(st=>`<b>${abbr[st]}</b> ${st}`).join(' · ');
   return `<div class="card" style="overflow-x:auto"><h3>OAS — current stage per stream</h3>
     <p class="hint" style="margin:0 0 4px">${scale} &nbsp;cold → hot: stage 1 just starting, stage 9 peak of the scheme.</p>
-    <p class="hint" style="margin:0 0 4px"><span class="stg z">·</span> not started yet · <span class="stg mv" style="background:${stgColor(3)}">3</span> amber ring = moved up since they arrived. Tap a scout to see the branches — Pioneering, Survival, and the specialist disciplines.</p>
+    <p class="hint" style="margin:0 0 4px"><span class="stg z">·</span> not started yet · <span class="stg mv" style="background:${stgColor(3)}">3</span> amber ring = moved up since arriving · ± = branches at different stages. <b>Tap a scout</b> for their branches, <b>tap a column heading</b> to plan a night around that stream.</p>
     <table style="width:100%;border-collapse:collapse;font-size:12px" class="oasgrid"><tr><th style="text-align:left">Scout</th>${head}</tr>${rows}</table>
     <p class="hint" style="margin:8px 0 0">${key}</p></div>`;
 }
@@ -2680,7 +2805,7 @@ function troopChart(){
   const anyOn=SECS.some(x=>f[x]);
   const secChips='<div class="areachips" style="margin:0 2px 8px">'+SECS.map(x=>
     `<span class="chip ${f[x]?'on':''}" data-act="secfilter" data-s="${x}">${x}s</span>`).join('')+'</div>';
-  let sorted=[...S.roster].sort((a,b)=>(b.peak-a.peak)||a.name.localeCompare(b.name));
+  let sorted=[...aliveRoster()].sort((a,b)=>(b.peak-a.peak)||a.name.localeCompare(b.name));
   if(anyOn)sorted=sorted.filter(s=>f[s.section]);
   const cols=['M1','M2','M3','OAS','SIA','Jny','Crs','Rfl'];
   const head=`<div class="chart-row chart-head"><span class="cname"></span>${cols.map(c=>`<span class="ccell">${c}</span>`).join('')}</div>`;
@@ -2712,7 +2837,7 @@ function scoutCard(s){
   const contact=`<div class="btn-row" style="margin:8px 0 6px">
     ${s.g1phone?`<a class="btn ghost sm callbtn" href="tel:${esc(s.g1phone)}">📞 ${esc((s.g1name||'Guardian 1').split(' ')[0])}</a>`:''}
     ${s.g2phone?`<a class="btn ghost sm callbtn" href="tel:${esc(s.g2phone)}">📞 ${esc((s.g2name||'Guardian 2').split(' ')[0])}</a>`:''}
-    <button class="btn sm" data-act="scedit" data-id="${s.id}" style="margin-left:auto;${s._edit?'background:var(--moss);color:#fff;border-color:var(--moss)':'background:none;border:1.5px solid var(--line)'}">${s._edit?'✓ Done editing':'✎ Edit'}</button></div>`;
+    <button class="btn sm" data-act="scedit" data-id="${s.id}" style="margin-left:auto;background:var(--pine);color:#fff;border-color:var(--pine)">${s._edit?'✕ Close edit':'✎ Edit'}</button></div>`;
   if(s._edit)return `<div class="scout open">${head}<div class="body">${contact}${scoutEdit(s,cur)}</div></div>`;
   const ps=peakStepState(s),doneN=ps.filter(Boolean).length;
   /* 1 — the climb */
@@ -2739,7 +2864,7 @@ function scoutCard(s){
     <div class="prog-row"><span class="pn" style="font-weight:800">Assists</span>
       <div class="prog-track"><div class="prog-fill" style="width:${Math.min(100,p.A/tg.A*100)}%;background:var(--amber)"></div></div>
       <span class="pc"><b>${p.A}/${tg.A}</b></span></div></div>
-    ${needs.length?`<p class="hint" style="margin:2px 0 0">Still needs: ${needs.join(' · ')}</p>`:''}`;
+    `;
   /* 3 — OAS */
   const o=oasFor(s.id);
   const CORES=['Bushcraft','Bushwalking','Camping'];
@@ -2776,7 +2901,7 @@ function scoutCard(s){
   const SIA_ICONS={'Adventure & Sport':'🏅','Arts & Literature':'🎨','Creating a Better World':'🌏','Environment':'🌿','Growth & Development':'🌱','STEM & Innovation':'🔬'};
   const areaChips=SIA_AREAS.map(a=>{const on=fin.some(x=>x.area===a);
     return `<span class="sarea${on?' on':''}">${SIA_ICONS[a]||'✦'} ${a}</span>`;}).join('');
-  const sia=`<h4 class="sec-h">Special Interest Areas <span>${fin.length}/6</span></h4>
+  const sia=`<h4 class="sec-h">Special Interest Areas</h4>
     <div class="circ-row">${bar}<span class="circ-lbl">${areaN}/${q.siaAreas} areas</span></div>
     <div class="siaareas">${areaChips}</div>
     <p class="hint" style="margin:0 0 6px">${q.siaHrs}+ hrs each — several can run at once.</p>
@@ -2844,12 +2969,12 @@ function scoutEdit(s,cur){
         <div class="btn-row" style="gap:5px;margin-bottom:7px">${tabs}</div>
         <div class="ob-grid">${AREAS.map(a=>f(a,a.replace('Personal Growth','Growth'))).join('')}${f('A','Assists')}${f('L','Leads')}</div>
         <p class="hint" style="margin:7px 0 0">Editing M${em}${em===(s.milestone||1)?' — the milestone they are on now':''}. Targets for M${em}: ${MS[em].P} per area, ${MS[em].A} assists, ${MS[em].L} leads.</p>
+        <div class="mini-cap" style="margin-top:10px">OAS — stage started from, per stream</div>
+        <p class="hint" style="margin:0 0 5px">The stage they held on their section start date. Progressions count from here.</p>
+        <div class="ob-grid">${STREAMS.map(st=>{const v=(s.oasStart||{})[st]||0;
+          return `<div class="ob-cell"><label>${st}</label><select data-act="oasstart" data-id="${s.id}" data-st="${st}">${[0,1,2,3,4,5,6,7,8,9].map(x=>`<option value="${x}" ${v===x?'selected':''}>${x}</option>`).join('')}</select></div>`;}).join('')}</div>
         <div class="btn-row" style="margin-top:7px"><button class="btn ghost sm" data-act="obclear" data-id="${s.id}" data-m="${em}">Clear M${em}</button>
         <button class="btn ghost sm" data-act="obtoggle" data-id="${s.id}">Done</button></div></div>`;})()}
-    <div class="mini-cap" style="margin-top:8px">OAS — stage started from, per stream</div>
-    <p class="hint" style="margin:0 0 5px">The stage they held on their section start date. Progressions count from here.</p>
-    <div class="ob-grid">${STREAMS.map(st=>{const v=(s.oasStart||{})[st]||0;
-      return `<div class="ob-cell"><label>${st}</label><select data-act="oasstart" data-id="${s.id}" data-st="${st}">${[0,1,2,3,4,5,6,7,8,9].map(x=>`<option value="${x}" ${v===x?'selected':''}>${x}</option>`).join('')}</select></div>`;}).join('')}</div>
     <div class="mini-cap" style="margin-top:8px">Prior totals (before tracking here)</div>
     <div class="namerow">
       <span class="numfield"><label>prior km</label><input type="number" min="0" data-act="priorkm" data-id="${s.id}" value="${s.priorKm||0}"></span>
@@ -2872,6 +2997,7 @@ function scoutEdit(s,cur){
     <div class="btn-row" style="margin-top:8px">
       <button class="btn ghost sm" data-act="peak" data-id="${s.id}">${s.peak?'★ Peak Award — yes':'☆ Mark as Peak Award'}</button>
       ${reqs(s.section).next?`<button class="btn ghost sm" data-act="moveup" data-id="${s.id}">↑ Move up to ${reqs(s.section).next}s</button>`:''}
+      <button class="btn ghost sm" data-act="scarchive" data-id="${s.id}" style="flex:none">📦 Left the group</button>
       <button class="btn ghost sm" data-act="delscout" data-id="${s.id}" style="flex:none;color:var(--clay)">Remove</button>
     </div>`;
 }
@@ -2882,17 +3008,19 @@ function vTroop(){
     <button class="tchip ${mode==='chart'?'on':''}" data-act="troopview" data-v="chart">Section view</button>
     <button class="tchip ${mode==='oas'?'on':''}" data-act="troopview" data-v="oas">OAS grid</button>
     <button class="tchip ${mode==='patrols'?'on':''}" data-act="troopview" data-v="patrols">Patrols</button></div>`;
-  const sorted=[...S.roster].sort((a,b)=>(b.peak-a.peak)||a.name.localeCompare(b.name));
-  const cards=mode!=='cards'?'':sorted.map(scoutCard).join('');
+  const sorted=[...aliveRoster()].sort((a,b)=>(b.peak-a.peak)||a.name.localeCompare(b.name));
+  const arch=S.roster.filter(x=>x.archived).sort((a,b)=>a.name.localeCompare(b.name));
+  const archBox=(mode==='cards'&&arch.length)?`<div class="card flat" style="margin-top:10px">
+    <div class="roles-bar" data-act="archtoggle"><span class="rl">Left the group</span>
+      <span class="rs">${arch.length} archived — records kept</span>
+      <span style="margin-left:auto;flex:none;transform:rotate(${S._archOpen?90:0}deg)">▸</span></div>
+    ${S._archOpen?arch.map(s=>`<div class="namerow" style="align-items:center;padding:4px 0">
+      <span style="flex:1;font-size:13px;font-weight:600">${esc(s.name)}${s.memberNo?' <span class="mno">#'+esc(s.memberNo)+'</span>':''} <span class="mno">${esc(s.section)}</span></span>
+      <button class="btn ghost sm" data-act="screstore" data-id="${s.id}" style="flex:none">↩ Bring back</button></div>`).join(''):''}</div>`:'';
+  const cards=mode!=='cards'?'':sorted.map(scoutCard).join('')+archBox;
   return `<div class="view">
     <div class="view-title">The Youth</div>
-    <div class="view-sub">Every scout's progress in one place. ★ = chasing Peak Award — plan the term around them.</div>
-    <div class="card"><h3>Add a scout</h3>
-      <div class="addrow"><input type="text" id="newScout" placeholder="Scout's name">
-        <button class="btn primary" data-act="addscout" style="flex:none">Add</button></div>
-      ${(()=>{const miss=Object.keys(OAS_DOC_IMPORT).filter(k=>!S.roster.some(s=>(s.memberNo||'').trim()===k||norm2(s.name)===norm2(OAS_DOC_IMPORT[k].name)));
-        return miss.length?`<p class="hint" style="margin:9px 0 5px">${miss.length} scout${miss.length===1?'':'s'} from Tracey's summary ${miss.length===1?'is':'are'} not in the app: ${miss.map(k=>OAS_DOC_IMPORT[k].name).join(', ')}.</p>
-        <div class="btn-row"><button class="btn ghost" data-act="oasaddmissing">Add missing scouts & venturers</button></div>`:'';})()}</div>
+    <div class="view-sub">Every scout's progress in one place. ★ = chasing Peak Award — plan the term around them. New members get added over on the New tab.</div>
     ${toggle}${mode==='chart'?troopChart():mode==='patrols'?troopPatrols():mode==='oas'?troopOAS():(cards||'<div class="card"><div class="empty">No scouts yet.</div></div>')}</div>`;
 }
 
@@ -2922,6 +3050,12 @@ function vWelcome(){
   return `<div class="view">
     <div class="view-title">New to Scouting</div>
     <div class="view-sub">Every answer a new family needs — so you're never caught out at the door.</div>
+    <div class="card"><h3>Add a scout</h3>
+      <div class="addrow"><input type="text" id="newScout" placeholder="Scout's name">
+        <button class="btn primary" data-act="addscout" style="flex:none">Add</button></div>
+      ${(()=>{const miss=Object.keys(OAS_DOC_IMPORT).filter(k=>!S.roster.some(s=>(s.memberNo||'').trim()===k||norm2(s.name)===norm2(OAS_DOC_IMPORT[k].name)));
+        return miss.length?`<p class="hint" style="margin:9px 0 5px">${miss.length} scout${miss.length===1?'':'s'} from Tracey's summary ${miss.length===1?'is':'are'} not in the app: ${miss.map(k=>OAS_DOC_IMPORT[k].name).join(', ')}.</p>
+        <div class="btn-row"><button class="btn ghost" data-act="oasaddmissing">Add missing scouts & venturers</button></div>`:'';})()}</div>
     <div class="card"><h3>Answers for new parents</h3>
       <p class="hint">The questions you get asked at pick-up. Fill the answers in as you gather them — then it's all in your pocket.</p>
       ${faqs}<button class="addevent" data-act="faqadd">+ add a question</button></div>
@@ -3198,9 +3332,18 @@ document.addEventListener('click',e=>{
     const was=s._open;
     S.roster.forEach(x=>{x._open=false;x._edit=false;});
     s._open=!was;render();return;}
-  if(a==='troopview'){S._troopView=t.dataset.v;S._oasSel=null;
+  if(a==='troopview'){S._troopView=t.dataset.v;S._oasSel=null;S._oasStream=null;
     S.roster.forEach(x=>{x._open=false;x._edit=false;});render();return;}
   if(a==='oasgridsel'){S._oasSel=S._oasSel===t.dataset.id?null:t.dataset.id;render();return;}
+  if(a==='oasstream'){S._oasStream=t.dataset.st;S._oasSel=null;render();return;}
+  if(a==='oasstreamback'){S._oasStream=null;render();return;}
+  if(a==='oastargetskill'){const it=planFind(S._oasTargetId).it;if(!it)return;
+    const id=t.dataset.sk;it.targetSkills=it.targetSkills||[];
+    const ix=it.targetSkills.findIndex(x=>x.id===id);
+    if(ix>=0)it.targetSkills.splice(ix,1);
+    else{const pp=id.split('|');const grp=OAS_SKILLS[pp[0]]&&OAS_SKILLS[pp[0]][+pp[1]];
+      it.targetSkills.push({id,name:skillName(id),stage:grp?grp[0]:null});}
+    save('year');render();return;}
   if(a==='secfilter'){S._secF=S._secF||{};S._secF[t.dataset.s]=!S._secF[t.dataset.s];render();return;}
   if(a==='scprole'){const s=S.roster.find(x=>x.id===t.dataset.id);
     if(s){s.prole=t.dataset.r;save('roster');render();}return;}
@@ -3242,6 +3385,12 @@ document.addEventListener('click',e=>{
     const x=(s.sias||[]).find(y=>y.id===t.dataset.sia);if(x)x._open=!x._open;render();return;}
   if(a==='delsia'){const s=S.roster.find(x=>x.id===t.dataset.id);
     s.sias=(s.sias||[]).filter(x=>x.id!==t.dataset.sia);save('roster');render();return;}
+  if(a==='scarchive'){const id=t.dataset.id,s=S.roster.find(x=>x.id===id);
+    uiConfirm((s?s.name:'This member')+' is leaving? They move to the archive — every record stays, and one tap brings them back if they return.',()=>{
+      s.archived=true;s._open=false;s._edit=false;save('roster');render();});return;}
+  if(a==='screstore'){const s=S.roster.find(x=>x.id===t.dataset.id);
+    if(s){s.archived=false;save('roster');render();}return;}
+  if(a==='archtoggle'){S._archOpen=!S._archOpen;render();return;}
   if(a==='delscout'){const id=t.dataset.id,s=S.roster.find(x=>x.id===id);
     uiConfirm('Remove '+(s?s.name:'this member')+'? Their saved night records stay logged.',()=>{
       S.roster=S.roster.filter(x=>x.id!==id);save('roster');render();});return;}
@@ -3286,7 +3435,10 @@ document.addEventListener('click',e=>{
       rosterDefaults();
       save('roster');save('year');save('nights');save('welcome');save('contacts');render();uiAlert('Backup restored.');}
     catch(err){uiAlert('That does not look like valid backup data.');}});return;}
-  if(a==='scoutmode'){S.mode='scout';render();return;}
+  if(a==='scoutmode'){S.mode='scout';
+    // Handing the device over: it stops being a trusted leader device until the PIN goes in again.
+    S.devLeader=false;Store.set('muster.devLeader','0');
+    render();return;}
   if(a==='scoutnav'){S.scoutView=t.dataset.v;render();return;}
   if(a==='schedtick'){const it=planFind(t.dataset.id).it;if(it){const r=ensurePlan(it).sched[+t.dataset.i];if(r){r.done=!r.done;save('year');render();}}return;}
   if(a==='unlockleader'){
@@ -3627,6 +3779,7 @@ document.addEventListener('change',e=>{
   if(a==='evtype'){const it=planFind(t.dataset.id).it;if(it){it.type=t.value;save('year');}render();return;}
   if(a==='planstream'){const it=planFind(t.dataset.id).it;if(it){it.stream=t.value;it._openG=null;save('year');}render();return;}
   if(a==='adhocstream'){S._adhocStream=t.value;S._adhocG=null;render();return;}
+  if(a==='oastargetweek'){S._oasTargetId=t.value;render();return;}
   if(a==='ctag'){const c=S.contacts.find(x=>x.id===t.dataset.id);if(c){c.tag=t.value;save('contacts');render();}return;}
   if(a==='setms'){const s=S.roster.find(x=>x.id===t.dataset.id);
     // "Started at" = arrival milestone anchor for the opening balance.
