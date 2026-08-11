@@ -324,6 +324,18 @@ main textarea{width:100%;border:1.5px solid var(--line);border-radius:9px;paddin
 .bal-row .bc{font-size:12px;font-weight:700;color:var(--ink-soft);width:30px;text-align:right}
 .scout{border:1.5px solid var(--line);border-radius:13px;background:var(--card-2);margin-bottom:9px;overflow:hidden}
 .scout .hd{display:flex;align-items:center;gap:9px;padding:12px;cursor:pointer}
+/* On a phone the patrol pill and section were fighting the name for one line —
+   some wrapped, some didn't. Give them a line of their own so every card matches. */
+.scout .hd .nm{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}
+.scout .hd .nmtxt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:520px){
+  .scout .hd{flex-wrap:wrap;row-gap:5px}
+  .scout .hd .nm{flex:1 1 100%;order:1}
+  .scout .hd .nmtxt{white-space:normal}
+  .scout .hd .sec{order:2;margin-left:0}
+  .scout .hd svg{order:3;margin-left:auto}
+  .ppill.pat{padding:2px 8px;font-size:10.5px}
+}
 .scout .hd .nm{font-weight:600;font-size:15px;flex:1}
 .scout .hd .sec{font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase}
 .mno{font-size:11px;font-weight:700;color:var(--ink-faint)}
@@ -2995,7 +3007,7 @@ function scoutCard(s){
   const roll=msRollup(s.id);const cur=roll.cur;const p=roll.progress,tg=MS[cur];
   const q=reqs(s.section);
   const head=`<div class="hd" data-act="scopen" data-id="${s.id}">
-      <span class="nm">${esc(s.name)}${s.memberNo?' <span class="mno">#'+esc(s.memberNo)+'</span>':''} ${s.peak?'<span class="peak-star">★</span>':''}
+      <span class="nm"><span class="nmtxt">${esc(s.name)}${s.memberNo?' <span class="mno">#'+esc(s.memberNo)+'</span>':''}${s.peak?' <span class="peak-star">★</span>':''}</span>
         ${s.patrol?`<span class="ppill pat" style="background:${patrolColor(s.patrol)};border-color:${patrolColor(s.patrol)}">${esc(s.patrol)}${s.prole?' · '+s.prole:''}</span>`:s.prole?`<span class="ppill">${s.prole}</span>`:''}</span>
       <span class="sec"><b class="secb">${esc(s.section)}</b> · M${cur}</span>
       <svg width="16" height="16" viewBox="0 0 16 16" style="transform:rotate(${s._open?180:0}deg);transition:.2s"><path d="M3 6l5 5 5-5" stroke="#5D5440" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>`;
