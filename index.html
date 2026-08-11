@@ -471,6 +471,9 @@ nav button .nl{font-size:9.5px;font-weight:700}
 .focusbar.ev .fb-lbl{color:#fff}
 .focusbar.ev .btn{color:#fff}
 .fb-sub{display:block;font-size:10.5px;font-weight:700;opacity:.75;margin-top:1px}
+.slbar{display:flex;align-items:center;gap:8px;background:var(--pine-d);color:#EFE8D4;border-radius:11px;
+  padding:8px 11px;margin:8px 0 2px;font-size:12px;font-weight:700}
+.slbar .btn{color:#EFE8D4;border-color:rgba(255,255,255,.35)}
 .modebtn{margin-left:auto;flex:none;background:var(--amber);color:#1B1B47;border:none;border-radius:20px;
   padding:8px 13px;font-size:12px;font-weight:800;cursor:pointer;position:relative;z-index:1;
   box-shadow:0 2px 8px rgba(0,0,0,.25);display:none}
@@ -1314,11 +1317,18 @@ async function load(){
     if(typeof S.meta.keyAt[k]!=='number')S.meta.keyAt[k]=S.meta.updatedAt||0;});
   S.mode='scout';  // everyone lands in scout mode; the PIN is the leader key
   S.pin=(await Store.get('muster.pin'))||'';
+  // Paired youth device: read-only, no leader mode, no PIN prompt.
+  const sl=await Store.get('muster.scoutLink');
+  S.scoutLink=sl?JSON.parse(sl):null;
+  if(_pairFromHash){S.scoutLink={id:_pairFromHash.id,key:_pairFromHash.key,at:0};
+    Store.set('muster.scoutLink',JSON.stringify(S.scoutLink));}
   // A device that has unlocked leader mode once stays a leader device.
   S.devLeader=(await Store.get('muster.devLeader'))==='1';
   if(S.pin&&S.devLeader)S.mode='leader';
   if(S._gmPurged||S._rosterDirty){delete S._gmPurged;delete S._rosterDirty;Store.set('muster.roster',JSON.stringify(S.roster));}
   const dv=await Store.get('muster.drive');S.drive=dv?JSON.parse(dv):{clientId:'',fileId:'',lastSync:0,enabled:false,tok:null};
+  if(S.drive.apiKey==null)S.drive.apiKey='';
+  if(S.drive.shareId==null)S.drive.shareId='';
   const y=await Store.get('muster.year');
   const oldT=y?null:await Store.get('muster.term');
   S.year=migrateYear(y?JSON.parse(y):null,oldT?JSON.parse(oldT):null);
@@ -1372,6 +1382,48 @@ const save=k=>{Store.set('muster.'+k,JSON.stringify(S[k]));
 
 /* ===== Google Drive sync ===== */
 const DRIVE_FILE='Star-Lord-Command-Data.json';
+const SHARE_FILE='Star-Lord-Command-Scouts.json';
+/* What the scouts' copy contains. Guardian names, phones and emails never leave
+   the leader's file — the youth copy is names, patrols, plan and progress only. */
+function shareEnvelope(){
+  const roster=aliveRoster().map(s=>({id:s.id,name:s.name,section:s.section,patrol:s.patrol||'',
+    prole:s.prole||'',peak:!!s.peak,milestone:s.milestone||1,msOpening:s.msOpening||{},
+    oasStart:s.oasStart||{},sias:(s.sias||[]).map(x=>({id:x.id,area:x.area,description:x.description||'',date:x.date||'',started:x.started||''})),
+    peakSteps:s.peakSteps||TEN_F.slice(),journey:s.journey||{},priorKm:s.priorKm||0,priorNights:s.priorNights||0}));
+  return JSON.stringify({updatedAt:S.meta.updatedAt,keyAt:S.meta.keyAt||{},
+    app:'star-lord-command',scoutCopy:true,
+    data:{roster,year:S.year,nights:S.nights,welcome:S.welcome,contacts:[]}});
+}
+async function sharePublish(){
+  // find or make the scouts' file
+  if(!S.drive.shareId){
+    const q=encodeURIComponent("name = '"+SHARE_FILE+"' and trashed = false");
+    const r=await dFetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id)');
+    const j=await r.json();S.drive.shareId=(j.files&&j.files[0]&&j.files[0].id)||'';
+  }
+  const body=shareEnvelope();
+  if(S.drive.shareId){
+    await dFetch('https://www.googleapis.com/upload/drive/v3/files/'+S.drive.shareId+'?uploadType=media',
+      {method:'PATCH',headers:{'Content-Type':'application/json'},body});
+  }else{
+    const b='slcs'+Date.now();
+    const mp='--'+b+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'
+      +JSON.stringify({name:SHARE_FILE,mimeType:'application/json'})
+      +'\r\n--'+b+'\r\nContent-Type: application/json\r\n\r\n'+body+'\r\n--'+b+'--';
+    const r=await dFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+      {method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body:mp});
+    const j=await r.json();S.drive.shareId=j.id||'';
+  }
+  // anyone with the link may read it
+  try{await dFetch('https://www.googleapis.com/drive/v3/files/'+S.drive.shareId+'/permissions',
+    {method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({role:'reader',type:'anyone'})});}catch(e){}
+  S.drive.sharedAt=Date.now();saveDrive();
+}
+function shareLink(){
+  if(!S.drive.shareId||!S.drive.apiKey)return '';
+  return location.origin+location.pathname+'#scout='+S.drive.shareId+'.'+S.drive.apiKey;
+}
 let _pushTimer=null,_authPending=null;
 function saveDrive(){Store.set('muster.drive',JSON.stringify(S.drive));}
 function tokenValid(){return S.drive&&S.drive.tok&&S.drive.tok.v&&Date.now()<S.drive.tok.exp;}
@@ -1379,6 +1431,12 @@ function appRedirect(){let p=location.pathname;
   if(p.endsWith('index.html'))p=p.slice(0,-'index.html'.length);
   return location.origin+p;}
 let _redirFail=false;
+let _pairFromHash=null;
+(function(){
+  const m=(location.hash||'').match(/scout=([^.&]+)\.([^&]+)/);
+  if(m){_pairFromHash={id:m[1],key:m[2]};
+    try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}}
+})();
 function parseAuthHash(){
   if(!location.hash)return;
   const h=location.hash;
@@ -1546,6 +1604,9 @@ async function _driveSyncInner(mode){
         if(pulled.length)render();
       }
     }
+    // Once the scouts' copy exists it keeps itself current — every push republishes it,
+    // so the youth devices never sit on a stale plan.
+    if(S.drive.shareId){try{await sharePublish();}catch(e){}}
     S.drive.lastSync=Date.now();S.drive.status='';saveDrive();renderDriveStatus();
     if(mode==='manual'){
       const w=_lastSyncWork;
@@ -1589,6 +1650,31 @@ function driveStatusText(){
   if(!tokenValid())return'Link idle — will reconnect on Sync'+ago;
   return'Link established'+ago;
 }
+/* A paired scout device holds only a public file id + API key. It reads, never writes. */
+async function scoutPull(quiet){
+  if(!S.scoutLink)return;
+  try{
+    const u='https://www.googleapis.com/drive/v3/files/'+S.scoutLink.id+'?alt=media&key='+S.scoutLink.key;
+    const r=await fetch(u);
+    if(!r.ok)throw new Error('http '+r.status);
+    const env=JSON.parse(await r.text());
+    if(!env||!env.data)throw new Error('empty');
+    if(env.data.roster)S.roster=env.data.roster;
+    if(env.data.year)S.year=migrateYear(env.data.year,null);
+    if(env.data.nights)S.nights=env.data.nights;
+    if(env.data.welcome)S.welcome=env.data.welcome;
+    rosterDefaults();
+    S.scoutLink.at=Date.now();Store.set('muster.scoutLink',JSON.stringify(S.scoutLink));
+    Store.set('muster.roster',JSON.stringify(S.roster));
+    Store.set('muster.year',JSON.stringify(S.year));
+    Store.set('muster.nights',JSON.stringify(S.nights));
+    if(S.year.cur&&!planFind(S.year.cur.id).it)S.year.cur=null;
+    render();
+  }catch(e){if(!quiet)uiAlert("Couldn't reach the plan just now — you're seeing the last copy that came through.");}
+}
+function shareFlushOnHide(){
+  if(!S.drive||!S.drive.shareId||!S.drive.enabled||!tokenValid())return;
+  sharePublish().catch(()=>{});}
 function driveBoot(){
   if(_authPending){S.drive.tok=_authPending;S.drive.enabled=true;_authPending=null;saveDrive();render();}
   if(_redirFail){_redirFail=false;S.drive.status='Link down — tap Sync to sign back in';renderDriveStatus();}
@@ -1720,9 +1806,12 @@ function renderNav(){
       <button data-act="scoutnav" data-v="plan" class="${sv==='plan'?'on':''}">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z M9 4v14 M15 6v14"/></svg>
         <span class="nl">Plan</span></button>
-      <button data-act="unlockleader">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V7a5 5 0 0110 0v4 M5 11h14v10H5z"/></svg>
-        <span class="nl">Leader</span></button>`;
+      <button data-act="${S.scoutLink?'scoutrefresh':'unlockleader'}">
+        ${S.scoutLink
+          ?`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 10-2.3 5.6M20 5v6h-6"/></svg>
+        <span class="nl">Refresh</span>`
+          :`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V7a5 5 0 0110 0v4 M5 11h14v10H5z"/></svg>
+        <span class="nl">Leader</span>`}</button>`;
     return;}
   const items=[
     ['tonight','Tonight','M12 3L4 9v11h6v-6h4v6h6V9z'],
@@ -2296,17 +2385,22 @@ function nightPlanUI(it){
     <span class="rl">Night plan</span><span class="rs">${st}</span>
     <span style="margin-left:auto;flex:none;transform:rotate(${it._planOpen?90:0}deg)">▸</span></div>${body}`;
 }
+function scoutLinkBar(){
+  if(!S.scoutLink)return '';
+  const at=S.scoutLink.at;
+  return `<div class="slbar"><span>📡 Section plan${at?' · updated '+fmtAgo(at):' · not pulled yet'}</span>
+    <button class="btn ghost sm" data-act="scoutrefresh" style="flex:none">Refresh</button></div>`;}
 function vScout(){return (S.scoutView||'tonight')==='plan'?vScoutPlan():vScoutTonight();}
 function vScoutTonight(){
   const f=curItemR();const it=f.it;
-  if(!it||!(it.activity||'').trim())return `<div class="view">
+  if(!it||!(it.activity||'').trim())return `<div class="view">${scoutLinkBar()}
     <div class="view-title">Tonight</div>
     <div class="view-sub">Follow the plan you built — the lead keeps time, the assist keeps it moving.</div>
     <div class="card"><div class="empty">No plan for tonight yet — build it in the Plan tab, or ask Star-Lord which night is live.</div></div></div>`;
   const p=ensurePlan(it);
   const L=roleNames(it,'L'),A=roleNames(it,'A');
   const sched=timelineHTML(it,false);
-  return `<div class="view">
+  return `<div class="view">${scoutLinkBar()}
     <div class="view-title">Tonight</div>
     <div class="view-sub">${esc(it.activity)}${it.time?' · '+esc(it.time):''}${p.where?' · '+esc(p.where):''}</div>
     <div class="card"><h3>Who's on</h3>
@@ -3219,6 +3313,19 @@ function vRules(){
         :`<button class="btn primary" data-act="dconnect">Connect Google Drive</button>`}
       </div>
       ${S.drive.clientId?`<p class="hint" style="margin-top:7px">Client ID set. <span data-act="dclearid" style="text-decoration:underline;cursor:pointer">Change it</span></p>`:''}
+      <div class="mini-cap" style="margin-top:12px">Share with the scouts</div>
+      <p class="hint">Publishes a youth copy — names, patrols, the plan and progress. <b>No guardian names, phones or emails ever go in it.</b> Scouts open the link once and their app keeps itself up to date, read-only, and can't reach leader mode.</p>
+      ${S.drive.shareId?`<p class="hint" style="color:var(--moss);font-weight:600;margin:2px 0 0">✓ Publishing automatically — every sync updates the scouts' copy.</p>`:''}
+      ${S.drive.apiKey?'':`<label class="fld" style="margin-top:6px">Google API key (one-time)</label>
+      <input type="text" data-act="dapikey" value="" placeholder="Paste the API key here">`}
+      <div class="btn-row" style="margin-top:7px">
+        <button class="btn ${S.drive.shareId?'ghost':'primary'}" data-act="sharepub">${S.drive.shareId?'Publish now':'Publish for scouts'}</button>
+        ${shareLink()?`<button class="btn primary" data-act="sharecopy">Copy the link</button>`:''}
+      </div>
+      ${S.drive.sharedAt?`<p class="hint" style="margin-top:6px">Last published ${fmtAgo(S.drive.sharedAt)}.${S.drive.apiKey?'':' Add the API key above to get the link.'}</p>`:''}
+      ${shareLink()?`<p class="hint" style="margin-top:4px;word-break:break-all;background:var(--card-2);padding:7px 9px;border-radius:8px">${esc(shareLink())}</p>
+      <div class="btn-row"><button class="btn ghost sm" data-act="shareqr">Show QR code</button></div>`:''}
+      ${S.drive.apiKey?`<p class="hint" style="margin-top:5px">API key set. <span data-act="dclearkey" style="text-decoration:underline;cursor:pointer">Change it</span></p>`:''}
       <div class="mini-cap" style="margin-top:12px">Backup</div>
       <p class="hint">Data saves on this device/account. Export a copy before big changes, and to move between phone & laptop.</p>
       <div class="btn-row"><button class="btn ghost" data-act="export">Export data</button>
@@ -3540,6 +3647,30 @@ document.addEventListener('click',e=>{
     return;}
   if(a==='dsync'){driveSync('manual');return;}
   if(a==='ddisconnect'){S.drive.enabled=false;S.drive.tok=null;S.drive.status='';saveDrive();render();return;}
+  if(a==='sharepub'){
+    if(!S.drive.enabled){uiAlert('Connect Google Drive first — the scouts\' copy lives alongside your data file.');return;}
+    S.drive.status='Publishing…';renderDriveStatus();
+    (async()=>{try{
+        if(!tokenValid()){const ok=await freshToken(true);if(!ok){uiAlert('Google sign-in did not complete — try again.');return;}}
+        await sharePublish();S.drive.status='';renderDriveStatus();render();
+        uiAlert(S.drive.apiKey?'Published. Copy the link and send it to the scouts — their apps update themselves from here on.'
+          :'Published. Add a Google API key above and the share link appears.');
+      }catch(e){S.drive.status='';renderDriveStatus();uiAlert('Could not publish: '+e.message);}})();
+    return;}
+  if(a==='sharecopy'){const l=shareLink();if(l){fb(l,t);}return;}
+  if(a==='shareqr'){const l=shareLink();if(!l)return;
+    const c=document.getElementById('modalCard');
+    c.innerHTML=`<h4>Scan to get the plan</h4><p>Scouts scan this, then add it to their home screen. Read-only — no leader access.</p>
+      <div style="text-align:center"><img alt="QR code" style="width:100%;max-width:260px;border-radius:10px"
+        src="https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=${encodeURIComponent(l)}"></div>
+      <div class="btn-row" style="margin-top:12px"><button class="btn primary" id="mCancel">Done</button></div>`;
+    document.getElementById('modal').classList.add('show');
+    document.getElementById('mCancel').onclick=closeModal;return;}
+  if(a==='dclearkey'){uiConfirm('Clear the API key on this device?',()=>{
+    S.drive.apiKey='';saveDrive();render();});return;}
+  if(a==='scoutrefresh'){scoutPull(false);return;}
+  if(a==='scoutunpair'){uiConfirm('Unlink this device from the section plan? It goes back to an empty app.',()=>{
+    S.scoutLink=null;Store.set('muster.scoutLink','');render();});return;}
   if(a==='dclearid'){uiConfirm('Clear the saved Client ID?',()=>{
     S.drive.clientId='';S.drive.enabled=false;S.drive.tok=null;saveDrive();render();});return;}
   /* rules */
@@ -3565,6 +3696,7 @@ document.addEventListener('click',e=>{
   if(a==='scoutnav'){S.scoutView=t.dataset.v;render();return;}
   if(a==='schedtick'){const it=planFind(t.dataset.id).it;if(it){const r=ensurePlan(it).sched[+t.dataset.i];if(r){r.done=!r.done;save('year');render();}}return;}
   if(a==='unlockleader'){
+    if(S.scoutLink){uiAlert("This device is set up as a scout's — it shows the plan and keeps itself updated, but leader mode isn't available on it.");return;}
     if(S.pin&&S.devLeader){S.mode='leader';render();return;}
     if(!S.pin){
       uiPrompt('Set the leader PIN','First time on this device — pick the PIN that unlocks leader mode. It sticks until you change it.',(v)=>{
@@ -3866,6 +3998,7 @@ document.addEventListener('input',e=>{
   if(['g1n','g1p','g1e','g2n','g2p','g2e'].includes(a)){const s=S.roster.find(x=>x.id===t.dataset.id);if(s){
     s[{g1n:'g1name',g1p:'g1phone',g1e:'g1email',g2n:'g2name',g2p:'g2phone',g2e:'g2email'}[a]]=t.value;save('roster');}}
   if(a==='dclientid'){S.drive.clientId=t.value.trim();saveDrive();renderDriveStatus();}
+  if(a==='dapikey'){S.drive.apiKey=t.value.trim();saveDrive();}
   if(a==='faqq'||a==='faqa'){const f=S.welcome.faqs.find(x=>x.id===t.dataset.id);
     if(f){f[a==='faqq'?'q':'a']=t.value;save('welcome');}}
   if(a==='invtxt'){const f=S.welcome.invest.find(x=>x.id===t.dataset.id);if(f){f.txt=t.value;save('welcome');}}
@@ -3924,7 +4057,13 @@ document.getElementById('modal').addEventListener('click',e=>{
   if(e.target.id==='modal')closeModal();
 });
 parseAuthHash();
-load().then(()=>{render();driveBoot();});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible'){shareFlushOnHide();return;}
+  if(S.scoutLink)scoutPull(true);   // back on a youth device: get the latest
+});
+load().then(()=>{render();
+  if(S.scoutLink)scoutPull(true);   // youth device: read-only pull of the plan
+  else driveBoot();});
 </script>
 <script>
 if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
