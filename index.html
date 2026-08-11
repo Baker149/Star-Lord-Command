@@ -447,6 +447,15 @@ nav button .nl{font-size:9.5px;font-weight:700}
   background:var(--card-2);border:1.5px solid var(--line);border-radius:9px;padding:5px 8px}
 .sarea.on{background:rgba(242,168,29,.14);border-color:var(--amber);color:var(--ink)}
 .ofromtxt{font-size:11.5px;color:var(--ink-faint);font-weight:700;margin-left:4px}
+.jclr{background:none;border:none;color:var(--clay);font-size:10px;font-weight:800;cursor:pointer;padding:0 2px}
+.brchline{margin:5px 0;padding:6px 8px;background:var(--card-2);border-radius:9px}
+.brchline b{font-size:12.5px;margin-right:6px}
+.brchline>div{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.brch{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--card);color:var(--ink-soft)}
+.brch.don{border-color:var(--moss);color:var(--moss)}
+.modebtn{margin-left:auto;flex:none;background:var(--amber);color:#1B1B47;border:none;border-radius:20px;
+  padding:8px 13px;font-size:12px;font-weight:800;cursor:pointer;position:relative;z-index:1;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);display:none}
 .aw2{display:flex;gap:9px;margin:10px 0 0;padding-top:9px;border-top:1px solid var(--line-soft)}
 .awchip{flex:1;display:flex;align-items:baseline;gap:5px;background:var(--card-2);border:1.5px solid var(--line);
   border-radius:10px;padding:8px 11px;font-size:13px;font-weight:600}
@@ -460,6 +469,7 @@ nav button .nl{font-size:9.5px;font-weight:700}
 .sia2.don .sia2m{background:rgba(95,163,54,.08)}
 .sia2 .s2a{font-size:13px;font-weight:700;flex:1}
 .sia2 .s2s{font-size:11px;color:var(--ink-faint);flex:none}
+.sia2 .s2s.ip{font-size:13px;font-weight:800;color:#EF8022}
 .sia2 .s2d{padding:8px 10px;font-size:12.5px;color:var(--ink-soft)}
 .aw-line{font-size:12px;color:var(--ink-soft);margin:8px 0 0;padding-top:8px;border-top:1px solid var(--line-soft)}
 #printArea{display:none}
@@ -481,6 +491,7 @@ nav button .nl{font-size:9.5px;font-weight:700}
     <div class="brand">
       <img class="mark" src="data:image/png;base64,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" alt="Scouts logo">
       <div><h1>Star-Lord Command<span class="spark">✦</span></h1><div class="tag">Dial it in · Record it right</div></div>
+      <button class="modebtn" id="modeBtn" data-act="scoutmode">🖖 Scout mode</button>
     </div>
   </header>
   <main id="main"></main>
@@ -1258,6 +1269,9 @@ async function load(){
     if(typeof S.meta.keyAt[k]!=='number')S.meta.keyAt[k]=S.meta.updatedAt||0;});
   S.mode='scout';  // everyone lands in scout mode; the PIN is the leader key
   S.pin=(await Store.get('muster.pin'))||'';
+  // A device that has unlocked leader mode once stays a leader device.
+  S.devLeader=(await Store.get('muster.devLeader'))==='1';
+  if(S.pin&&S.devLeader)S.mode='leader';
   if(S._gmPurged||S._rosterDirty){delete S._gmPurged;delete S._rosterDirty;Store.set('muster.roster',JSON.stringify(S.roster));}
   const dv=await Store.get('muster.drive');S.drive=dv?JSON.parse(dv):{clientId:'',fileId:'',lastSync:0,enabled:false,tok:null};
   const y=await Store.get('muster.year');
@@ -1570,6 +1584,8 @@ function uiPrompt(title,msg,onSubmit){
   document.getElementById('modal').classList.add('show');
   document.getElementById('mCancel').onclick=closeModal;
   document.getElementById('mGo').onclick=()=>{const v=document.getElementById('mInput').value;closeModal();onSubmit(v);};
+  const mi=document.getElementById('mInput');mi.focus();
+  mi.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('mGo').click();}});
 }
 
 function progressFor(id){
@@ -1646,6 +1662,7 @@ function render(){
     S.mode==='scout'?vScout():
     (({tonight:vTonight,plan:vPlan,troop:vTroop,welcome:vWelcome,rules:vRules})[S.view]||vTonight)());
   renderNav();
+  const mb=document.getElementById('modeBtn');if(mb)mb.style.display=S.mode==='leader'?'block':'none';
   if(S._focus){const el=document.getElementById(S._focus);if(el)el.focus();S._focus=null;}
 }
 function renderNav(){
@@ -2624,18 +2641,36 @@ function stgColor(n){return 'hsl('+(210-(n-1)*21)+',62%,40%)';}
 function stgChip(n,moved){
   if(!n)return '<span class="stg z">·</span>';
   return '<span class="stg'+(moved?' mv':'')+'" style="background:'+stgColor(n)+'">'+n+'</span>';}
+function oasBranchDetail(s){
+  const o=oasFor(s.id);const es=earnedSkillIds(s.id);
+  const lines=STREAMS.filter(st=>{const v=o.streams[st]||{};return v.cur>0||v.from>0;}).map(st=>{
+    const v=o.streams[st];
+    const groups=OAS_SKILLS[st].map((g,gi)=>({g,gi}))
+      .filter(x=>x.g[0]>v.from&&x.g[0]<=v.cur+1);
+    if(!groups.length)return '';
+    const chips=groups.map(({g,gi})=>{
+      const left=g[2].filter((_,i)=>!hasSkillAlready(s,st+'|'+gi+'|'+i,es)).length;
+      const disc=(g[1].split('—')[1]||'').trim();
+      const lbl='S'+g[0]+(disc?' '+disc:'');
+      return `<span class="brch ${left===0?'don':''}">${esc(lbl)} ${left===0?'✓':'· '+left+' left'}</span>`;}).join('');
+    return `<div class="brchline"><b>${st}</b> <span class="hint" style="margin:0">from ${v.from} · now ${v.cur}</span><div>${chips}</div></div>`;
+  }).filter(Boolean).join('');
+  return lines||'<p class="hint" style="margin:4px 0">Nothing recorded in any stream yet.</p>';
+}
 function troopOAS(){
   const abbr={Bushcraft:'Bc',Bushwalking:'Bw',Camping:'Cp',Alpine:'Al',Cycling:'Cy',Vertical:'Vt',Aquatics:'Aq',Boating:'Bo',Paddling:'Pd'};
   const head=STREAMS.map(st=>`<th title="${st}" style="padding:4px 2px">${abbr[st]}</th>`).join('');
   const rows=S.roster.map(s=>{const o=oasFor(s.id);
     const cells=STREAMS.map(st=>{const v=o.streams[st]||{from:0,cur:0};
       return `<td style="text-align:center;padding:3px 2px">${stgChip(v.cur,v.cur>v.from)}</td>`;}).join('');
-    return `<tr><td style="white-space:nowrap;padding:3px 4px">${esc(s.name.split(' ')[0])} <span class="mno">${esc(s.section[0])}</span></td>${cells}</tr>`;}).join('');
+    const sel=S._oasSel===s.id;
+    return `<tr data-act="oasgridsel" data-id="${s.id}" style="cursor:pointer${sel?';background:rgba(242,168,29,.10)':''}"><td style="white-space:nowrap;padding:3px 4px">${sel?'▾':'▸'} ${esc(s.name.split(' ')[0])} <span class="mno">${esc(s.section[0])}</span></td>${cells}</tr>`
+      +(sel?`<tr><td colspan="${STREAMS.length+1}" style="padding:6px 6px 10px">${oasBranchDetail(s)}</td></tr>`:'');}).join('');
   const scale=[1,2,3,4,5,6,7,8,9].map(n=>stgChip(n,false)).join(' ');
   const key=STREAMS.map(st=>`<b>${abbr[st]}</b> ${st}`).join(' · ');
   return `<div class="card" style="overflow-x:auto"><h3>OAS — current stage per stream</h3>
     <p class="hint" style="margin:0 0 4px">${scale} &nbsp;cold → hot: stage 1 just starting, stage 9 peak of the scheme.</p>
-    <p class="hint" style="margin:0 0 4px"><span class="stg z">·</span> not started yet · <span class="stg mv" style="background:${stgColor(3)}">3</span> amber ring = moved up since they arrived.</p>
+    <p class="hint" style="margin:0 0 4px"><span class="stg z">·</span> not started yet · <span class="stg mv" style="background:${stgColor(3)}">3</span> amber ring = moved up since they arrived. Tap a scout to see the branches — Pioneering, Survival, and the specialist disciplines.</p>
     <table style="width:100%;border-collapse:collapse;font-size:12px" class="oasgrid"><tr><th style="text-align:left">Scout</th>${head}</tr>${rows}</table>
     <p class="hint" style="margin:8px 0 0">${key}</p></div>`;
 }
@@ -2677,7 +2712,7 @@ function scoutCard(s){
   const contact=`<div class="btn-row" style="margin:8px 0 6px">
     ${s.g1phone?`<a class="btn ghost sm callbtn" href="tel:${esc(s.g1phone)}">📞 ${esc((s.g1name||'Guardian 1').split(' ')[0])}</a>`:''}
     ${s.g2phone?`<a class="btn ghost sm callbtn" href="tel:${esc(s.g2phone)}">📞 ${esc((s.g2name||'Guardian 2').split(' ')[0])}</a>`:''}
-    <button class="btn ${s._edit?'primary':'ghost'} sm" data-act="scedit" data-id="${s.id}" style="margin-left:auto">${s._edit?'✓ Done editing':'✎ Edit'}</button></div>`;
+    <button class="btn sm" data-act="scedit" data-id="${s.id}" style="margin-left:auto;${s._edit?'background:var(--moss);color:#fff;border-color:var(--moss)':'background:none;border:1.5px solid var(--line)'}">${s._edit?'✓ Done editing':'✎ Edit'}</button></div>`;
   if(s._edit)return `<div class="scout open">${head}<div class="body">${contact}${scoutEdit(s,cur)}</div></div>`;
   const ps=peakStepState(s),doneN=ps.filter(Boolean).length;
   /* 1 — the climb */
@@ -2718,10 +2753,9 @@ function scoutCard(s){
       <span class="on2">now <b>${v.cur}</b></span></div>`;}).join('');
   const nx=oasNextUp(s).slice(0,2);
   const pcirc=Array.from({length:q.oasProg},(_,i)=>`<span class="siab${i<o.prog?' on':''}">${i<o.prog?'✦':i+1}</span>`).join('');
-  const oas=`<h4 class="sec-h">Outdoor Adventure Skills <span>${o.prog}/${q.oasProg} progressions${o.done?' ✦':''}</span></h4>
-    <div class="circ-row">${pcirc}</div>
-    <p class="hint" style="margin:0 0 5px">✦ = a progression earned in this section. The stage each scout started from is set under ✎ Edit.</p>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 7px">${coreChips}<span class="chip on" style="background:var(--pine)">✦ ${o.prog} of ${q.oasProg}</span></div>
+  const oas=`<h4 class="sec-h">Outdoor Adventure Skills${o.done?' <span>✦ done</span>':''}</h4>
+    <div class="circ-row">${pcirc}<span class="circ-lbl">progressions</span></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 7px">${coreChips}</div>
     ${orows}
     ${nx.length?`<p class="hint" style="margin:6px 0 0">Closest: ${nx.map(g=>esc(g.st)+' S'+g.stage+' — '+g.left.length+' skill'+(g.left.length===1?'':'s')+' left').join(' · ')}</p>`:''}`;
   /* 4 — SIAs */
@@ -2733,7 +2767,7 @@ function scoutCard(s){
     return `<div class="sia2${done?' don':''}">
       <div class="sia2m" data-act="siaopen" data-id="${s.id}" data-sia="${x.id}">
         <span class="s2a">${done?'✦ ':''}${esc(x.area||'—')}</span>
-        <span class="s2s">${x.date?'finished '+fmtD(x.date):(x.started?'in progress · '+fmtD(x.started):'finished')}</span>
+        <span class="s2s${(!x.date&&x.started)?' ip':''}">${x.date?'finished '+fmtD(x.date):(x.started?'in progress · '+fmtD(x.started):'finished')}</span>
         <span style="transform:rotate(${x._open?90:0}deg);flex:none;font-size:12px">▸</span></div>
       ${x._open?`<div class="s2d">${x.description?esc(x.description):'<i>What it\'s for hasn\'t been written down.</i>'}
         <div class="btn-row" style="margin-top:7px">
@@ -2745,14 +2779,14 @@ function scoutCard(s){
   const sia=`<h4 class="sec-h">Special Interest Areas <span>${fin.length}/6</span></h4>
     <div class="circ-row">${bar}<span class="circ-lbl">${areaN}/${q.siaAreas} areas</span></div>
     <div class="siaareas">${areaChips}</div>
-    <p class="hint" style="margin:0 0 6px">${q.siaHrs}+ hrs each, agreed with the leader before it starts. Planning one starts it — several can run at once. Reviewed locks in the finish date and it counts toward the 6.</p>
+    <p class="hint" style="margin:0 0 6px">${q.siaHrs}+ hrs each — several can run at once.</p>
     ${siaRows}
     <select id="siaArea-${s.id}" style="margin-top:4px">${SIA_AREAS.map(a=>`<option>${a}</option>`).join('')}</select>
     <div class="addrow"><input type="text" id="siaDesc-${s.id}" placeholder="What's the SIA for?">
       <button class="btn primary sm" data-act="siaplan" data-id="${s.id}" style="flex:none">＋ Planned</button></div>`;
   /* 5 — adventurous journey */
   const j=s.journey||{};
-  const jf=(f,l)=>`<span class="dp"><label>${l}</label><input type="date" data-act="jnyd" data-id="${s.id}" data-f="${f}" value="${j[f]||''}"></span>`;
+  const jf=(f,l)=>`<span class="dp"><label>${l}${j[f]?` <button class="jclr" data-act="jnyclear" data-id="${s.id}" data-f="${f}">✕ clear</button>`:''}</label><input type="date" data-act="jnyd" data-id="${s.id}" data-f="${f}" value="${j[f]||''}"></span>`;
   const jny=`<h4 class="sec-h">Adventurous Journey${ps[7]?' <span style="margin-left:0">✦ done</span>':''}</h4>
     <p class="hint" style="margin:0 0 5px">${esc(q.journey)}. Three dates lock it in: plan it, do it, review it.</p>
     <div class="datepair">${jf('planDate','Plan')}${jf('doDate','Do')}${jf('reviewDate','Review')}</div>
@@ -2779,7 +2813,7 @@ function scoutEdit(s,cur){
     </div>
     <div class="mini-cap">Patrol</div>
     <div class="namerow"><input type="text" data-act="scpatrol" data-id="${s.id}" value="${esc(s.patrol||'')}" placeholder="Patrol — e.g. Red">
-      <div class="rseg" style="flex:none">${[['','—'],['PL','PL'],['APL','APL']].map(([k,l])=>
+      <div class="rseg" style="flex:none">${[['','—'],['PL','PL'],['APL','APL'],['UL','UL']].map(([k,l])=>
         `<button data-act="scprole" data-id="${s.id}" data-r="${k}" class="${(s.prole||'')===k?'on':''}">${l}</button>`).join('')}</div></div>
     <div class="mini-cap">Dates</div>
     <div class="datepair">
@@ -2970,6 +3004,7 @@ document.addEventListener('click',e=>{
   if(a==='syncsetup'){S.view='rules';window.scrollTo(0,0);render();
     setTimeout(()=>{const el=document.getElementById('dstatus');if(el&&el.scrollIntoView)el.scrollIntoView({block:'center'});},60);return;}
   if(a==='nav'){S.view=t.dataset.v;
+    S.roster.forEach(x=>{x._open=false;x._edit=false;});
     // coming back to Tonight after signing off starts the next night, not the receipt
     if(S.view==='tonight'&&S.night.saved){S.night=nightFromCurrent();save('night');}
     render();return;}
@@ -3159,8 +3194,13 @@ document.addEventListener('click',e=>{
   if(a==='addscout'){const inp=document.getElementById('newScout'),v=(inp?inp.value:'').trim();
     if(!v)return;S.roster.push({id:uid(),name:v,section:'Scout',peak:false,milestone:1,memberNo:"",sias:[],priorKm:0,priorNights:0,peakSteps:TEN_F.slice()});
     save('roster');S._focus='newScout';render();return;}
-  if(a==='scopen'){const s=S.roster.find(x=>x.id===t.dataset.id);s._open=!s._open;render();return;}
-  if(a==='troopview'){S._troopView=t.dataset.v;render();return;}
+  if(a==='scopen'){const s=S.roster.find(x=>x.id===t.dataset.id);
+    const was=s._open;
+    S.roster.forEach(x=>{x._open=false;x._edit=false;});
+    s._open=!was;render();return;}
+  if(a==='troopview'){S._troopView=t.dataset.v;S._oasSel=null;
+    S.roster.forEach(x=>{x._open=false;x._edit=false;});render();return;}
+  if(a==='oasgridsel'){S._oasSel=S._oasSel===t.dataset.id?null:t.dataset.id;render();return;}
   if(a==='secfilter'){S._secF=S._secF||{};S._secF[t.dataset.s]=!S._secF[t.dataset.s];render();return;}
   if(a==='scprole'){const s=S.roster.find(x=>x.id===t.dataset.id);
     if(s){s.prole=t.dataset.r;save('roster');render();}return;}
@@ -3187,6 +3227,8 @@ document.addEventListener('click',e=>{
     s.sias=s.sias||[];s.sias.push({id:uid(),area:ar,description:de,date:dt});
     save('roster');render();return;}
   if(a==='scedit'){const s=S.roster.find(x=>x.id===t.dataset.id);s._edit=!s._edit;render();return;}
+  if(a==='jnyclear'){const s=S.roster.find(x=>x.id===t.dataset.id);
+    if(s&&s.journey){s.journey[t.dataset.f]='';save('roster');render();}return;}
   if(a==='siaplan'){const id=t.dataset.id,s=S.roster.find(x=>x.id===id);
     const ar=document.getElementById('siaArea-'+id).value;
     const de=(document.getElementById('siaDesc-'+id).value||'').trim();
@@ -3248,13 +3290,18 @@ document.addEventListener('click',e=>{
   if(a==='scoutnav'){S.scoutView=t.dataset.v;render();return;}
   if(a==='schedtick'){const it=planFind(t.dataset.id).it;if(it){const r=ensurePlan(it).sched[+t.dataset.i];if(r){r.done=!r.done;save('year');render();}}return;}
   if(a==='unlockleader'){
+    if(S.pin&&S.devLeader){S.mode='leader';render();return;}
     if(!S.pin){
       uiPrompt('Set the leader PIN','First time on this device — pick the PIN that unlocks leader mode. It sticks until you change it.',(v)=>{
         if(!v||!v.trim())return uiAlert('Need a PIN.');
-        S.pin=v.trim();Store.set('muster.pin',S.pin);S.mode='leader';render();});
+        S.pin=v.trim();Store.set('muster.pin',S.pin);
+        S.devLeader=true;Store.set('muster.devLeader','1');
+        S.mode='leader';render();});
       return;}
-    uiPrompt('Leader unlock','Enter the leader PIN.',(v)=>{
-      if((v||'').trim()===S.pin){S.mode='leader';render();}
+    uiPrompt('Leader unlock','Enter the leader PIN. This device stays unlocked once you get it right.',(v)=>{
+      if((v||'').trim()===S.pin){
+        S.devLeader=true;Store.set('muster.devLeader','1');
+        S.mode='leader';render();}
       else uiAlert('Wrong PIN.');});
     return;}
   if(a==='nptoggle'){const it=planFind(t.dataset.id).it;if(it){
@@ -3588,6 +3635,8 @@ document.addEventListener('change',e=>{
   if(a==='setsec'){const s=S.roster.find(x=>x.id===t.dataset.id);s.section=t.value;save('roster');render();return;}
   if(a==='jnyd'){const s=S.roster.find(x=>x.id===t.dataset.id);
     s.journey=s.journey||{};s.journey[t.dataset.f]=t.value;save('roster');render();return;}
+  if(a==='jnyclear'){const s=S.roster.find(x=>x.id===t.dataset.id);
+    if(s&&s.journey){s.journey[t.dataset.f]='';save('roster');render();}return;}
 });
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter')return;
