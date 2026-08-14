@@ -463,6 +463,15 @@ nav button .nl{font-size:9.5px;font-weight:700}
 .brchline{margin:5px 0;padding:6px 8px;background:var(--card-2);border-radius:9px}
 .brchline b{font-size:12.5px;margin-right:6px}
 .brchline>div{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.stgrow{display:flex;align-items:center;gap:9px;padding:8px 10px;margin-top:5px;cursor:pointer;
+  background:var(--card);border:1.5px solid var(--line);border-radius:10px}
+.stgrow.open{border-color:var(--pine);background:var(--card-2)}
+.stgrow.don .stgn{background:var(--pine);border-color:var(--pine);color:#fff}
+.stgrow .stgn{flex:none;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);
+  display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--ink-soft)}
+.stgrow .stgt{flex:1;font-size:13px;font-weight:700}
+.stgrow .stgc{flex:none;font-size:11.5px;font-weight:700;color:var(--ink-faint)}
+.skrow.ro{cursor:default;margin-top:4px}
 .brow{display:flex;align-items:center;gap:7px;margin-top:5px;flex-wrap:nowrap}
 .brow.solo{padding-left:2px}
 .ppill .pdot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
@@ -471,8 +480,6 @@ nav button .nl{font-size:9.5px;font-weight:700}
   text-transform:uppercase;letter-spacing:.02em;line-height:1.15}
 .brow .bcirc{display:flex;gap:3px;flex-wrap:wrap}
 .brow .bnext{margin-left:auto;flex:none;font-size:11px;font-weight:700;color:var(--ink-faint);white-space:nowrap}
-.stgtap{display:inline-block;cursor:pointer;border-radius:50%;padding:1px;transition:.15s}
-.stgtap.sel{box-shadow:0 0 0 2.5px var(--amber)}
 .spanel{margin-top:7px;background:var(--card);border:1.5px solid var(--line);border-radius:11px;padding:9px 10px}
 .sptop{display:flex;align-items:center;gap:9px;font-size:12.5px;margin-bottom:5px;flex-wrap:wrap}
 .sphd{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);
@@ -2864,26 +2871,51 @@ function oasBranchMap(s,st,es){
     if(nx)b.next={stage:nx.g[0],left:nx.g[2].filter((_,i)=>!has(nx.gi,i)).length,
       shared:perStage[nx.g[0]]===1};});
   return {map:out,order};}
-/* Tap a stage circle and you get the actual checklist: what they've signed off,
-   what's still open, in the words the scout will read on the night. */
-function stagePanel(s,st,stage){
+/* Every pickable skill line: a plain stream, or one branch of a stream that splits.
+   A branch line carries the shared early stages too, because everyone climbs those. */
+function oasLines(st){
+  const perStage={};OAS_SKILLS[st].forEach(g=>{perStage[g[0]]=(perStage[g[0]]||0)+1;});
+  const shared=OAS_SKILLS[st].map((g,gi)=>({g,gi})).filter(x=>perStage[x.g[0]]===1);
+  const keys=[];const byKey={};
+  OAS_SKILLS[st].forEach((g,gi)=>{
+    if(perStage[g[0]]===1)return;
+    const k=discKey(g[1]);if(!k)return;
+    if(!byKey[k]){byKey[k]={key:st+'|'+k,label:st+' — '+discName(g[1]),stream:st,groups:shared.slice()};keys.push(k);}
+    byKey[k].groups.push({g,gi});});
+  if(!keys.length)return [{key:st,label:st,stream:st,groups:shared}];
+  return keys.map(k=>byKey[k]);
+}
+function allOasLines(){return STREAMS.flatMap(oasLines);}
+/* The three-step browser: pick a skill line, pick a stage, read the skills. */
+function oasBrowser(s){
+  const pick=s._oasPick||{};
+  const lines=allOasLines();
+  const line=lines.find(l=>l.key===pick.key);
+  const sel=`<select data-act="oasline" data-id="${s.id}" style="width:100%">
+    <option value="">Browse a skill — pick one…</option>
+    ${lines.map(l=>`<option value="${esc(l.key)}" ${pick.key===l.key?'selected':''}>${esc(l.label)}</option>`).join('')}</select>`;
+  if(!line)return `<div class="mini-cap" style="margin-top:10px">Look up any skill</div>${sel}`;
   const es=earnedSkillIds(s.id);
-  const from=+((s.oasStart||{})[st]||0);
-  const groups=OAS_SKILLS[st].map((g,gi)=>({g,gi})).filter(x=>x.g[0]===stage);
-  if(!groups.length)return '';
-  const pre=stage<=from;
-  const blocks=groups.map(({g,gi})=>{
-    const rows=g[2].map((sk,i)=>{
-      const on=hasSkillAlready(s,st+'|'+gi+'|'+i,es);
-      return `<div class="sprow ${on?'on':''}"><span class="sbx">${on?'✓':''}</span><span>${esc(sk)}</span></div>`;}).join('');
-    const done=g[2].filter((_,i)=>hasSkillAlready(s,st+'|'+gi+'|'+i,es)).length;
-    const disc=discName(g[1]);
-    return `<div class="sphd">${disc?esc(disc)+' — ':''}${done}/${g[2].length} done${done===g[2].length?' ✓':''}</div>${rows}`;}).join('');
-  return `<div class="spanel">
-    <div class="sptop"><b>${esc(st)} · Stage ${stage}</b>
-      ${pre?'<span class="hint" style="margin:0">held before this section — counted as their starting stage</span>':''}
-      <button class="btn ghost sm" data-act="oasstageclose" style="flex:none;margin-left:auto">Close</button></div>
-    ${blocks}</div>`;
+  const from=+((s.oasStart||{})[line.stream]||0);
+  const stageRows=[1,2,3,4,5,6,7,8,9].map(n=>{
+    const gs=line.groups.filter(x=>x.g[0]===n);
+    if(!gs.length)return '';
+    const tot=gs.reduce((a,x)=>a+x.g[2].length,0);
+    const got=gs.reduce((a,x)=>a+x.g[2].filter((_,i)=>hasSkillAlready(s,line.stream+'|'+x.gi+'|'+i,es)).length,0);
+    const pre=n<=from;const full=got===tot;
+    const open=pick.stage===n;
+    return `<div class="stgrow ${full?'don':''} ${open?'open':''}" data-act="oasstagepick" data-id="${s.id}" data-stage="${n}">
+      <span class="stgn">${n}</span>
+      <span class="stgt">Stage ${n}${pre?' <span class="hint" style="margin:0">· held on arrival</span>':''}</span>
+      <span class="stgc">${full?'✓ all done':got+' of '+tot}</span></div>`
+      +(open?gs.map(x=>x.g[2].map((sk,i)=>{
+        const on=hasSkillAlready(s,line.stream+'|'+x.gi+'|'+i,es);
+        return `<div class="skrow ${on?'on':''} ro">
+          <div class="skbox ro">${on?'✓':''}</div><div class="sktext">${esc(sk)}</div></div>`;}).join('')).join(''):'');
+  }).join('');
+  return `<div class="mini-cap" style="margin-top:10px">Look up any skill</div>${sel}
+    <p class="hint" style="margin:5px 0 4px">Tap a stage to read its skills. Blue means signed off.</p>
+    ${stageRows}`;
 }
 function oasBranchDetail(s){
   const o=oasFor(s.id);const es=earnedSkillIds(s.id);
@@ -2891,13 +2923,9 @@ function oasBranchDetail(s){
     if(v.cur>0||v.from>0)return true;
     return S.nights.some(n=>{const sk=(n.skillsDone||{})[s.id];
       return sk&&Object.keys(sk).some(k=>k.startsWith(st+'|'));});});
-  // one row of stage circles, coloured up to `cur` — each one opens its checklist
-  const sel=S._oasStage||{};
-  const circles=(cur,st)=>[1,2,3,4,5,6,7,8,9].map(n=>{
-    const on=sel.sid===s.id&&sel.st===st&&sel.stage===n;
-    return `<span class="stgtap${on?' sel':''}" data-act="oasstagepeek" data-id="${s.id}" data-st="${st}" data-stage="${n}">`
-      +(n<=cur?stgChip(n,false):`<span class="stg z">${n}</span>`)+`</span>`;}).join('');
-  const panelFor=st=>(sel.sid===s.id&&sel.st===st)?stagePanel(s,st,sel.stage):'';
+  // one row of stage circles, coloured up to `cur`
+  const circles=cur=>[1,2,3,4,5,6,7,8,9]
+    .map(n=>n<=cur?stgChip(n,false):`<span class="stg z">${n}</span>`).join('');
   const lines=active.map(st=>{
     const v=o.streams[st];
     const bm=oasBranchMap(s,st,es);
@@ -2911,17 +2939,17 @@ function oasBranchDetail(s){
       const rows=shown.map(k=>{const b=bm.map[k];
         return `<div class="brow">
           <span class="blbl">${esc(b.name)}</span>
-          <span class="bcirc">${circles(b.cur,st)}</span>
+          <span class="bcirc">${circles(b.cur)}</span>
           <span class="bnext">${b.next?(b.next.left?'S'+b.next.stage+' · '+b.next.left+' left':'S'+b.next.stage+' ready'):'✓ stage 9'}</span></div>`;}).join('');
-      return `<div class="brchline"><b>${st}</b> <span class="hint" style="margin:0">from ${v.from}</span>${rows}${panelFor(st)}</div>`;
+      return `<div class="brchline"><b>${st}</b> <span class="hint" style="margin:0">from ${v.from}</span>${rows}</div>`;
     }
     const open=OAS_SKILLS[st].map((g,gi)=>({g,gi}))
       .filter(x=>x.g[0]>v.from&&x.g[0]<=v.cur+1)
       .map(x=>({stage:x.g[0],left:x.g[2].filter((_,i2)=>!hasSkillAlready(s,st+'|'+x.gi+'|'+i2,es)).length}))
       .filter(x=>x.left>0).slice(0,3);
     return `<div class="brchline"><b>${st}</b> <span class="hint" style="margin:0">from ${v.from}</span>
-      <div class="brow solo"><span class="bcirc">${circles(v.cur,st)}</span>
-      <span class="bnext">${open.length?'S'+open[0].stage+' · '+open[0].left+' left':(v.cur>=9?'✓ stage 9':'S'+(v.cur+1)+' ready')}</span></div>${panelFor(st)}</div>`;
+      <div class="brow solo"><span class="bcirc">${circles(v.cur)}</span>
+      <span class="bnext">${open.length?'S'+open[0].stage+' · '+open[0].left+' left':(v.cur>=9?'✓ stage 9':'S'+(v.cur+1)+' ready')}</span></div></div>`;
   }).join('');
   return lines||'<p class="hint" style="margin:4px 0">Nothing recorded in any stream yet.</p>';
 }
@@ -3099,7 +3127,8 @@ function scoutCard(s){
     <div class="circ-row">${pcirc}<span class="circ-lbl">progressions</span></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 7px">${coreChips}</div>
     ${orows}
-    ${nx.length?`<p class="hint" style="margin:6px 0 0">Closest: ${nx.map(g=>esc(g.st)+' S'+g.stage+' — '+g.left.length+' skill'+(g.left.length===1?'':'s')+' left').join(' · ')}</p>`:''}`;
+    ${nx.length?`<p class="hint" style="margin:6px 0 0">Closest: ${nx.map(g=>esc(g.st)+' S'+g.stage+' — '+g.left.length+' skill'+(g.left.length===1?'':'s')+' left').join(' · ')}</p>`:''}
+    ${oasBrowser(s)}`;
   /* 4 — SIAs */
   const sias=s.sias||[];const fin=siaFinished(s);
   const areaN=new Set(fin.map(x=>x.area).filter(Boolean)).size;
@@ -3625,11 +3654,7 @@ document.addEventListener('click',e=>{
     s._open=!was;render();return;}
   if(a==='troopview'){S._troopView=t.dataset.v;S._oasSel=null;S._oasStream=null;
     S.roster.forEach(x=>{x._open=false;x._edit=false;});render();return;}
-  if(a==='oasgridsel'){S._oasSel=S._oasSel===t.dataset.id?null:t.dataset.id;S._oasStage=null;render();return;}
-  if(a==='oasstagepeek'){const q={sid:t.dataset.id,st:t.dataset.st,stage:+t.dataset.stage};
-    const c=S._oasStage||{};
-    S._oasStage=(c.sid===q.sid&&c.st===q.st&&c.stage===q.stage)?null:q;render();return;}
-  if(a==='oasstageclose'){S._oasStage=null;render();return;}
+  if(a==='oasgridsel'){S._oasSel=S._oasSel===t.dataset.id?null:t.dataset.id;render();return;}
   if(a==='oasstream'){S._oasStream=t.dataset.st;S._oasSel=null;render();return;}
   if(a==='oasstreamback'){S._oasStream=null;render();return;}
   if(a==='oasrank'){S._oasRank=t.dataset.v;render();return;}
@@ -3666,6 +3691,9 @@ document.addEventListener('click',e=>{
     s.sias=s.sias||[];s.sias.push({id:uid(),area:ar,description:de,date:dt});
     save('roster');render();return;}
   if(a==='scedit'){const s=S.roster.find(x=>x.id===t.dataset.id);s._edit=!s._edit;render();return;}
+  if(a==='oasstagepick'){const s=S.roster.find(x=>x.id===t.dataset.id);if(!s)return;
+    const n=+t.dataset.stage;s._oasPick=s._oasPick||{};
+    s._oasPick.stage=s._oasPick.stage===n?null:n;render();return;}
   if(a==='jnyclear'){const s=S.roster.find(x=>x.id===t.dataset.id);
     if(s&&s.journey){s.journey[t.dataset.f]='';save('roster');render();}return;}
   if(a==='crsclear'){const s=S.roster.find(x=>x.id===t.dataset.id);
@@ -4104,6 +4132,8 @@ document.addEventListener('change',e=>{
   if(a==='evtype'){const it=planFind(t.dataset.id).it;if(it){it.type=t.value;save('year');}render();return;}
   if(a==='planstream'){const it=planFind(t.dataset.id).it;if(it){it.stream=t.value;it._openG=null;save('year');}render();return;}
   if(a==='adhocstream'){S._adhocStream=t.value;S._adhocG=null;render();return;}
+  if(a==='oasline'){const s=S.roster.find(x=>x.id===t.dataset.id);
+    if(s){s._oasPick={key:t.value,stage:null};render();}return;}
   if(a==='oastargetweek'){S._oasTargetId=t.value;render();return;}
   if(a==='ctag'){const c=S.contacts.find(x=>x.id===t.dataset.id);if(c){c.tag=t.value;save('contacts');render();}return;}
   if(a==='setms'){const s=S.roster.find(x=>x.id===t.dataset.id);
